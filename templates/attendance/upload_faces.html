@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-5">
+    <h2>Upload Face Data - {{ student.username }}</h2>
+
+    <form method="POST" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        <div class="mb-3">
+            {{ form.image.label_tag }}
+            {{ form.image }}
+        </div>
+
+        <button type="submit" class="btn btn-primary">
+            Upload Face
+        </button>
+    </form>
+
+    {% if form.errors %}
+        <div class="alert alert-danger mt-3">
+            {{ form.errors }}
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

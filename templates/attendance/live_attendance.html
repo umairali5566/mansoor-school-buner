@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-3">🤖 Multi-Camera Live Attendance</h2>
+    <hr>
+
+    <!-- 🔵 LIVE STATUS CARD -->
+    <div class="card shadow p-3 mb-4">
+        <h5>📋 Live Attendance Status</h5>
+        <ul id="liveStatus" class="list-group mt-2"></ul>
+    </div>
+
+    <!-- 🎥 CAMERA SECTION -->
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card shadow p-2">
+                <h5 class="text-center">Camera 0</h5>
+                <img src="{% url 'video_feed' 0 %}" 
+                    class="img-fluid rounded"
+                    style="width:100%; border-radius:10px;">
+            </div>
+        </div>
+    </div>
+
+    <!-- 🔙 BACK BUTTON -->
+    <div class="mt-4">
+        <a href="{% url 'admin_dashboard' %}" 
+           class="btn btn-secondary w-100">
+           ⬅ Back to Dashboard
+        </a>
+    </div>
+
+</div>
+
+
+<!-- 🔄 AUTO REFRESH LIVE STATUS -->
+<script>
+
+function fetchLiveMessages() {
+    fetch("{% url 'live_messages' %}")
+        .then(response => response.json())
+        .then(data => {
+
+            let list = document.getElementById("liveStatus");
+            list.innerHTML = "";
+
+            data.messages.forEach(msg => {
+                let li = document.createElement("li");
+                li.className = "list-group-item";
+                li.innerText = msg;
+                list.appendChild(li);
+            });
+
+        })
+        .catch(error => console.log("Error fetching messages:", error));
+}
+
+// Auto refresh every 2 seconds
+setInterval(fetchLiveMessages, 2000);
+
+// Load immediately
+fetchLiveMessages();
+
+</script>
+
+{% endblock %}

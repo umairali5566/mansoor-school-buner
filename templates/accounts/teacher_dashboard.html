@@ -1,0 +1,440 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container mt-4">
+
+<h2 class="mb-4">Teacher Dashboard 👨‍🏫</h2>
+
+<a href="{% url 'upload_homework' %}" class="btn btn-primary mb-4">
+📚 Upload Homework
+</a>
+
+
+<!-- ========================= -->
+<!-- Stats Cards -->
+<!-- ========================= -->
+
+<div class="row text-center mb-4">
+
+<div class="col-md-3 mb-3">
+<div class="card shadow border-0">
+<div class="card-body">
+<h6 class="text-muted">Total Students</h6>
+<h3 class="text-primary">{{ total_students }}</h3>
+</div>
+</div>
+</div>
+
+
+<div class="col-md-3 mb-3">
+<div class="card shadow border-0">
+<div class="card-body">
+<h6 class="text-muted">Present Today</h6>
+<h3 class="text-success">{{ today_present }}</h3>
+</div>
+</div>
+</div>
+
+
+<div class="col-md-3 mb-3">
+<div class="card shadow border-0">
+<div class="card-body">
+<h6 class="text-muted">Absent Today</h6>
+<h3 class="text-danger">{{ today_absent }}</h3>
+</div>
+</div>
+</div>
+
+
+<div class="col-md-3 mb-3">
+<div class="card shadow border-0">
+<div class="card-body">
+<h6 class="text-muted">Total Attendance Records</h6>
+<h3 class="text-dark">{{ total_attendance }}</h3>
+</div>
+</div>
+</div>
+
+</div>
+
+
+
+<!-- ========================= -->
+<!-- Recent Attendance -->
+<!-- ========================= -->
+
+<div class="card shadow-sm">
+<div class="card-body">
+
+<h5 class="mb-3">Recent Attendance</h5>
+
+<table class="table table-bordered">
+
+<thead class="table-light">
+<tr>
+<th>Student</th>
+<th>Date</th>
+<th>Status</th>
+</tr>
+</thead>
+
+<tbody>
+
+{% for record in recent_attendance %}
+
+<tr>
+
+<td>{{ record.student.user.username }}</td>
+
+<td>{{ record.date }}</td>
+
+<td>
+
+{% if record.status == "Present" %}
+
+<span class="badge bg-success">Present</span>
+
+{% else %}
+
+<span class="badge bg-danger">Absent</span>
+
+{% endif %}
+
+</td>
+
+</tr>
+
+{% empty %}
+
+<tr>
+
+<td colspan="3" class="text-center">No records found</td>
+
+</tr>
+
+{% endfor %}
+
+</tbody>
+
+</table>
+
+</div>
+</div>
+
+
+
+<!-- ========================= -->
+<!-- Today's Chart -->
+<!-- ========================= -->
+
+<div class="card shadow-sm mt-4">
+
+<div class="card-body">
+
+<h5 class="mb-3">Today's Attendance</h5>
+
+<div style="max-width:400px;margin:auto">
+
+<canvas id="attendanceChart"></canvas>
+
+</div>
+
+</div>
+
+</div>
+
+
+
+<!-- ========================= -->
+<!-- Class Wise Chart -->
+<!-- ========================= -->
+
+<div class="card shadow-sm mt-4">
+
+<div class="card-body">
+
+<h5 class="mb-3">Class Wise Attendance</h5>
+
+<canvas id="classChart" height="100"></canvas>
+
+</div>
+
+</div>
+
+
+
+<!-- ========================= -->
+<!-- Weekly Chart -->
+<!-- ========================= -->
+
+<div class="card shadow-sm mt-4">
+
+<div class="card-body">
+
+<h5 class="mb-3">Weekly Attendance Overview</h5>
+
+<canvas id="weeklyChart" height="100"></canvas>
+
+</div>
+
+</div>
+
+
+
+<!-- ========================= -->
+<!-- Monthly Chart -->
+<!-- ========================= -->
+
+<div class="card shadow-sm mt-4 mb-5">
+
+<div class="card-body">
+
+<h5 class="mb-3">Monthly Attendance Trend (Last 30 Days)</h5>
+
+<canvas id="monthlyChart" height="100"></canvas>
+
+</div>
+
+</div>
+
+
+</div>
+
+
+
+<!-- ========================= -->
+<!-- Chart JS -->
+<!-- ========================= -->
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+
+document.addEventListener("DOMContentLoaded", function () {
+
+
+/* =======================
+TODAY CHART
+======================= */
+
+const todayCtx = document.getElementById('attendanceChart');
+
+if (todayCtx) {
+
+new Chart(todayCtx, {
+
+type: 'doughnut',
+
+data: {
+
+labels: ['Present','Absent'],
+
+datasets: [{
+
+data: {{ today_chart_data|safe }},
+
+backgroundColor: ['#28a745','#dc3545']
+
+}]
+
+},
+
+options: {
+
+responsive: true,
+
+maintainAspectRatio: true,
+
+plugins: {
+
+legend:{position:'bottom'}
+
+}
+
+}
+
+});
+
+}
+
+
+
+/* =======================
+CLASS WISE CHART
+======================= */
+
+const classCtx = document.getElementById('classChart');
+
+if (classCtx) {
+
+new Chart(classCtx, {
+
+type:'bar',
+
+data:{
+
+labels: {{ class_labels|safe }},
+
+datasets:[
+
+{
+
+label:'Present',
+
+data: {{ class_present|safe }},
+
+backgroundColor:'#28a745'
+
+},
+
+{
+
+label:'Absent',
+
+data: {{ class_absent|safe }},
+
+backgroundColor:'#dc3545'
+
+}
+
+]
+
+},
+
+options:{
+
+responsive:true,
+
+scales:{
+
+y:{beginAtZero:true}
+
+}
+
+}
+
+});
+
+}
+
+
+
+/* =======================
+WEEKLY CHART
+======================= */
+
+const weeklyCtx = document.getElementById('weeklyChart');
+
+if (weeklyCtx) {
+
+new Chart(weeklyCtx, {
+
+type:'bar',
+
+data:{
+
+labels: {{ weekly_labels|safe }},
+
+datasets:[
+
+{
+
+label:'Present',
+
+data: {{ weekly_present|safe }},
+
+backgroundColor:'#28a745'
+
+},
+
+{
+
+label:'Absent',
+
+data: {{ weekly_absent|safe }},
+
+backgroundColor:'#dc3545'
+
+}
+
+]
+
+},
+
+options:{
+
+responsive:true,
+
+scales:{
+
+y:{beginAtZero:true}
+
+}
+
+}
+
+});
+
+}
+
+
+
+/* =======================
+MONTHLY CHART
+======================= */
+
+const monthlyCtx = document.getElementById('monthlyChart');
+
+if (monthlyCtx) {
+
+new Chart(monthlyCtx, {
+
+type:'line',
+
+data:{
+
+labels: {{ monthly_labels|safe }},
+
+datasets:[
+
+{
+
+label:'Present Students',
+
+data: {{ monthly_present|safe }},
+
+borderColor:'#007bff',
+
+backgroundColor:'rgba(0,123,255,0.2)',
+
+fill:true,
+
+tension:0.3
+
+}
+
+]
+
+},
+
+options:{
+
+responsive:true,
+
+scales:{
+
+y:{beginAtZero:true}
+
+}
+
+}
+
+});
+
+}
+
+});
+
+</script>
+
+{% endblock %}

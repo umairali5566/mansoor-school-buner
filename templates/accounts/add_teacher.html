@@ -1,0 +1,15 @@
+<h2>Add Teacher</h2>
+
+{% if form.errors %}
+    <div style="color:red;">
+        {{ form.errors }}
+    </div>
+{% endif %}
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Create Teacher</button>
+</form>
+
+<a href="{% url 'teacher_list' %}">Back</a>

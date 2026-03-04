@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>My Profile</h2>
+
+<form method="POST" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <div class="mb-3">
+        <label>Username:</label>
+        <input type="text" value="{{ student.user.username }}" class="form-control" disabled>
+    </div>
+
+    <div class="mb-3">
+    <label>Roll Number</label>
+    <input type="text" name="roll_number"
+           value="{{ student.roll_number }}"
+           class="form-control" required>
+    </div>
+
+    <div class="mb-3">
+    <label>Phone</label>
+    <input type="text" name="phone"
+           value="{{ student.phone }}"
+           class="form-control">
+    </div>
+
+    <div class="mb-3">
+        <label>Upload Face Image:</label>
+        <input type="file" name="image" class="form-control">
+    </div>
+
+    {% if student.face_image %}
+        <img src="{{ student.face_image.url }}" width="150">
+    {% endif %}
+
+    <br><br>
+    <button type="submit" class="btn btn-success">
+        Update Profile
+    </button>
+    {% if messages %}
+        {% for message in messages %}
+            <div style="color: green; font-weight: bold;">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+</form>
+
+{% endblock %}

@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container-fluid">
+
+    <!-- Welcome Header -->
+    <div class="card shadow-sm p-4 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h2>Welcome, {{ request.user.username }} 👑</h2>
+                <p class="text-muted mb-0">Admin Dashboard</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Stats Cards -->
+    <div class="row mb-4">
+
+        <!-- Students -->
+        <div class="col-md-4">
+            <div class="card shadow border-0 p-4 text-center">
+                <h4 class="text-primary">Total Students</h4>
+                <h1>{{ students_count }}</h1>
+                <a href="{% url 'student_list' %}" class="btn btn-primary mt-2 w-100">
+                    Manage
+                </a>
+            </div>
+        </div>
+
+        <!-- Teachers -->
+        <div class="col-md-4">
+            <div class="card shadow border-0 p-4 text-center">
+                <h4 class="text-success">Total Teachers</h4>
+                <h1>{{ teachers_count }}</h1>
+                <a href="{% url 'teacher_list' %}" class="btn btn-success mt-2 w-100">
+                    Manage
+                </a>
+            </div>
+        </div>
+
+        <!-- Attendance -->
+        <div class="col-md-4">
+            <div class="card shadow border-0 p-4 text-center">
+                <h4 class="text-warning">Today's Attendance</h4>
+                <h1>{{ today_attendance }}</h1>
+                <a href="{% url 'attendance_report' %}" class="btn btn-warning mt-2 w-100">
+                    View
+                </a>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card shadow-sm p-4">
+        <h4 class="mb-3">Admin Quick Actions</h4>
+
+        <div class="d-flex flex-wrap gap-2">
+
+            <a href="{% url 'student_list' %}" class="btn btn-primary">
+                Manage Students
+            </a>
+
+            <a href="{% url 'teacher_list' %}" class="btn btn-success">
+                Manage Teachers
+            </a>
+
+            <a href="{% url 'mark_attendance' %}" class="btn btn-warning">
+                Mark Attendance
+            </a>
+
+            <a href="{% url 'attendance_report' %}" class="btn btn-info text-white">
+                Attendance Report
+            </a>
+
+            <!-- 🤖 AUTO FACE ATTENDANCE BUTTON -->
+            <a href="{% url 'live_attendance' %}" class="btn btn-dark">
+                🤖 Live Face Attendance
+            </a>
+
+            <a href="{% url 'unknown_faces_list' %}" class="btn btn-danger">
+                🚨 View Unknown Faces
+            </a>
+          
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

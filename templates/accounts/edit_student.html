@@ -1,0 +1,22 @@
+<h2>Edit Student</h2>
+
+<form method="POST">
+    {% csrf_token %}
+
+    Username:
+    <input type="text" name="username" value="{{ student.user.username }}"><br><br>
+
+    Roll Number:
+    <input type="text" name="roll_number" value="{{ student.roll_number }}"><br><br>
+
+    Class:
+    <input type="text" name="class_name" value="{{ student.class_name }}"><br><br>
+
+    Phone:
+    <input type="text" name="phone" value="{{ student.phone }}"><br><br>
+
+    <button type="submit">Update</button>
+</form>
+
+<br>
+<a href="{% url 'student_list' %}">Back</a>

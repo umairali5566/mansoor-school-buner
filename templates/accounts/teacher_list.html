@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Teacher List</h2>
+
+<a href="{% url 'add_teacher' %}" class="btn btn-primary mb-3">Add Teacher</a>
+
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Username</th>
+            <th>Subject</th>
+            <th>Phone</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        {% for teacher in teachers %}
+        <tr>
+            <td>{{ teacher.user.username }}</td>
+            <td>{{ teacher.subject }}</td>
+            <td>{{ teacher.phone }}</td>
+            <td>
+                <a href="{% url 'reset_teacher_password' teacher.id %}" class="btn btn-warning btn-sm">Reset</a>
+                <a href="{% url 'edit_teacher' teacher.id %}" class="btn btn-info btn-sm">Edit</a>
+                <a href="{% url 'delete_teacher' teacher.id %}" class="btn btn-danger btn-sm"
+                   onclick="return confirm('Are you sure?')">Delete</a>
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}

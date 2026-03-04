@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<h2>Face Attendance Result</h2>
+
+{% if error %}
+    <p style="color:red;">{{ error }}</p>
+{% endif %}
+
+{% if recognized_students %}
+    <h3>Recognized Students</h3>
+
+    <table border="1" cellpadding="10">
+        <tr>
+            <th>Username</th>
+            <th>Roll Number</th>
+            <th>Status</th>
+        </tr>
+
+        {% for student in recognized_students %}
+        <tr>
+            <td>{{ student.user.username }}</td>
+            <td>{{ student.roll_number }}</td>
+
+            {% if student in late_students %}
+                <td style="color:red;">Late</td>
+            {% else %}
+                <td style="color:green;">Present</td>
+            {% endif %}
+        </tr>
+        {% endfor %}
+    </table>
+{% endif %}
+
+<br>
+<a href="{% url 'admin_dashboard' %}">Back to Dashboard</a>
+
+{% endblock %}

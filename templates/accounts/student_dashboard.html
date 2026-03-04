@@ -1,0 +1,187 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+    <!-- Welcome Card -->
+    <div class="card shadow-sm border-0 mb-4">
+        <div class="card-body d-flex justify-content-between align-items-center">
+
+            <div>
+                <h4 class="mb-1 fw-bold">
+                    Welcome back, {{ request.user.username }} 👋
+                </h4>
+                <small class="text-muted">Student Dashboard</small>
+            </div>
+
+            <div>
+                {% if face and face.image %}
+                    <img src="{{ face.image.url }}"
+                         class="rounded-circle shadow"
+                         style="width:70px;height:70px;object-fit:cover;">
+                {% else %}
+                    <img src="{% static 'default.png' %}"
+                         class="rounded-circle shadow"
+                         style="width:70px;height:70px;">
+                {% endif %}
+            </div>
+
+        </div>
+    </div>
+
+
+    <!-- Homework Notification -->
+    {% if homework_count > 0 %}
+    <div class="alert alert-warning">
+        📢 You have {{ homework_count }} homework assignments
+    </div>
+    {% endif %}
+
+
+    <!-- Stats Cards -->
+    <div class="row text-center mb-4">
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Attendance</h6>
+                    <h3 class="text-primary">{{ attendance_count }}</h3>
+
+                    <a href="{% url 'student_attendance' %}"
+                       class="btn btn-sm btn-primary mt-2">
+                       View Details
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Results</h6>
+                    <h3 class="text-success">{{ results_count }}</h3>
+
+                    <a href="#"
+                       class="btn btn-sm btn-success mt-2">
+                       View Results
+                    </a>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-md-4 mb-3">
+            <div class="card shadow border-0">
+                <div class="card-body">
+                    <h6 class="text-muted">Homework</h6>
+                    <h3 class="text-warning">{{ homework_count }}</h3>
+
+                    <a href="{% url 'homework_list' %}"
+                       class="btn btn-sm btn-warning mt-2">
+                       View Homework
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+
+
+    <!-- Quick Actions -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-body">
+
+            <h5 class="mb-3">Quick Actions</h5>
+
+            <div class="d-flex flex-wrap gap-3">
+
+                <a href="{% url 'student_profile' %}" class="btn btn-outline-primary">
+                    👤 My Profile
+                </a>
+
+                <a href="{% url 'student_attendance' %}" class="btn btn-outline-success">
+                    📅 My Attendance
+                </a>
+
+                <a href="{% url 'homework_list' %}" class="btn btn-outline-warning">
+                    📚 Homework
+                </a>
+
+                <a href="{% url 'change_password' %}" class="btn btn-outline-secondary">
+                    🔐 Change Password
+                </a>
+
+            </div>
+
+        </div>
+    </div>
+
+
+
+    <!-- Homework List -->
+    <div class="card shadow-sm">
+
+        <div class="card-body">
+
+            <h5 class="mb-3">📚 Latest Homework</h5>
+
+            <div class="table-responsive">
+
+                <table class="table table-bordered table-hover">
+
+                    <thead class="table-light">
+                        <tr>
+                            <th>Title</th>
+                            <th>Description</th>
+                            <th>Date</th>
+                            <th>File</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        {% for hw in homeworks %}
+
+                        <tr>
+                            <td>{{ hw.title }}</td>
+                            <td>{{ hw.description }}</td>
+                            <td>{{ hw.date_assigned }}</td>
+
+                            <td>
+                                {% if hw.file %}
+                                    <a href="{{ hw.file.url }}" class="btn btn-sm btn-primary">
+                                        Download
+                                    </a>
+                                {% else %}
+                                    <span class="text-muted">No File</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+
+                        {% empty %}
+
+                        <tr>
+                            <td colspan="4" class="text-center text-muted">
+                                No homework assigned
+                            </td>
+                        </tr>
+
+                        {% endfor %}
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+{% endblock %}

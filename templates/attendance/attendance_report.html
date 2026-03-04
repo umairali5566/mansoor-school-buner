@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<h2 class="mb-4">Attendance Report 📊</h2>
+
+<!-- Filters -->
+<div class="card p-3 mb-4 shadow-sm">
+    <form method="GET" class="row g-3">
+
+        <div class="col-md-4">
+            <label>Date</label>
+            <input type="date" name="date" value="{{ selected_date }}" class="form-control">
+        </div>
+
+        <div class="col-md-4">
+            <label>Class</label>
+            <select name="class" class="form-control">
+                <option value="">All Classes</option>
+                {% for cls in classes %}
+                    <option value="{{ cls }}" {% if cls == selected_class %}selected{% endif %}>
+                        {{ cls }}
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div class="col-md-4 align-self-end">
+            <button type="submit" class="btn btn-primary">Filter</button>
+            <a href="{% url 'attendance_report' %}" class="btn btn-secondary">Reset</a>
+        </div>
+
+    </form>
+</div>
+
+<!-- Summary Cards -->
+<div class="row mb-4">
+
+    <div class="col-md-6">
+        <div class="card bg-success text-white shadow">
+            <div class="card-body text-center">
+                <h5>Present Students</h5>
+                <h3>{{ present_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card bg-danger text-white shadow">
+            <div class="card-body text-center">
+                <h5>Absent Students</h5>
+                <h3>{{ absent_count }}</h3>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!-- Attendance Table -->
+<div class="card shadow mt-4">
+    <div class="card-body">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Student</th>
+                    <th>Class</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for record in attendances %}
+                <tr>
+                    <td>{{ record.student.user.username }}</td>
+                    <td>{{ record.student.class_name }}</td>
+                    <td>{{ record.date }}</td>
+                    <td>
+                        {% if record.status == "Present" %}
+                            <span class="badge bg-success">Present</span>
+                        {% else %}
+                            <span class="badge bg-danger">Absent</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="text-center">No records found</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% endblock %}

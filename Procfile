@@ -1,0 +1,1 @@
+web: gunicorn Mansoor School Buner.wsgi:application

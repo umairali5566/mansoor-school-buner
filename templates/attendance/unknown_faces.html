@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <h2>🚨 Unknown Face Records</h2>
+    <hr>
+
+    <div class="row">
+
+        {% for face in faces %}
+
+        <div class="col-md-3 mb-4">
+
+            <div class="card shadow">
+
+                <!-- Unknown Image -->
+                <img src="{{ face.image.url }}" class="card-img-top">
+
+                <div class="card-body text-center">
+
+                    <!-- Time -->
+                    <small class="text-muted">
+                        {{ face.captured_at }}
+                    </small>
+
+                    <br><br>
+
+                    <!-- Convert Button -->
+                    <a href="{% url 'convert_unknown' face.id %}"
+                       class="btn btn-primary btn-sm w-100">
+                        ➕ Add As Student
+                    </a>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        {% empty %}
+
+        <div class="col-12 text-center">
+            <p>No unknown faces detected.</p>
+        </div>
+
+        {% endfor %}
+
+    </div>
+
+</div>
+
+{% endblock %}

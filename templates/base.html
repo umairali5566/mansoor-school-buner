@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Mansoor School Buner</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
+<body>
+
+<!-- ================= NAVBAR ================= -->
+
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+
+        <span class="navbar-brand">Mansoor School Buner</span>
+
+        {% if user.is_authenticated %}
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger">
+                Logout
+            </button>
+        </form>
+        {% endif %}
+
+    </div>
+</nav>
+
+
+<div class="container-fluid">
+<div class="row">
+
+
+{% if user.is_authenticated %}
+
+<!-- ================= SIDEBAR ================= -->
+
+<div class="col-md-2 bg-light vh-100 p-3">
+
+<h5>Menu</h5>
+<hr>
+
+<!-- ========= ADMIN MENU ========= -->
+
+{% if request.user.role == "ADMIN" %}
+
+<a href="{% url 'admin_dashboard' %}" class="d-block mb-2">🏠 Dashboard</a>
+
+<a href="{% url 'student_list' %}" class="d-block mb-2">👨‍🎓 Students</a>
+
+<a href="{% url 'teacher_list' %}" class="d-block mb-2">👨‍🏫 Teachers</a>
+
+<a href="{% url 'mark_attendance' %}" class="d-block mb-2">📋 Mark Attendance</a>
+
+<a href="{% url 'attendance_report' %}" class="d-block mb-2">📊 Attendance Report</a>
+
+<a href="{% url 'live_attendance' %}" class="d-block mb-2">🤖 Live Face Attendance</a>
+
+<a href="{% url 'unknown_faces_list' %}" class="d-block mb-2">🚨 Unknown Faces</a>
+
+{% endif %}
+
+
+<!-- ========= TEACHER MENU ========= -->
+
+{% if request.user.role == "TEACHER" %}
+
+<a href="{% url 'teacher_dashboard' %}" class="d-block mb-2">🏠 Dashboard</a>
+
+<a href="{% url 'mark_attendance' %}" class="d-block mb-2">📋 Mark Attendance</a>
+
+<a href="{% url 'attendance_report' %}" class="d-block mb-2">📊 Attendance Report</a>
+
+{% endif %}
+
+
+<!-- ========= STUDENT MENU ========= -->
+
+{% if request.user.role == "STUDENT" %}
+
+<a href="{% url 'student_dashboard' %}" class="d-block mb-2">🏠 Dashboard</a>
+
+<a href="{% url 'student_profile' %}" class="d-block mb-2">👤 My Profile</a>
+
+<a href="{% url 'student_attendance' %}" class="d-block mb-2">📅 My Attendance</a>
+
+{% endif %}
+
+</div>
+
+
+<div class="col-md-10 p-4">
+
+{% else %}
+
+<div class="col-md-12 p-4">
+
+{% endif %}
+
+
+<!-- ================= PAGE CONTENT ================= -->
+
+{% block content %}
+{% endblock %}
+
+
+</div>
+
+</div>
+</div>
+
+</body>
+</html>

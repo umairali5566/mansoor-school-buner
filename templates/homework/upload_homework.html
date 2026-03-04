@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container mt-4">
+
+<h3>📚 Upload Homework</h3>
+
+<form method="post" enctype="multipart/form-data">
+
+{% csrf_token %}
+
+<div class="mb-3">
+<label>Title</label>
+<input type="text" name="title" class="form-control">
+</div>
+
+<div class="mb-3">
+<label>Description</label>
+<textarea name="description" class="form-control"></textarea>
+</div>
+
+<div class="mb-3">
+<label>Class</label>
+<input type="text" name="class_name" class="form-control">
+</div>
+
+<div class="mb-3">
+<label>Upload File (PDF / Image)</label>
+<input type="file" name="file" class="form-control">
+</div>
+
+<button class="btn btn-success">
+Upload Homework
+</button>
+
+</form>
+
+</div>
+
+{% endblock %}
