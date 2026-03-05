@@ -478,7 +478,7 @@ def reset_teacher_password(request, teacher_id):
     })
 
 
-import face_recognition
+#import face_recognition
 import numpy as np
 from attendance.models import StudentFaceData
 

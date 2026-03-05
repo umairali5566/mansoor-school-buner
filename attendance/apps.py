@@ -7,5 +7,5 @@ class AttendanceConfig(AppConfig):
 
     def ready(self):
 
-        from .scheduler import start
+        #from .scheduler import start
         start()
