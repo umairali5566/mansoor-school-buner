@@ -6,6 +6,5 @@ class AttendanceConfig(AppConfig):
     name = 'attendance'
 
     def ready(self):
-
+        pas
         #from .scheduler import start
-        start()
