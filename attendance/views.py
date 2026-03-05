@@ -240,11 +240,10 @@ def video_feed(request, camera_id):
     )
 
 
-@staff_member_required
-def live_attendance_page(request):
-    auto_mark_absent()   # 🔥 auto absent check
-    return render(request, "attendance/live_attendance.html")
+from django.http import HttpResponse
 
+def attendance_page(request):
+    return HttpResponse("Attendance system working (Face recognition disabled)")
 # =====================================================
 # 📊 Attendance Analytics
 # =====================================================
