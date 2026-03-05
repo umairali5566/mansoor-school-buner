@@ -164,7 +164,7 @@ def generate_frames(camera_id):
         if not success:
             break
 
-        rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+        #rgb_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
 
         face_locations = face_recognition.face_locations(rgb_frame)
         face_encodings = face_recognition.face_encodings(rgb_frame, face_locations)
@@ -204,7 +204,7 @@ def generate_frames(camera_id):
 
                         filepath = os.path.join(folder_path, filename)
 
-                        cv2.imwrite(filepath, frame)
+                        #cv2.imwrite(filepath, frame)
 
                         UnknownFace.objects.create(
                             image=f"unknown_faces/{filename}"
@@ -222,11 +222,11 @@ def generate_frames(camera_id):
                 label = "No Data"
                 color = (0, 0, 255)
 
-            cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
-            cv2.putText(frame, label, (left, top - 10),
-                        cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
+            #cv2.rectangle(frame, (left, top), (right, bottom), color, 2)
+            #cv2.putText(frame, label, (left, top - 10),
+                        #cv2.FONT_HERSHEY_SIMPLEX, 0.8, color, 2)
 
-        ret, buffer = cv2.imencode('.jpg', frame)
+        #ret, buffer = cv2.imencode('.jpg', frame)
         frame = buffer.tobytes()
 
         yield (b'--frame\r\n'
