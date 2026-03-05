@@ -1,7 +1,7 @@
-import cv2
+#import cv2
 import pickle
 import numpy as np
-import face_recognition
+#import face_recognition
 import os
 import uuid
 from django.conf import settings
@@ -134,10 +134,10 @@ def attendance_report(request):
 
 def generate_frames(camera_id):
 
-    video_capture = cv2.VideoCapture(int(camera_id))
+    #video_capture = cv2.VideoCapture(int(camera_id))
 
-    video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
-    video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
+    #video_capture.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
+    #video_capture.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
     from collections import deque
     from datetime import date
