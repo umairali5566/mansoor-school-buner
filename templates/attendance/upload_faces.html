@@ -1,26 +1,49 @@
 {% extends 'base.html' %}
-
+{% block title %}Upload Face Data | School Management System{% endblock %}
+{% block topbar_eyebrow %}Face Profiles{% endblock %}
+{% block topbar_title %}Upload Face Data{% endblock %}
+{% block topbar_subtitle %}Attach face images to student records with the same compact, responsive form styling used across the system.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'student_profile' student.id %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Student Profile
+    </a>
+</div>
+{% endblock %}
 {% block content %}
-<div class="container mt-5">
-    <h2>Upload Face Data - {{ student.username }}</h2>
-
-    <form method="POST" enctype="multipart/form-data">
-        {% csrf_token %}
-        
-        <div class="mb-3">
-            {{ form.image.label_tag }}
-            {{ form.image }}
-        </div>
-
-        <button type="submit" class="btn btn-primary">
-            Upload Face
-        </button>
-    </form>
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-camera-fill"></i>
+            Face Profiles
+        </span>
+        <h2 class="dashboard-hero-title">Upload Face Data</h2>
+        <p class="dashboard-hero-subtitle">Attach face images for <strong>{{ student.user.username }}</strong> using the same compact form width as the rest of the system.</p>
+    </section>
 
     {% if form.errors %}
-        <div class="alert alert-danger mt-3">
-            {{ form.errors }}
-        </div>
+    <div class="alert alert-danger mb-0" role="alert">
+        {{ form.errors }}
+    </div>
     {% endif %}
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+                {% csrf_token %}
+
+                <div>
+                    {{ form.image.label_tag }}
+                    {{ form.image }}
+                </div>
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Upload Face</button>
+                    <a href="{% url 'student_profile' student.id %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
 </div>
 {% endblock %}

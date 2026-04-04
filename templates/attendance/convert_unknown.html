@@ -1,37 +1,159 @@
 {% extends "base.html" %}
+{% block title %}Convert Unknown Face | School Management System{% endblock %}
+{% block topbar_eyebrow %}Face Review Queue{% endblock %}
+{% block topbar_title %}Convert Unknown Face{% endblock %}
+{% block topbar_subtitle %}Assign an unrecognized capture to an existing student or create a new student record from the same workflow.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'unknown_faces_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Unknown Faces
+    </a>
+</div>
+{% endblock %}
 {% block content %}
+<div class="container-fluid dashboard-page">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-person-fill-add"></i>
+            Unknown Face Conversion
+        </span>
+        <h2 class="dashboard-hero-title">Convert Unknown Face</h2>
+        <p class="dashboard-hero-subtitle mb-0">
+            Assign this face to an existing student or create a new student profile instantly.
+        </p>
+    </section>
 
-<div class="container mt-4">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }} mb-0">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
 
-<h2>Convert Unknown Face → Student</h2>
-<hr>
+    <div class="row g-4">
+        <div class="col-lg-5">
+            <section class="saas-panel h-100">
+                <div class="ratio ratio-4x3 bg-light rounded-top-4 overflow-hidden">
+                    <img src="{{ face.image.url }}" class="w-100 h-100 object-fit-cover" alt="Unknown face preview">
+                </div>
+                <div class="saas-panel-body">
+                    <h5 class="saas-panel-title mb-2">Capture Details</h5>
+                    <p class="text-muted mb-0">
+                        Captured on {{ face.captured_at|date:"M d, Y" }} at {{ face.captured_at|time:"H:i" }}.
+                    </p>
+                </div>
+            </section>
+        </div>
 
-<div class="row">
+        <div class="col-lg-7">
+            <section class="saas-panel h-100">
+                <div class="saas-panel-body">
+                    <h5 class="saas-panel-title mb-2">Assign Student</h5>
+                    <p class="text-muted">
+                        Choose an existing student or select <strong>+ Add New Student</strong> to register instantly.
+                    </p>
 
-<div class="col-md-4">
-<img src="{{ face.image.url }}" class="img-fluid">
+                    <form method="post" enctype="multipart/form-data" id="convertUnknownForm">
+                        {% csrf_token %}
+
+                        <div class="mb-3">
+                            <label for="{{ form.student_choice.id_for_label }}" class="form-label">Assign Student</label>
+                            {{ form.student_choice }}
+                            {% if form.student_choice.errors %}
+                                <div class="text-danger small mt-2">{{ form.student_choice.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div id="newStudentFields" class="{% if not show_new_student_form %}d-none{% endif %}">
+                            <div class="p-3 rounded-4 border bg-light-subtle mb-3">
+                                <h6 class="mb-3">Create New Student</h6>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label for="{{ form.full_name.id_for_label }}" class="form-label">Student Name</label>
+                                        {{ form.full_name }}
+                                        {% if form.full_name.errors %}
+                                            <div class="text-danger small mt-1">{{ form.full_name.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.roll_number.id_for_label }}" class="form-label">Roll Number</label>
+                                        {{ form.roll_number }}
+                                        {% if form.roll_number.errors %}
+                                            <div class="text-danger small mt-1">{{ form.roll_number.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.class_name.id_for_label }}" class="form-label">Class</label>
+                                        {{ form.class_name }}
+                                        {% if form.class_name.errors %}
+                                            <div class="text-danger small mt-1">{{ form.class_name.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.parent_phone.id_for_label }}" class="form-label">Parent Phone</label>
+                                        {{ form.parent_phone }}
+                                        {% if form.parent_phone.errors %}
+                                            <div class="text-danger small mt-1">{{ form.parent_phone.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.parent_email.id_for_label }}" class="form-label">Parent Email (Optional)</label>
+                                        {{ form.parent_email }}
+                                        {% if form.parent_email.errors %}
+                                            <div class="text-danger small mt-1">{{ form.parent_email.errors }}</div>
+                                        {% endif %}
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label for="{{ form.student_image.id_for_label }}" class="form-label">Student Profile Photo (Optional)</label>
+                                        {{ form.student_image }}
+                                        {% if form.student_image.errors %}
+                                            <div class="text-danger small mt-1">{{ form.student_image.errors }}</div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <p class="small text-muted mt-3 mb-0">
+                                    Default login password for newly created students: <strong>123456</strong>
+                                </p>
+                            </div>
+                        </div>
+
+                        <div class="page-actions">
+                            <button type="submit" class="btn btn-primary" id="convertSubmitBtn">Save Face Profile</button>
+                            <a href="{% url 'unknown_faces_list' %}" class="btn btn-outline-primary">Cancel</a>
+                        </div>
+                    </form>
+                </div>
+            </section>
+        </div>
+    </div>
 </div>
 
-<div class="col-md-6">
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const choiceField = document.getElementById("id_student_choice");
+    const newStudentFields = document.getElementById("newStudentFields");
+    const submitButton = document.getElementById("convertSubmitBtn");
+    const addNewValue = "{{ add_new_value }}";
 
-<form method="POST">
-{% csrf_token %}
+    if (!choiceField || !newStudentFields || !submitButton) {
+        return;
+    }
 
-<label>Select Student</label>
-{{ form.student }}
+    const syncFormMode = function () {
+        const isAddNew = choiceField.value === addNewValue;
+        newStudentFields.classList.toggle("d-none", !isAddNew);
+        submitButton.textContent = isAddNew ? "Create Student and Save Face" : "Save Face Profile";
+    };
 
-<br><br>
-
-<button class="btn btn-success">
-Save Face Data
-</button>
-
-</form>
-
-</div>
-
-</div>
-
-</div>
-
+    choiceField.addEventListener("change", syncFormMode);
+    syncFormMode();
+});
+</script>
 {% endblock %}

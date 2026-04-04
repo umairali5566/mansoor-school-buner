@@ -1,6 +1,7 @@
 from django.urls import path
-from django.http import HttpResponse
+from . import views
 
 urlpatterns = [
-    path('', lambda request: HttpResponse("Results App Working ✅")),
+    path('add/', views.add_result, name='add_result'),
+    path('list/', views.result_list, name='result_list'),
 ]

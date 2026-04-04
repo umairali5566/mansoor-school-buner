@@ -6,12 +6,12 @@ def start():
 
     scheduler = BackgroundScheduler()
 
-    # run daily at 10:01 AM
+    # run daily at 10:02 AM (attendance cutoff)
     scheduler.add_job(
         mark_auto_absent,
         'cron',
         hour=10,
-        minute=1
+        minute=2
     )
 
     scheduler.start()

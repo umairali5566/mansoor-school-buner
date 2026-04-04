@@ -1,49 +1,63 @@
 {% extends 'base.html' %}
+{% block title %}Student Attendance | School Management System{% endblock %}
+{% block topbar_eyebrow %}Attendance Summary{% endblock %}
+{% block topbar_title %}My Attendance{% endblock %}
+{% block topbar_subtitle %}Track your attendance percentage and daily history in a cleaner, mobile-friendly student reporting view.{% endblock %}
 {% block content %}
+<div class="container-fluid page-stack">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-calendar-check-fill"></i>
+            Attendance Summary
+        </span>
+        <h2 class="dashboard-hero-title">My Attendance</h2>
+        <p class="dashboard-hero-subtitle">Review your attendance percentage and daily records in a consistent, mobile-friendly layout.</p>
+    </section>
 
-<h2 class="mb-4">My Attendance 📅</h2>
+    <section class="row g-4">
+        <div class="col-12 col-md-4 d-flex">
+            <article class="summary-card summary-unmarked w-100">
+                <h5>Attendance Percentage</h5>
+                <h3>{{ percentage }}%</h3>
+            </article>
+        </div>
+    </section>
 
-<!-- Percentage Card -->
-<div class="card shadow mb-4">
-    <div class="card-body text-center">
-        <h4>Attendance Percentage</h4>
-        <h2 class="text-primary">{{ percentage }}%</h2>
-    </div>
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="table-responsive table-shell">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in records %}
+                        <tr>
+                            <td>{{ record.date }}</td>
+                            <td>{{ record.time }}</td>
+                            <td>
+                                {% if record.status == "Present" %}
+                                <span class="status-badge status-badge-success">Present</span>
+                                {% elif record.status == "Late" %}
+                                <span class="status-badge status-badge-warning">Late</span>
+                                {% else %}
+                                <span class="status-badge status-badge-danger">Absent</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-4">No attendance found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </div>
-
-<div class="card shadow">
-    <div class="card-body">
-        <table class="table table-bordered table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for record in records %}
-                <tr>
-                    <td>{{ record.date }}</td>
-                    <td>{{ record.time }}</td>
-                    <td>
-                        {% if record.status == "Present" %}
-                            <span class="badge bg-success">Present</span>
-                        {% elif record.status == "Late" %}
-                            <span class="badge bg-warning text-dark">Late</span>
-                        {% else %}
-                            <span class="badge bg-danger">Absent</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="3" class="text-center">No attendance found</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
 {% endblock %}

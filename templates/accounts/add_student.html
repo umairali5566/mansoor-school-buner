@@ -1,24 +1,72 @@
-<h2>Add Student</h2>
+{% extends 'base.html' %}
+{% block title %}Add Student | School Management System{% endblock %}
+{% block topbar_eyebrow %}Student Management{% endblock %}
+{% block topbar_title %}Add Student{% endblock %}
+{% block topbar_subtitle %}Create a student account with a compact, mobile-friendly form and clear onboarding guidance.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'student_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-people-fill"></i>
+        Student List
+    </a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-person-plus-fill"></i>
+            Student Management
+        </span>
+        <h2 class="dashboard-hero-title">Add Student</h2>
+        <p class="dashboard-hero-subtitle">Create a student account with balanced form sizing for desktop and mobile screens.</p>
+    </section>
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Student</button>
-</form>
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} mb-0" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
 
-<a href="{% url 'student_list' %}">Back</a>
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" class="d-flex flex-column gap-3">
+                {% csrf_token %}
 
-<form method="POST">
-{% csrf_token %}
+                <div>
+                    <label class="form-label">Student Name</label>
+                    <input type="text" name="full_name" class="form-control" required>
+                </div>
 
-<input type="text" name="username" placeholder="Username" required>
+                <p class="content-note">Login username will be generated as student name plus roll number. The default password is <strong>123456</strong>.</p>
 
-<input type="text" name="roll_number" placeholder="Roll Number" required>
+                <div class="form-grid-2">
+                    <div>
+                        <label class="form-label">Roll Number</label>
+                        <input type="text" name="roll_number" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Class Name</label>
+                        <input type="text" name="class_name" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Parent Email</label>
+                        <input type="email" name="parent_email" class="form-control" required>
+                    </div>
+                </div>
 
-<input type="text" name="class_name" placeholder="Class" required>
-
-<input type="text" name="phone" placeholder="Phone" required>
-
-<button type="submit" class="btn btn-success">Create Student</button>
-
-</form>
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Create Student</button>
+                    <a href="{% url 'student_list' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

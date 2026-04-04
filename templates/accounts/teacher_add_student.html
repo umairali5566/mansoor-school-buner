@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% block title %}Add Student | School Management System{% endblock %}
+{% block topbar_eyebrow %}Class Enrollment{% endblock %}
+{% block topbar_title %}Add Student{% endblock %}
+{% block topbar_subtitle %}Register a student into one of your assigned classes with a cleaner teacher workflow and responsive form spacing.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Teacher Dashboard
+    </a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-person-plus-fill"></i>
+            Class Enrollment
+        </span>
+        <h2 class="dashboard-hero-title">Add Student</h2>
+        <p class="dashboard-hero-subtitle">Add a student to one of your assigned classes with cleaner spacing and form widths.</p>
+    </section>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-0" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" class="d-flex flex-column gap-3">
+                {% csrf_token %}
+
+                <div>
+                    <label class="form-label">Student Name</label>
+                    <input type="text" name="full_name" class="form-control" placeholder="Enter student full name" required>
+                </div>
+
+                <p class="content-note">Student login credentials are generated automatically. Username follows the student name plus roll number rule, and the default password is <strong>123456</strong>.</p>
+
+                <div class="form-grid-2">
+                    <div>
+                        <label class="form-label">Roll Number</label>
+                        <input type="text" name="roll_number" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Class</label>
+                        <select name="class_name" class="form-control" required>
+                            {% for cls in request.user.teacher.classes.all %}
+                            <option value="{{ cls.name }}">{{ cls.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control">
+                    </div>
+                    <div>
+                        <label class="form-label">Parent Email</label>
+                        <input type="email" name="parent_email" class="form-control">
+                    </div>
+                </div>
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Add Student</button>
+                    <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

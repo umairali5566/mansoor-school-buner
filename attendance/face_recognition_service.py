@@ -1,31 +1,50 @@
-import cv2
-import face_recognition
-import numpy as np
-from datetime import date, datetime
-from accounts.models import Student
-from attendance.models import Attendance, StudentFaceData
+try:
+    import cv2
+except ModuleNotFoundError:  # pragma: no cover - runtime dependency
+    cv2 = None
+
+try:
+    import face_recognition
+except ModuleNotFoundError:  # pragma: no cover - runtime dependency
+    face_recognition = None
+
+try:
+    import numpy as np
+except ModuleNotFoundError:  # pragma: no cover - runtime dependency
+    np = None
+from datetime import datetime
+from django.utils import timezone
+from attendance.models import StudentFaceData
+from attendance.services import save_attendance_record
 
 
 def run_auto_attendance():
+    if cv2 is None or face_recognition is None or np is None:
+        return
 
     # Time check (9–10 AM only)
     now = datetime.now()
     if not (9 <= now.hour < 10):
-        print("Not within attendance time (9-10 AM)")
         return
 
-    print("Starting Face Recognition Attendance...")
 
     video_capture = cv2.VideoCapture(0)
+    if not video_capture.isOpened():
+        video_capture.release()
+        return
 
     # Load known faces
     known_encodings = []
     known_students = []
 
-    students = StudentFaceData.objects.all()
+    students = StudentFaceData.objects.select_related("student").all()
 
     for student_face in students:
-        encoding = np.frombuffer(student_face.encoding)
+        if not student_face.encoding:
+            continue
+        encoding = np.frombuffer(student_face.encoding, dtype=np.float64)
+        if encoding.size == 0:
+            continue
         known_encodings.append(encoding)
         known_students.append(student_face.student)
 
@@ -33,6 +52,8 @@ def run_auto_attendance():
 
     while True:
         ret, frame = video_capture.read()
+        if not ret or frame is None:
+            continue
         rgb_frame = frame[:, :, ::-1]
 
         face_locations = face_recognition.face_locations(rgb_frame)
@@ -48,12 +69,15 @@ def run_auto_attendance():
                 student = known_students[best_match_index]
 
                 if student not in marked_students:
-                    Attendance.objects.get_or_create(
+                    save_attendance_record(
                         student=student,
-                        date=date.today(),
-                        defaults={"status": "Present"}
+                        status="Present",
+                        marked_by="FACE",
+                        attendance_date=timezone.localdate(),
+                        marked_at=timezone.now(),
+                        overwrite_existing=True,
                     )
-                    print(f"Marked Present: {student.user.username}")
+                    # logged attendance for student
                     marked_students.add(student)
 
         cv2.imshow("Auto Attendance", frame)
@@ -62,4 +86,7 @@ def run_auto_attendance():
             break
 
     video_capture.release()
-    cv2.destroyAllWindows()
+    try:
+        cv2.destroyAllWindows()
+    except Exception:
+        pass

@@ -1,19 +1,64 @@
-<h2>Edit Teacher</h2>
+{% extends 'base.html' %}
+{% block title %}Edit Teacher | School Management System{% endblock %}
+{% block topbar_eyebrow %}Teacher Management{% endblock %}
+{% block topbar_title %}Edit Teacher{% endblock %}
+{% block topbar_subtitle %}Adjust teacher profile details in the same polished form system used across the dashboard experience.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'teacher_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Back to Teachers
+    </a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-pencil-square"></i>
+            Teacher Management
+        </span>
+        <h2 class="dashboard-hero-title">Edit Teacher</h2>
+        <p class="dashboard-hero-subtitle">Update teacher details using the same balanced sizing system as the rest of the portal.</p>
+    </section>
 
-<form method="POST">
-    {% csrf_token %}
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} mb-0" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
 
-    Username:
-    <input type="text" name="username" value="{{ teacher.user.username }}"><br><br>
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" class="d-flex flex-column gap-3">
+                {% csrf_token %}
 
-    Subject:
-    <input type="text" name="subject" value="{{ teacher.subject }}"><br><br>
+                <div>
+                    <label class="form-label">Login Username</label>
+                    <input type="text" class="form-control" value="{{ teacher.user.username }}" readonly>
+                </div>
 
-    Phone:
-    <input type="text" name="phone" value="{{ teacher.phone }}"><br><br>
+                <p class="content-note">Teacher usernames are mapped to phone numbers, so only the editable profile fields are shown below.</p>
 
-    <button type="submit">Update</button>
-</form>
+                <div class="form-grid-2">
+                    <div>
+                        <label class="form-label">Subject</label>
+                        <input type="text" name="subject" class="form-control" value="{{ teacher.subject }}" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control" value="{{ teacher.phone }}" required>
+                    </div>
+                </div>
 
-<br>
-<a href="{% url 'teacher_list' %}">Back</a>
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Update Teacher</button>
+                    <a href="{% url 'teacher_list' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

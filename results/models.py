@@ -8,6 +8,7 @@ class Result(models.Model):
     total_marks = models.IntegerField(default=100)
     exam_type = models.CharField(max_length=50)  # Midterm / Final
     date = models.DateField(auto_now_add=True)
+    notification_sent_at = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.student.user.username} - {self.subject}"

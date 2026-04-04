@@ -1,90 +1,177 @@
 {% extends "base.html" %}
-{% block content %}
+{% load static %}
+{% block title %}Admin Dashboard | Mansoor School Buner{% endblock %}
 
-<div class="container-fluid">
+{% block extra_css %}
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.8s ease-out;
+    }
 
-    <!-- Welcome Header -->
-    <div class="card shadow-sm p-4 mb-4">
-        <div class="d-flex justify-content-between align-items-center">
-            <div>
-                <h2>Welcome, {{ request.user.username }} 👑</h2>
-                <p class="text-muted mb-0">Admin Dashboard</p>
-            </div>
-        </div>
-    </div>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
 
-    <!-- Stats Cards -->
-    <div class="row mb-4">
-
-        <!-- Students -->
-        <div class="col-md-4">
-            <div class="card shadow border-0 p-4 text-center">
-                <h4 class="text-primary">Total Students</h4>
-                <h1>{{ students_count }}</h1>
-                <a href="{% url 'student_list' %}" class="btn btn-primary mt-2 w-100">
-                    Manage
-                </a>
-            </div>
-        </div>
-
-        <!-- Teachers -->
-        <div class="col-md-4">
-            <div class="card shadow border-0 p-4 text-center">
-                <h4 class="text-success">Total Teachers</h4>
-                <h1>{{ teachers_count }}</h1>
-                <a href="{% url 'teacher_list' %}" class="btn btn-success mt-2 w-100">
-                    Manage
-                </a>
-            </div>
-        </div>
-
-        <!-- Attendance -->
-        <div class="col-md-4">
-            <div class="card shadow border-0 p-4 text-center">
-                <h4 class="text-warning">Today's Attendance</h4>
-                <h1>{{ today_attendance }}</h1>
-                <a href="{% url 'attendance_report' %}" class="btn btn-warning mt-2 w-100">
-                    View
-                </a>
-            </div>
-        </div>
-
-    </div>
-
-    <!-- Quick Actions -->
-    <div class="card shadow-sm p-4">
-        <h4 class="mb-3">Admin Quick Actions</h4>
-
-        <div class="d-flex flex-wrap gap-2">
-
-            <a href="{% url 'student_list' %}" class="btn btn-primary">
-                Manage Students
-            </a>
-
-            <a href="{% url 'teacher_list' %}" class="btn btn-success">
-                Manage Teachers
-            </a>
-
-            <a href="{% url 'mark_attendance' %}" class="btn btn-warning">
-                Mark Attendance
-            </a>
-
-            <a href="{% url 'attendance_report' %}" class="btn btn-info text-white">
-                Attendance Report
-            </a>
-
-            <!-- 🤖 AUTO FACE ATTENDANCE BUTTON -->
-            <a href="{% url 'live_attendance' %}" class="btn btn-dark">
-                🤖 Live Face Attendance
-            </a>
-
-            <a href="{% url 'unknown_faces_list' %}" class="btn btn-danger">
-                🚨 View Unknown Faces
-            </a>
-          
-        </div>
-    </div>
-
+{% block topbar_eyebrow %}
+<span class="live-indicator">
+    <i class="bi bi-shield-check"></i>
+    Admin Control Center
+</span>
+{% endblock %}
+{% block topbar_title %}Admin Dashboard{% endblock %}
+{% block topbar_subtitle %}Comprehensive school management with real-time monitoring, admissions, staff, and attendance tracking.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'student_admissions' %}" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-journal-richtext"></i>
+        Admissions
+    </a>
+    <a href="{% url 'live_attendance' %}" class="btn btn-light btn-sm">
+        <i class="bi bi-camera-video-fill"></i>
+        Live Attendance
+        <span class="badge bg-danger ms-1">Live</span>
+    </a>
 </div>
+{% endblock %}
 
+{% block content %}
+<div class="dashboard-bg"></div>
+<div class="space-y-6 animate-fade-in relative z-10">
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-accent via-purple to-primary rounded-2xl p-8 text-white relative overflow-hidden">
+        <div class="relative z-10">
+            <h1 class="text-4xl font-bold mb-2">Welcome back, {{ request.user.get_full_name|default:request.user.username }}</h1>
+            <p class="text-lg opacity-90 mb-6">Comprehensive school management and monitoring.</p>
+
+            <!-- Stats in hero -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold">{{ students_count }}</div>
+                    <div class="text-sm opacity-80">Students</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold">{{ teachers_count }}</div>
+                    <div class="text-sm opacity-80">Teachers</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold">{{ today_present_count }}</div>
+                    <div class="text-sm opacity-80">Present Today</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold">{{ today_unmarked_count }}</div>
+                    <div class="text-sm opacity-80">Pending</div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute -bottom-4 -right-4 w-32 h-32 bg-white/10 rounded-full"></div>
+        <div class="absolute top-4 right-4 w-24 h-24 bg-white/5 rounded-full"></div>
+    </div>
+
+    <!-- Action Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+        <a href="{% url 'student_list' %}" class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="bi bi-people-fill text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold">Manage Students</h3>
+                    <p class="text-gray-300 text-sm">Student database</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'teacher_list' %}" class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="bi bi-person-workspace text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold">Manage Teachers</h3>
+                    <p class="text-gray-300 text-sm">Teaching staff</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'student_admissions' %}" class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="bi bi-journal-richtext text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold">Admissions</h3>
+                    <p class="text-gray-300 text-sm">New enrollments</p>
+                </div>
+            </div>
+        </a>
+
+        <a href="{% url 'live_attendance' %}" class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="bi bi-camera-video-fill text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold">Live Attendance</h3>
+                    <p class="text-gray-300 text-sm">Real-time monitoring</p>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-white mb-4">Attendance Overview</h3>
+            <div class="h-64 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-32 h-32 bg-gradient-to-r from-accent to-purple rounded-full flex items-center justify-center mb-4">
+                        <span class="text-3xl font-bold text-white">{{ today_attendance }}%</span>
+                    </div>
+                    <p class="text-gray-300">Today's Attendance Rate</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-white mb-4">Weekly Trend</h3>
+            <div class="h-64 flex items-center justify-center">
+                <div class="text-center text-gray-400">
+                    <i class="bi bi-bar-chart-line-fill text-4xl mb-2"></i>
+                    <p>Weekly attendance trend</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Advanced Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-white mb-4">Face Recognition Status</h3>
+            <div class="space-y-4">
+                <div class="flex items-center justify-between p-3 bg-green-500/20 rounded-lg">
+                    <span class="text-green-300">System Active</span>
+                    <i class="bi bi-check-circle-fill text-green-400"></i>
+                </div>
+                <div class="text-sm text-gray-400">
+                    Real-time face recognition is running smoothly with {{ students_count }} registered faces.
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-white mb-4">System Alerts</h3>
+            <div class="space-y-3">
+                <div class="p-3 bg-yellow-500/20 rounded-lg">
+                    <p class="text-yellow-300 text-sm">{{ today_unmarked_count }} attendance records pending</p>
+                </div>
+                <div class="p-3 bg-blue-500/20 rounded-lg">
+                    <p class="text-blue-300 text-sm">All systems operational</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 {% endblock %}

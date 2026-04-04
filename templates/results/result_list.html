@@ -1,0 +1,69 @@
+{% extends 'base.html' %}
+{% block title %}Results | School Management System{% endblock %}
+{% block topbar_eyebrow %}Results Center{% endblock %}
+{% block topbar_title %}Results{% endblock %}
+{% block topbar_subtitle %}Review published results in a cleaner academic reporting table with consistent responsive spacing.{% endblock %}
+{% block topbar_actions %}
+{% if request.user.role == 'TEACHER' %}
+<div class="topbar-actions-group">
+    <a href="{% url 'add_result' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-journal-plus"></i>
+        Add Result
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-graph-up-arrow"></i>
+            Results
+        </span>
+        <h2 class="dashboard-hero-title">Results</h2>
+        <p class="dashboard-hero-subtitle">Review published results in a responsive table with balanced spacing across screen sizes.</p>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="table-responsive table-shell">
+                <table class="table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Subject</th>
+                            <th>Marks</th>
+                            <th>Total</th>
+                            <th>Percentage</th>
+                            <th>Exam Type</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for result in results %}
+                        <tr>
+                            <td>
+                                <div class="record-name">
+                                    <strong>{{ result.student.user.get_full_name|default:result.student.user.username }}</strong>
+                                    <span class="record-meta">Roll {{ result.student.roll_number|default:"-" }}</span>
+                                </div>
+                            </td>
+                            <td>{{ result.subject }}</td>
+                            <td>{{ result.marks }}</td>
+                            <td>{{ result.total_marks }}</td>
+                            <td>{% widthratio result.marks result.total_marks 100 %}%</td>
+                            <td>{{ result.exam_type }}</td>
+                            <td>{{ result.date }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="7" class="text-center text-muted py-4">No results found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

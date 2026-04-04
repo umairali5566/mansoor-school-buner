@@ -1,53 +1,117 @@
 {% extends "base.html" %}
-{% block content %}
-
-<div class="container mt-4">
-
-    <h2>🚨 Unknown Face Records</h2>
-    <hr>
-
-    <div class="row">
-
-        {% for face in faces %}
-
-        <div class="col-md-3 mb-4">
-
-            <div class="card shadow">
-
-                <!-- Unknown Image -->
-                <img src="{{ face.image.url }}" class="card-img-top">
-
-                <div class="card-body text-center">
-
-                    <!-- Time -->
-                    <small class="text-muted">
-                        {{ face.captured_at }}
-                    </small>
-
-                    <br><br>
-
-                    <!-- Convert Button -->
-                    <a href="{% url 'convert_unknown' face.id %}"
-                       class="btn btn-primary btn-sm w-100">
-                        ➕ Add As Student
-                    </a>
-
-                </div>
-
-            </div>
-
-        </div>
-
-        {% empty %}
-
-        <div class="col-12 text-center">
-            <p>No unknown faces detected.</p>
-        </div>
-
-        {% endfor %}
-
-    </div>
-
+{% block title %}Unknown Faces | School Management System{% endblock %}
+{% block topbar_eyebrow %}Face Review Queue{% endblock %}
+{% block topbar_title %}Unknown Faces{% endblock %}
+{% block topbar_subtitle %}Review unmatched captures, convert valid records, and clear false positives from one organized moderation queue.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'live_attendance' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-camera-video-fill"></i>
+        Live Attendance
+    </a>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-grid-1x2-fill"></i>
+        Dashboard
+    </a>
 </div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid dashboard-page">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-person-fill-exclamation"></i>
+            Face Review Queue
+        </span>
+        <h2 class="dashboard-hero-title">Unknown Faces</h2>
+        <p class="dashboard-hero-subtitle">Review unrecognized captures, convert valid records into student face profiles, and clear false positives from one organized workspace.</p>
+    </section>
 
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} mb-0" role="alert">{{ message }}</div>
+        {% endfor %}
+    {% endif %}
+
+    <section class="row g-4">
+        <div class="col-12 col-md-6 col-xl-4 d-flex">
+            <article class="saas-stat-card w-100">
+                <div class="saas-stat-main">
+                    <span class="saas-stat-icon"><i class="bi bi-collection-fill"></i></span>
+                    <p class="saas-stat-label">Total Records</p>
+                    <h3 class="saas-stat-value">{{ total_unknown_faces }}</h3>
+                    <p class="saas-stat-meta">Open captures waiting for review</p>
+                </div>
+            </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4 d-flex">
+            <article class="saas-stat-card w-100">
+                <div class="saas-stat-main">
+                    <span class="saas-stat-icon"><i class="bi bi-calendar2-check-fill"></i></span>
+                    <p class="saas-stat-label">Captured Today</p>
+                    <h3 class="saas-stat-value">{{ captured_today }}</h3>
+                    <p class="saas-stat-meta">New unmatched captures today</p>
+                </div>
+            </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-4 d-flex">
+            <article class="saas-stat-card w-100">
+                <div class="saas-stat-main">
+                    <span class="saas-stat-icon"><i class="bi bi-person-badge-fill"></i></span>
+                    <p class="saas-stat-label">Face Profiles Ready</p>
+                    <h3 class="saas-stat-value">{{ registered_face_profiles }}</h3>
+                    <p class="saas-stat-meta">Registered student face profiles</p>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="row g-4">
+        {% for face in faces %}
+        <div class="col-12 col-md-6 col-xl-4 d-flex">
+            <article class="saas-panel w-100">
+                <div class="ratio ratio-4x3 bg-light rounded-top-4 overflow-hidden">
+                    <img src="{{ face.image.url }}" class="w-100 h-100 object-fit-cover" alt="Unknown face {{ face.id }}">
+                </div>
+                <div class="saas-panel-body d-flex flex-column gap-3">
+                    <div class="d-flex justify-content-between align-items-start gap-3">
+                        <div>
+                            <h5 class="saas-panel-title mb-1">Capture #{{ face.id }}</h5>
+                            <p class="text-muted mb-0 small">{{ face.captured_at|date:"M d, Y" }} at {{ face.captured_at|time:"H:i" }}</p>
+                        </div>
+                        <span class="badge bg-danger-subtle text-danger">Unmatched</span>
+                    </div>
+
+                    <p class="content-note">If this image belongs to a registered student, convert it into a face profile. Otherwise remove it to keep the review queue clean.</p>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'convert_unknown' face.id %}" class="btn btn-primary">Convert to Student Profile</a>
+                        <a href="{{ face.image.url }}" target="_blank" class="btn btn-outline-secondary">Open Full Image</a>
+                        <form method="post" action="{% url 'delete_unknown_face' face.id %}">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger w-100">Delete Record</button>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+        {% empty %}
+        <div class="col-12">
+            <section class="saas-panel">
+                <div class="saas-panel-body">
+                    <div class="empty-state">
+                        <span class="empty-state-icon"><i class="bi bi-check2-circle"></i></span>
+                        <div>
+                            <h4 class="mb-2">No unknown faces detected</h4>
+                            <p class="mb-0">The recognition system has no unresolved captures right now.</p>
+                        </div>
+                    </div>
+                    <div class="page-actions mt-3">
+                        <a href="{% url 'live_attendance' %}" class="btn btn-primary">Open Live Attendance</a>
+                    </div>
+                </div>
+            </section>
+        </div>
+        {% endfor %}
+    </section>
+</div>
 {% endblock %}

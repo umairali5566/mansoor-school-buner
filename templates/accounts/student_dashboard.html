@@ -1,187 +1,166 @@
 {% extends 'base.html' %}
 {% load static %}
+{% block title %}Student Dashboard | Mansoor School Buner{% endblock %}
+
+{% block extra_css %}
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block topbar_eyebrow %}Student Portal{% endblock %}
+{% block topbar_title %}Learning Dashboard{% endblock %}
+{% block topbar_subtitle %}{% endblock %}
+{% block topbar_actions %}
+<form method="post" action="{% url 'logout' %}" class="m-0">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-primary btn-sm btn-gradient-clean">
+        <i class="bi bi-box-arrow-right"></i>
+        Logout
+    </button>
+</form>
+{% endblock %}
 
 {% block content %}
-
-<div class="container mt-4">
-
-    <!-- Welcome Card -->
-    <div class="card shadow-sm border-0 mb-4">
-        <div class="card-body d-flex justify-content-between align-items-center">
-
-            <div>
-                <h4 class="mb-1 fw-bold">
-                    Welcome back, {{ request.user.username }} 👋
-                </h4>
-                <small class="text-muted">Student Dashboard</small>
+<div class="dashboard-bg"></div>
+<div class="space-y-6 animate-fade-in relative z-10">
+    <!-- Hero Section -->
+    <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-8 relative overflow-hidden">
+        <div class="absolute top-4 right-4">
+            {% if request.user.student.image %}
+            <img src="{{ request.user.student.image.url }}" alt="Profile" class="w-16 h-16 rounded-full border-2 border-accent">
+            {% else %}
+            <div class="w-16 h-16 bg-gradient-to-r from-accent to-purple rounded-full flex items-center justify-center">
+                <i class="bi bi-person-fill text-white text-xl"></i>
             </div>
-
-            <div>
-                {% if face and face.image %}
-                    <img src="{{ face.image.url }}"
-                         class="rounded-circle shadow"
-                         style="width:70px;height:70px;object-fit:cover;">
-                {% else %}
-                    <img src="{% static 'default.png' %}"
-                         class="rounded-circle shadow"
-                         style="width:70px;height:70px;">
-                {% endif %}
-            </div>
-
+            {% endif %}
         </div>
+        <div class="max-w-md">
+            <h1 class="text-4xl font-bold text-white mb-2">Welcome back, Mansoor 👋</h1>
+            <p class="text-gray-300">Track your academic progress and stay on top of your studies.</p>
+        </div>
+        <div class="absolute -bottom-4 -right-4 w-32 h-32 bg-gradient-to-r from-accent to-purple rounded-full opacity-20"></div>
     </div>
-
-
-    <!-- Homework Notification -->
-    {% if homework_count > 0 %}
-    <div class="alert alert-warning">
-        📢 You have {{ homework_count }} homework assignments
-    </div>
-    {% endif %}
-
 
     <!-- Stats Cards -->
-    <div class="row text-center mb-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center">
+                    <i class="bi bi-calendar-check-fill text-white text-xl"></i>
+                </div>
+                <span class="text-2xl font-bold text-white">{{ attendance_percentage|default:"0" }}%</span>
+            </div>
+            <h3 class="text-gray-300 font-medium">Attendance</h3>
+            <p class="text-sm text-gray-400">{{ attendance_count }} records</p>
+        </div>
 
-        <div class="col-md-4 mb-3">
-            <div class="card shadow border-0">
-                <div class="card-body">
-                    <h6 class="text-muted">Total Attendance</h6>
-                    <h3 class="text-primary">{{ attendance_count }}</h3>
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center">
+                    <i class="bi bi-trophy-fill text-white text-xl"></i>
+                </div>
+                <span class="text-2xl font-bold text-white">{{ results_count }}</span>
+            </div>
+            <h3 class="text-gray-300 font-medium">Total Results</h3>
+            <p class="text-sm text-gray-400">Academic records</p>
+        </div>
 
-                    <a href="{% url 'student_attendance' %}"
-                       class="btn btn-sm btn-primary mt-2">
-                       View Details
-                    </a>
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center">
+                    <i class="bi bi-journal-text text-white text-xl"></i>
+                </div>
+                <span class="text-2xl font-bold text-white">{{ homework_count }}</span>
+            </div>
+            <h3 class="text-gray-300 font-medium">Homework</h3>
+            <p class="text-sm text-gray-400">Assignments</p>
+        </div>
+
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl">
+            <div class="flex items-center justify-between mb-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center">
+                    <i class="bi bi-person-circle text-white text-xl"></i>
+                </div>
+                <span class="text-2xl font-bold text-white">1</span>
+            </div>
+            <h3 class="text-gray-300 font-medium">Profile</h3>
+            <p class="text-sm text-gray-400">Complete profile</p>
+        </div>
+    </div>
+
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-white mb-4">Attendance Chart</h3>
+            <div class="h-64 flex items-center justify-center">
+                <div class="text-center">
+                    <div class="w-32 h-32 bg-gradient-to-r from-accent to-purple rounded-full flex items-center justify-center mb-4">
+                        <span class="text-3xl font-bold text-white">{{ attendance_percentage|default:"0" }}%</span>
+                    </div>
+                    <p class="text-gray-300">Attendance Rate</p>
                 </div>
             </div>
         </div>
 
-
-        <div class="col-md-4 mb-3">
-            <div class="card shadow border-0">
-                <div class="card-body">
-                    <h6 class="text-muted">Total Results</h6>
-                    <h3 class="text-success">{{ results_count }}</h3>
-
-                    <a href="#"
-                       class="btn btn-sm btn-success mt-2">
-                       View Results
-                    </a>
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-white mb-4">Weekly Progress</h3>
+            <div class="h-64 flex items-center justify-center">
+                <div class="text-center text-gray-400">
+                    <i class="bi bi-bar-chart-line-fill text-4xl mb-2"></i>
+                    <p>Chart visualization</p>
                 </div>
             </div>
         </div>
-
-
-        <div class="col-md-4 mb-3">
-            <div class="card shadow border-0">
-                <div class="card-body">
-                    <h6 class="text-muted">Homework</h6>
-                    <h3 class="text-warning">{{ homework_count }}</h3>
-
-                    <a href="{% url 'homework_list' %}"
-                       class="btn btn-sm btn-warning mt-2">
-                       View Homework
-                    </a>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-
-
-    <!-- Quick Actions -->
-    <div class="card shadow-sm mb-4">
-        <div class="card-body">
-
-            <h5 class="mb-3">Quick Actions</h5>
-
-            <div class="d-flex flex-wrap gap-3">
-
-                <a href="{% url 'student_profile' %}" class="btn btn-outline-primary">
-                    👤 My Profile
-                </a>
-
-                <a href="{% url 'student_attendance' %}" class="btn btn-outline-success">
-                    📅 My Attendance
-                </a>
-
-                <a href="{% url 'homework_list' %}" class="btn btn-outline-warning">
-                    📚 Homework
-                </a>
-
-                <a href="{% url 'change_password' %}" class="btn btn-outline-secondary">
-                    🔐 Change Password
-                </a>
-
-            </div>
-
+    <!-- Recent Activity Table -->
+    <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl overflow-hidden">
+        <div class="p-6 border-b border-white/20">
+            <h3 class="text-xl font-bold text-white">Recent Activity</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-white/5">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Details</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    {% for record in recent_attendance %}
+                    <tr class="hover:bg-white/5 transition-colors duration-200">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ record.date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if record.status == "Present" %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="bi bi-check-circle-fill mr-1"></i> Present
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="bi bi-x-circle-fill mr-1"></i> Absent
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ record.marked_by|default:"System" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-gray-400">No recent activity</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
-
-
-
-    <!-- Homework List -->
-    <div class="card shadow-sm">
-
-        <div class="card-body">
-
-            <h5 class="mb-3">📚 Latest Homework</h5>
-
-            <div class="table-responsive">
-
-                <table class="table table-bordered table-hover">
-
-                    <thead class="table-light">
-                        <tr>
-                            <th>Title</th>
-                            <th>Description</th>
-                            <th>Date</th>
-                            <th>File</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                        {% for hw in homeworks %}
-
-                        <tr>
-                            <td>{{ hw.title }}</td>
-                            <td>{{ hw.description }}</td>
-                            <td>{{ hw.date_assigned }}</td>
-
-                            <td>
-                                {% if hw.file %}
-                                    <a href="{{ hw.file.url }}" class="btn btn-sm btn-primary">
-                                        Download
-                                    </a>
-                                {% else %}
-                                    <span class="text-muted">No File</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-
-                        {% empty %}
-
-                        <tr>
-                            <td colspan="4" class="text-center text-muted">
-                                No homework assigned
-                            </td>
-                        </tr>
-
-                        {% endfor %}
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-    </div>
-
 </div>
-
 {% endblock %}
+

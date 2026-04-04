@@ -1,41 +1,79 @@
 {% extends "base.html" %}
-
+{% block title %}Upload Homework | School Management System{% endblock %}
+{% block topbar_eyebrow %}Homework Publisher{% endblock %}
+{% block topbar_title %}Upload Homework{% endblock %}
+{% block topbar_subtitle %}Create and publish homework with a cleaner teacher workflow and touch-friendly form controls.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'homework_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-journal-text"></i>
+        Homework List
+    </a>
+</div>
+{% endblock %}
 {% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-cloud-arrow-up-fill"></i>
+            Homework
+        </span>
+        <h2 class="dashboard-hero-title">Upload Homework</h2>
+        <p class="dashboard-hero-subtitle">Publish homework with a cleaner form width, touch-friendly fields, and tighter spacing.</p>
+    </section>
 
-<div class="container mt-4">
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} mb-0" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
 
-<h3>📚 Upload Homework</h3>
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+                {% csrf_token %}
 
-<form method="post" enctype="multipart/form-data">
+                <div>
+                    <label class="form-label">Title</label>
+                    <input type="text" name="title" class="form-control" required>
+                </div>
 
-{% csrf_token %}
+                <div>
+                    <label class="form-label">Description</label>
+                    <textarea name="description" class="form-control" required></textarea>
+                </div>
 
-<div class="mb-3">
-<label>Title</label>
-<input type="text" name="title" class="form-control">
+                <div class="form-grid-2">
+                    <div>
+                        <label class="form-label">Class</label>
+                        <select name="class_name" class="form-control" required>
+                            {% for class_name in class_names %}
+                            <option value="{{ class_name }}">{{ class_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label">Subject</label>
+                        <input type="text" name="subject" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Due Date</label>
+                        <input type="date" name="due_date" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Upload File</label>
+                        <input type="file" name="file" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Upload Homework</button>
+                    <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
 </div>
-
-<div class="mb-3">
-<label>Description</label>
-<textarea name="description" class="form-control"></textarea>
-</div>
-
-<div class="mb-3">
-<label>Class</label>
-<input type="text" name="class_name" class="form-control">
-</div>
-
-<div class="mb-3">
-<label>Upload File (PDF / Image)</label>
-<input type="file" name="file" class="form-control">
-</div>
-
-<button class="btn btn-success">
-Upload Homework
-</button>
-
-</form>
-
-</div>
-
 {% endblock %}

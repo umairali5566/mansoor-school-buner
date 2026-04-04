@@ -1,66 +1,130 @@
-{% extends "base.html" %}
+{% extends 'base.html' %}
+{% block title %}Mark Attendance | School Management System{% endblock %}
+{% block topbar_eyebrow %}Attendance Workspace{% endblock %}
+{% block topbar_title %}Manual Attendance{% endblock %}
+{% block topbar_subtitle %}Load a class, mark each student quickly, and save attendance from a mobile-friendly teaching screen.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'attendance_report' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-clipboard-data"></i>
+        Reports
+    </a>
+</div>
+{% endblock %}
 {% block content %}
+<div class="container-fluid page-stack">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-clipboard-check-fill"></i>
+            Attendance
+        </span>
+        <h2 class="dashboard-hero-title">Manual Attendance</h2>
+        <p class="dashboard-hero-subtitle">Load a class, mark student attendance, and save everything from one responsive table layout.</p>
+    </section>
 
-<div class="container mt-4">
-
-    <!-- Page Title -->
-    <div class="card shadow mb-4">
-        <div class="card-header bg-primary text-white">
-            <h4 class="mb-0">📋 Manual Attendance</h4>
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-0" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
+        {% endfor %}
+    {% endif %}
 
-        <div class="card-body">
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="get" class="row g-3 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Class</label>
+                    <select name="class" class="form-control">
+                        <option value="">Select Class</option>
+                        {% for c in classes %}
+                        <option value="{{ c }}" {% if c == selected_class %}selected{% endif %}>Class {{ c }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
 
-            <form method="POST">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date" value="{{ selected_date }}" class="form-control">
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="page-actions">
+                        <button type="submit" class="btn btn-primary">Load Students</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    {% if selected_class %}
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="page-section-head mb-3">
+                <div>
+                    <h5 class="saas-panel-title">Students for Class {{ selected_class }}</h5>
+                    <p class="content-note mb-0">Select a status for each student and save the attendance for {{ selected_date }}.</p>
+                </div>
+            </div>
+
+            <form method="post" class="d-flex flex-column gap-3">
                 {% csrf_token %}
+                {% if selected_class %}
+                <input type="hidden" name="class" value="{{ selected_class }}">
+                {% endif %}
+                <input type="hidden" name="date" value="{{ selected_date }}">
 
-                <div class="table-responsive">
-
-                    <table class="table table-bordered table-hover text-center">
-
-                        <thead class="table-dark">
+                <div class="table-responsive table-shell">
+                    <table class="table align-middle mb-0">
+                        <thead>
                             <tr>
-                                <th>Select</th>
-                                <th>Username</th>
+                                <th>Student</th>
                                 <th>Roll Number</th>
                                 <th>Class</th>
+                                <th>Attendance</th>
                             </tr>
                         </thead>
-
                         <tbody>
-
-                        {% for student in students %}
-                        <tr>
-                            <td>
-                                <input type="checkbox"
-                                       name="students"
-                                       value="{{ student.id }}"
-                                       class="form-check-input">
-                            </td>
-
-                            <td>{{ student.user.username }}</td>
-                            <td>{{ student.roll_number }}</td>
-                            <td>{{ student.class_name }}</td>
-                        </tr>
-                        {% endfor %}
-
+                            {% for student in students %}
+                            <tr>
+                                <td>
+                                    <div class="record-name">
+                                        <strong>{{ student.user.get_full_name|default:student.user.username }}</strong>
+                                        <span class="record-meta">{{ student.user.username }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ student.roll_number }}</td>
+                                <td>{{ student.class_name }}</td>
+                                <td>
+                                    <input type="hidden" name="student_ids" value="{{ student.id }}">
+                                    <div class="btn-group flex-wrap" role="group" aria-label="Attendance for {{ student.user.get_full_name|default:student.user.username }}">
+                                        <label class="btn btn-outline-success btn-sm me-1">
+                                            <input class="visually-hidden" type="radio" name="attendance_{{ student.id }}" value="Present">
+                                            Present
+                                        </label>
+                                        <label class="btn btn-outline-danger btn-sm">
+                                            <input class="visually-hidden" type="radio" name="attendance_{{ student.id }}" value="Absent">
+                                            Absent
+                                        </label>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center text-muted py-4">No students found in your class. Please contact admin to assign a class.</td>
+                            </tr>
+                            {% endfor %}
                         </tbody>
-
                     </table>
-
                 </div>
 
-                <div class="text-center mt-3">
-                    <button type="submit" class="btn btn-success btn-lg">
-                        ✅ Mark Present
-                    </button>
+                <div class="page-actions">
+                    <button id="saveBtn" type="submit" class="btn btn-primary">Save Attendance</button>
                 </div>
-
             </form>
-
         </div>
-    </div>
-
+    </section>
+    {% endif %}
 </div>
-
 {% endblock %}

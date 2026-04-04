@@ -1,7 +1,39 @@
-<h2>Student Created Successfully ✅</h2>
+{% extends "base.html" %}
+{% block title %}Admission Created | School Management System{% endblock %}
+{% block topbar_eyebrow %}Admissions Complete{% endblock %}
+{% block topbar_title %}Student Admission Saved{% endblock %}
+{% block topbar_subtitle %}The student account is ready, and the admission workflow has been completed successfully.{% endblock %}
+{% block content %}
+<div class="container-fluid dashboard-page">
+    <section class="saas-panel">
+        <div class="saas-panel-body text-center py-4">
+            <div class="success-orb">
+                <i class="bi bi-check-lg"></i>
+            </div>
+            <span class="section-badge">Admission created</span>
+            <h2 class="mt-3 mb-2">Student admission saved successfully</h2>
+            <p class="content-note mx-auto mb-4">The student account is now ready for login. Keep these credentials for first access and ask the student to change the password after signing in.</p>
 
-<p><strong>Username:</strong> {{ username }}</p>
-<p><strong>Password:</strong> {{ password }}</p>
+            <div class="detail-grid justify-content-center mb-4">
+                <div class="detail-card">
+                    <span class="detail-label">Student</span>
+                    <span class="detail-value">{{ student.display_name }}</span>
+                </div>
+                <div class="detail-card">
+                    <span class="detail-label">Username</span>
+                    <span class="detail-value">{{ username }}</span>
+                </div>
+                <div class="detail-card">
+                    <span class="detail-label">Password</span>
+                    <span class="detail-value">{{ password }}</span>
+                </div>
+            </div>
 
-<br>
-<a href="{% url 'student_list' %}">Back to Student List</a>
+            <div class="d-flex flex-wrap justify-content-center gap-2">
+                <a href="{% url 'student_profile' student.id %}" class="btn btn-primary">Open Profile</a>
+                <a href="{% url 'student_admissions' %}" class="btn btn-outline-secondary">Back to Admissions</a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

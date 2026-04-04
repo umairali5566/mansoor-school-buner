@@ -1,440 +1,179 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+{% block title %}Teacher Dashboard | Mansoor School Buner{% endblock %}
+
+{% block extra_css %}
+<style>
+    .animate-fade-in {
+        animation: fadeIn 0.8s ease-out;
+    }
+
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+{% endblock %}
+
+{% block topbar_eyebrow %}
+<span class="live-indicator" style="background: rgba(20, 184, 166, 0.12); border-color: rgba(20, 184, 166, 0.3); color: #0f766e;">
+    <i class="bi bi-mortarboard-fill"></i>
+    Teacher Workspace
+</span>
+{% endblock %}
+{% block topbar_title %}Teacher Dashboard{% endblock %}
+{% block topbar_subtitle %}Plan classes, track attendance, and manage learning tasks from one dashboard.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'mark_attendance' %}" class="btn btn-outline-light btn-sm">
+        <i class="bi bi-clipboard-check-fill"></i>
+        Attendance
+    </a>
+    <a href="{% url 'upload_homework' %}" class="btn btn-light btn-sm">
+        <i class="bi bi-cloud-arrow-up-fill"></i>
+        Upload Homework
+    </a>
+</div>
+{% endblock %}
+
 {% block content %}
+<div class="dashboard-bg"></div>
+<div class="space-y-6 animate-fade-in relative z-10">
+    <!-- Hero Section -->
+    <div class="bg-gradient-to-r from-accent via-purple to-green rounded-2xl p-8 text-white relative overflow-hidden">
+        <div class="relative z-10">
+            <h1 class="text-4xl font-bold mb-2">Welcome back, {{ request.user.get_full_name|default:request.user.username }}!</h1>
+            <p class="text-lg opacity-90 mb-6">Manage your classes and track student progress.</p>
 
-<div class="container mt-4">
+            <!-- Stats in hero -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold">{{ teacher_classes|length }}</div>
+                    <div class="text-sm opacity-80">Classes</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold">{{ total_students }}</div>
+                    <div class="text-sm opacity-80">Students</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold">{{ today_present }}</div>
+                    <div class="text-sm opacity-80">Present Today</div>
+                </div>
+                <div class="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
+                    <div class="text-2xl font-bold">{{ today_absent }}</div>
+                    <div class="text-sm opacity-80">Absent Today</div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute -bottom-4 -right-4 w-32 h-32 bg-white/10 rounded-full"></div>
+        <div class="absolute top-4 right-4 w-24 h-24 bg-white/5 rounded-full"></div>
+    </div>
 
-<h2 class="mb-4">Teacher Dashboard 👨‍🏫</h2>
+    <!-- Action Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <a href="{% url 'mark_attendance' %}" class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="bi bi-clipboard-check-fill text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold">Mark Attendance</h3>
+                    <p class="text-gray-300 text-sm">Record daily attendance</p>
+                </div>
+            </div>
+        </a>
 
-<a href="{% url 'upload_homework' %}" class="btn btn-primary mb-4">
-📚 Upload Homework
-</a>
+        <a href="{% url 'upload_homework' %}" class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="bi bi-cloud-arrow-up-fill text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold">Upload Homework</h3>
+                    <p class="text-gray-300 text-sm">Assign assignments</p>
+                </div>
+            </div>
+        </a>
 
+        <a href="{% url 'add_result' %}" class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6 hover:bg-white/20 transition-all duration-300 hover:scale-105 hover:shadow-xl group">
+            <div class="flex items-center space-x-4">
+                <div class="w-12 h-12 bg-gradient-to-r from-accent to-purple rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                    <i class="bi bi-journal-plus text-white text-xl"></i>
+                </div>
+                <div>
+                    <h3 class="text-white font-semibold">Add Results</h3>
+                    <p class="text-gray-300 text-sm">Record student grades</p>
+                </div>
+            </div>
+        </a>
+    </div>
 
-<!-- ========================= -->
-<!-- Stats Cards -->
-<!-- ========================= -->
+    <!-- Charts Section -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-white mb-4">Weekly Attendance</h3>
+            <div class="h-64 flex items-center justify-center">
+                <div class="text-center text-gray-400">
+                    <i class="bi bi-bar-chart-line-fill text-4xl mb-2"></i>
+                    <p>Weekly attendance chart</p>
+                </div>
+            </div>
+        </div>
 
-<div class="row text-center mb-4">
+        <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl p-6">
+            <h3 class="text-xl font-bold text-white mb-4">Class Performance</h3>
+            <div class="h-64 flex items-center justify-center">
+                <div class="text-center text-gray-400">
+                    <i class="bi bi-pie-chart-fill text-4xl mb-2"></i>
+                    <p>Class performance data</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
-<div class="col-md-3 mb-3">
-<div class="card shadow border-0">
-<div class="card-body">
-<h6 class="text-muted">Total Students</h6>
-<h3 class="text-primary">{{ total_students }}</h3>
+    <!-- Recent Attendance Table -->
+    <div class="bg-white/10 backdrop-blur-lg border border-white/20 rounded-2xl overflow-hidden">
+        <div class="p-6 border-b border-white/20">
+            <h3 class="text-xl font-bold text-white">Recent Attendance Logs</h3>
+        </div>
+        <div class="overflow-x-auto">
+            <table class="w-full">
+                <thead class="bg-white/5">
+                    <tr>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Student</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Date</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Class</th>
+                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-white/10">
+                    {% for record in recent_attendance %}
+                    <tr class="hover:bg-white/5 transition-colors duration-200">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white font-medium">
+                            {{ record.student.user.get_full_name|default:record.student.user.username }}
+                        </td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-white">{{ record.date|date:"M d, Y" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-300">{{ record.student.class_name|default:"-" }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap">
+                            {% if record.status == "Present" %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                <i class="bi bi-check-circle-fill mr-1"></i> Present
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                                <i class="bi bi-x-circle-fill mr-1"></i> Absent
+                            </span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="4" class="px-6 py-4 text-center text-gray-400">No recent attendance records</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
-</div>
-</div>
-
-
-<div class="col-md-3 mb-3">
-<div class="card shadow border-0">
-<div class="card-body">
-<h6 class="text-muted">Present Today</h6>
-<h3 class="text-success">{{ today_present }}</h3>
-</div>
-</div>
-</div>
-
-
-<div class="col-md-3 mb-3">
-<div class="card shadow border-0">
-<div class="card-body">
-<h6 class="text-muted">Absent Today</h6>
-<h3 class="text-danger">{{ today_absent }}</h3>
-</div>
-</div>
-</div>
-
-
-<div class="col-md-3 mb-3">
-<div class="card shadow border-0">
-<div class="card-body">
-<h6 class="text-muted">Total Attendance Records</h6>
-<h3 class="text-dark">{{ total_attendance }}</h3>
-</div>
-</div>
-</div>
-
-</div>
-
-
-
-<!-- ========================= -->
-<!-- Recent Attendance -->
-<!-- ========================= -->
-
-<div class="card shadow-sm">
-<div class="card-body">
-
-<h5 class="mb-3">Recent Attendance</h5>
-
-<table class="table table-bordered">
-
-<thead class="table-light">
-<tr>
-<th>Student</th>
-<th>Date</th>
-<th>Status</th>
-</tr>
-</thead>
-
-<tbody>
-
-{% for record in recent_attendance %}
-
-<tr>
-
-<td>{{ record.student.user.username }}</td>
-
-<td>{{ record.date }}</td>
-
-<td>
-
-{% if record.status == "Present" %}
-
-<span class="badge bg-success">Present</span>
-
-{% else %}
-
-<span class="badge bg-danger">Absent</span>
-
-{% endif %}
-
-</td>
-
-</tr>
-
-{% empty %}
-
-<tr>
-
-<td colspan="3" class="text-center">No records found</td>
-
-</tr>
-
-{% endfor %}
-
-</tbody>
-
-</table>
-
-</div>
-</div>
-
-
-
-<!-- ========================= -->
-<!-- Today's Chart -->
-<!-- ========================= -->
-
-<div class="card shadow-sm mt-4">
-
-<div class="card-body">
-
-<h5 class="mb-3">Today's Attendance</h5>
-
-<div style="max-width:400px;margin:auto">
-
-<canvas id="attendanceChart"></canvas>
-
-</div>
-
-</div>
-
-</div>
-
-
-
-<!-- ========================= -->
-<!-- Class Wise Chart -->
-<!-- ========================= -->
-
-<div class="card shadow-sm mt-4">
-
-<div class="card-body">
-
-<h5 class="mb-3">Class Wise Attendance</h5>
-
-<canvas id="classChart" height="100"></canvas>
-
-</div>
-
-</div>
-
-
-
-<!-- ========================= -->
-<!-- Weekly Chart -->
-<!-- ========================= -->
-
-<div class="card shadow-sm mt-4">
-
-<div class="card-body">
-
-<h5 class="mb-3">Weekly Attendance Overview</h5>
-
-<canvas id="weeklyChart" height="100"></canvas>
-
-</div>
-
-</div>
-
-
-
-<!-- ========================= -->
-<!-- Monthly Chart -->
-<!-- ========================= -->
-
-<div class="card shadow-sm mt-4 mb-5">
-
-<div class="card-body">
-
-<h5 class="mb-3">Monthly Attendance Trend (Last 30 Days)</h5>
-
-<canvas id="monthlyChart" height="100"></canvas>
-
-</div>
-
-</div>
-
-
-</div>
-
-
-
-<!-- ========================= -->
-<!-- Chart JS -->
-<!-- ========================= -->
-
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-
-document.addEventListener("DOMContentLoaded", function () {
-
-
-/* =======================
-TODAY CHART
-======================= */
-
-const todayCtx = document.getElementById('attendanceChart');
-
-if (todayCtx) {
-
-new Chart(todayCtx, {
-
-type: 'doughnut',
-
-data: {
-
-labels: ['Present','Absent'],
-
-datasets: [{
-
-data: {{ today_chart_data|safe }},
-
-backgroundColor: ['#28a745','#dc3545']
-
-}]
-
-},
-
-options: {
-
-responsive: true,
-
-maintainAspectRatio: true,
-
-plugins: {
-
-legend:{position:'bottom'}
-
-}
-
-}
-
-});
-
-}
-
-
-
-/* =======================
-CLASS WISE CHART
-======================= */
-
-const classCtx = document.getElementById('classChart');
-
-if (classCtx) {
-
-new Chart(classCtx, {
-
-type:'bar',
-
-data:{
-
-labels: {{ class_labels|safe }},
-
-datasets:[
-
-{
-
-label:'Present',
-
-data: {{ class_present|safe }},
-
-backgroundColor:'#28a745'
-
-},
-
-{
-
-label:'Absent',
-
-data: {{ class_absent|safe }},
-
-backgroundColor:'#dc3545'
-
-}
-
-]
-
-},
-
-options:{
-
-responsive:true,
-
-scales:{
-
-y:{beginAtZero:true}
-
-}
-
-}
-
-});
-
-}
-
-
-
-/* =======================
-WEEKLY CHART
-======================= */
-
-const weeklyCtx = document.getElementById('weeklyChart');
-
-if (weeklyCtx) {
-
-new Chart(weeklyCtx, {
-
-type:'bar',
-
-data:{
-
-labels: {{ weekly_labels|safe }},
-
-datasets:[
-
-{
-
-label:'Present',
-
-data: {{ weekly_present|safe }},
-
-backgroundColor:'#28a745'
-
-},
-
-{
-
-label:'Absent',
-
-data: {{ weekly_absent|safe }},
-
-backgroundColor:'#dc3545'
-
-}
-
-]
-
-},
-
-options:{
-
-responsive:true,
-
-scales:{
-
-y:{beginAtZero:true}
-
-}
-
-}
-
-});
-
-}
-
-
-
-/* =======================
-MONTHLY CHART
-======================= */
-
-const monthlyCtx = document.getElementById('monthlyChart');
-
-if (monthlyCtx) {
-
-new Chart(monthlyCtx, {
-
-type:'line',
-
-data:{
-
-labels: {{ monthly_labels|safe }},
-
-datasets:[
-
-{
-
-label:'Present Students',
-
-data: {{ monthly_present|safe }},
-
-borderColor:'#007bff',
-
-backgroundColor:'rgba(0,123,255,0.2)',
-
-fill:true,
-
-tension:0.3
-
-}
-
-]
-
-},
-
-options:{
-
-responsive:true,
-
-scales:{
-
-y:{beginAtZero:true}
-
-}
-
-}
-
-});
-
-}
-
-});
-
-</script>
-
 {% endblock %}

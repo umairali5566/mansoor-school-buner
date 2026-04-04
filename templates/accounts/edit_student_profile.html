@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title %}Edit Student Profile | School Management System{% endblock %}
+{% block topbar_eyebrow %}Student Records{% endblock %}
+{% block topbar_title %}Edit Student Profile{% endblock %}
+{% block topbar_subtitle %}Refine student profile details with consistent form sizing and a cleaner editing workflow.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'student_profile' student.id %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Back to Profile
+    </a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-person-lines-fill"></i>
+            Student Profile
+        </span>
+        <h2 class="dashboard-hero-title">Edit Student Profile</h2>
+        <p class="dashboard-hero-subtitle">Update profile information with consistent field sizes and cleaner spacing.</p>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" novalidate class="d-flex flex-column gap-3">
+                {% csrf_token %}
+
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger mb-0" role="alert">
+                    {{ form.non_field_errors }}
+                </div>
+                {% endif %}
+
+                <div class="form-grid-2">
+                    <div>
+                        <label class="form-label" for="{{ form.full_name.id_for_label }}">Full Name</label>
+                        {{ form.full_name }}
+                        {% if form.full_name.errors %}
+                        <div class="text-danger small mt-1">{{ form.full_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="form-label" for="{{ form.roll_number.id_for_label }}">Roll Number</label>
+                        {{ form.roll_number }}
+                        {% if form.roll_number.errors %}
+                        <div class="text-danger small mt-1">{{ form.roll_number.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="form-label" for="{{ form.class_name.id_for_label }}">Class</label>
+                        {{ form.class_name }}
+                        {% if form.class_name.errors %}
+                        <div class="text-danger small mt-1">{{ form.class_name.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="form-label" for="{{ form.phone.id_for_label }}">Phone Number</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <div class="text-danger small mt-1">{{ form.phone.errors }}</div>
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label class="form-label" for="{{ form.parent_email.id_for_label }}">Parent Email</label>
+                        {{ form.parent_email }}
+                        {% if form.parent_email.errors %}
+                        <div class="text-danger small mt-1">{{ form.parent_email.errors }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                    <a href="{% url 'student_profile' student.id %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,69 +1,81 @@
 {% extends "base.html" %}
-
+{% block title %}Homework List | School Management System{% endblock %}
+{% block topbar_eyebrow %}Homework Center{% endblock %}
+{% block topbar_title %}Homework List{% endblock %}
+{% block topbar_subtitle %}Browse and download homework in a cleaner table layout designed for both students and teachers.{% endblock %}
+{% block topbar_actions %}
+{% if request.user.role == 'TEACHER' %}
+<div class="topbar-actions-group">
+    <a href="{% url 'upload_homework' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-cloud-arrow-up-fill"></i>
+        Upload Homework
+    </a>
+</div>
+{% endif %}
+{% endblock %}
 {% block content %}
+<div class="container-fluid page-stack">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-journal-text"></i>
+            Homework
+        </span>
+        <h2 class="dashboard-hero-title">Homework List</h2>
+        <p class="dashboard-hero-subtitle">Browse assigned homework in a cleaner table layout that stays readable on mobile screens.</p>
+    </section>
 
-<div class="container mt-4">
-
-    <div class="card shadow-sm border-0">
-        <div class="card-body">
-
-            <h3 class="mb-3 fw-bold">📚 Homework List</h3>
-            <hr>
-
-            <div class="table-responsive">
-
-                <table class="table table-bordered table-hover">
-
-                    <thead class="table-light">
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="table-responsive table-shell">
+                <table class="table align-middle mb-0">
+                    <thead>
                         <tr>
                             <th>Title</th>
-                            <th>Description</th>
+                            <th>Subject</th>
+                            <th>Teacher</th>
                             <th>Class</th>
-                            <th>Date</th>
-                            <th>File</th>
+                            <th>Assigned Date</th>
+                            <th>Due Date</th>
+                            <th>Download</th>
                         </tr>
                     </thead>
-
                     <tbody>
-
                         {% for hw in homeworks %}
-
                         <tr>
-                            <td>{{ hw.title }}</td>
-                            <td>{{ hw.description }}</td>
+                            <td>
+                                <div class="record-name">
+                                    <strong>{{ hw.title }}</strong>
+                                    <span class="record-meta">Due {{ hw.due_date|default:"No due date" }}</span>
+                                </div>
+                            </td>
+                            <td>{{ hw.subject }}</td>
+                            <td>
+                                {% if hw.teacher %}
+                                {{ hw.teacher.user.get_full_name|default:hw.teacher.user.username }}
+                                {% else %}
+                                <span class="text-muted">N/A</span>
+                                {% endif %}
+                            </td>
                             <td>{{ hw.class_name }}</td>
                             <td>{{ hw.date_assigned }}</td>
-
+                            <td>{{ hw.due_date|default:"-" }}</td>
                             <td>
                                 {% if hw.file %}
-                                    <a href="{{ hw.file.url }}" class="btn btn-sm btn-primary">
-                                        Download
-                                    </a>
+                                <a href="{% url 'download_homework' hw.id %}" class="btn btn-sm btn-primary">Download</a>
                                 {% else %}
-                                    <span class="text-muted">No File</span>
+                                <span class="status-badge status-badge-neutral">No File</span>
                                 {% endif %}
                             </td>
                         </tr>
-
                         {% empty %}
-
                         <tr>
-                            <td colspan="5" class="text-center text-muted">
-                                No Homework Assigned
-                            </td>
+                            <td colspan="7" class="text-center text-muted py-4">No homework assigned.</td>
                         </tr>
-
                         {% endfor %}
-
                     </tbody>
-
                 </table>
-
             </div>
-
         </div>
-    </div>
-
+    </section>
 </div>
-
 {% endblock %}

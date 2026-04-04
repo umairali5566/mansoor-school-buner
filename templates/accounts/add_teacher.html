@@ -1,15 +1,64 @@
-<h2>Add Teacher</h2>
+{% extends 'base.html' %}
+{% block title %}Add Teacher | School Management System{% endblock %}
+{% block topbar_eyebrow %}Teacher Management{% endblock %}
+{% block topbar_title %}Add Teacher{% endblock %}
+{% block topbar_subtitle %}Create a teacher account with clean spacing, strong hierarchy, and touch-friendly fields.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'teacher_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-person-workspace"></i>
+        Teacher List
+    </a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-person-workspace"></i>
+            Teacher Management
+        </span>
+        <h2 class="dashboard-hero-title">Add Teacher</h2>
+        <p class="dashboard-hero-subtitle">Create a teacher account with consistent form sizing and spacing across devices.</p>
+    </section>
 
-{% if form.errors %}
-    <div style="color:red;">
-        {{ form.errors }}
-    </div>
-{% endif %}
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags|default:'info' }} mb-0" role="alert">
+            {{ message }}
+        </div>
+        {% endfor %}
+    {% endif %}
 
-<form method="POST">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Teacher</button>
-</form>
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" class="d-flex flex-column gap-3">
+                {% csrf_token %}
 
-<a href="{% url 'teacher_list' %}">Back</a>
+                <div>
+                    <label class="form-label">Teacher Name</label>
+                    <input type="text" name="full_name" class="form-control" required>
+                </div>
+
+                <p class="content-note">Login username will match the teacher phone number. The default password is <strong>123456</strong>.</p>
+
+                <div class="form-grid-2">
+                    <div>
+                        <label class="form-label">Subject</label>
+                        <input type="text" name="subject" class="form-control" required>
+                    </div>
+                    <div>
+                        <label class="form-label">Phone</label>
+                        <input type="text" name="phone" class="form-control" required>
+                    </div>
+                </div>
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Create Teacher</button>
+                    <a href="{% url 'teacher_list' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

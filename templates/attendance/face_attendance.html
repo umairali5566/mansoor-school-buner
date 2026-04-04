@@ -1,9 +1,37 @@
 {% extends "base.html" %}
-{% block content %}
-
-<div class="container mt-4">
-    <h2>🤖 Face Attendance</h2>
-    <p>This page will handle face recognition attendance.</p>
+{% block title %}Face Attendance | School Management System{% endblock %}
+{% block topbar_eyebrow %}Face Attendance{% endblock %}
+{% block topbar_title %}Face Attendance{% endblock %}
+{% block topbar_subtitle %}Use the live monitoring workflow for camera-based recognition while keeping this page aligned with the shared interface.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'live_attendance' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-camera-video-fill"></i>
+        Open Live Attendance
+    </a>
 </div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-camera-video-fill"></i>
+            Face Attendance
+        </span>
+        <h2 class="dashboard-hero-title">Face Attendance</h2>
+        <p class="dashboard-hero-subtitle">This area is reserved for face recognition attendance workflows and now follows the same balanced page sizing as the rest of the system.</p>
+    </section>
 
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="empty-state">
+                <span class="empty-state-icon"><i class="bi bi-stars"></i></span>
+                <p class="mb-0">Use the live attendance screen to monitor camera feeds, recognition events, and unknown captures.</p>
+            </div>
+            <div class="page-actions mt-3">
+                <a href="{% url 'live_attendance' %}" class="btn btn-primary">Open Live Attendance</a>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock %}

@@ -1,94 +1,152 @@
 {% extends 'base.html' %}
-{% block content %}
-
-<h2 class="mb-4">Attendance Report 📊</h2>
-
-<!-- Filters -->
-<div class="card p-3 mb-4 shadow-sm">
-    <form method="GET" class="row g-3">
-
-        <div class="col-md-4">
-            <label>Date</label>
-            <input type="date" name="date" value="{{ selected_date }}" class="form-control">
-        </div>
-
-        <div class="col-md-4">
-            <label>Class</label>
-            <select name="class" class="form-control">
-                <option value="">All Classes</option>
-                {% for cls in classes %}
-                    <option value="{{ cls }}" {% if cls == selected_class %}selected{% endif %}>
-                        {{ cls }}
-                    </option>
-                {% endfor %}
-            </select>
-        </div>
-
-        <div class="col-md-4 align-self-end">
-            <button type="submit" class="btn btn-primary">Filter</button>
-            <a href="{% url 'attendance_report' %}" class="btn btn-secondary">Reset</a>
-        </div>
-
-    </form>
+{% block title %}Attendance Report | School Management System{% endblock %}
+{% block topbar_eyebrow %}Attendance Analytics{% endblock %}
+{% block topbar_title %}Attendance Report{% endblock %}
+{% block topbar_subtitle %}Filter daily attendance by class and date, then review the outcome in a cleaner reporting experience.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'attendance_analytics' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-bar-chart-line-fill"></i>
+        Analytics
+    </a>
+    <a href="{% url 'attendance_report' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-arrow-clockwise"></i>
+        Refresh
+    </a>
 </div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid dashboard-page attendance-report-page">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-clipboard-data-fill"></i>
+            Attendance Analytics
+        </span>
+        <h2 class="dashboard-hero-title">Attendance Report</h2>
+        <p class="dashboard-hero-subtitle">Filter by date and class to view attendance insights, summary metrics, and individual records.</p>
+    </section>
 
-<!-- Summary Cards -->
-<div class="row mb-4">
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="GET" class="row g-3 align-items-end">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Date</label>
+                    <input type="date" name="date" value="{{ selected_date }}" class="form-control">
+                </div>
 
-    <div class="col-md-6">
-        <div class="card bg-success text-white shadow">
-            <div class="card-body text-center">
+                <div class="col-12 col-md-4">
+                    <label class="form-label">Class</label>
+                    {% if request.user.role == "TEACHER" %}
+                    <select name="class" class="form-control">
+                        <option value="">All Classes</option>
+                        {% for cls in classes %}
+                        <option value="{{ cls }}" {% if cls == selected_class %}selected{% endif %}>{{ cls }}</option>
+                        {% endfor %}
+                    </select>
+                    {% else %}
+                    <select name="class" class="form-control">
+                        <option value="">All Classes</option>
+                        {% for cls in classes %}
+                        <option value="{{ cls }}" {% if cls == selected_class %}selected{% endif %}>{{ cls }}</option>
+                        {% endfor %}
+                    </select>
+                    {% endif %}
+                </div>
+
+                <div class="col-12 col-md-4">
+                    <div class="report-actions">
+                        <button type="submit" class="btn btn-primary">Filter</button>
+                        <a href="{% url 'attendance_report' %}" class="btn btn-outline-primary">Reset</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    {% if not has_searched %}
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="empty-state">
+                <span class="empty-state-icon"><i class="bi bi-search"></i></span>
+                <p class="mb-0">Please select filters and click Filter to view attendance report.</p>
+            </div>
+        </div>
+    </section>
+    {% else %}
+    <section class="row g-4">
+        <div class="col-12 col-md-4 d-flex">
+            <article class="summary-card summary-present w-100">
                 <h5>Present Students</h5>
                 <h3>{{ present_count }}</h3>
-            </div>
+            </article>
         </div>
-    </div>
 
-    <div class="col-md-6">
-        <div class="card bg-danger text-white shadow">
-            <div class="card-body text-center">
+        <div class="col-12 col-md-4 d-flex">
+            <article class="summary-card summary-absent w-100">
                 <h5>Absent Students</h5>
                 <h3>{{ absent_count }}</h3>
+            </article>
+        </div>
+
+        <div class="col-12 col-md-4 d-flex">
+            <article class="summary-card summary-unmarked w-100">
+                <h5>Not Marked</h5>
+                <h3>{{ not_marked_count }}</h3>
+                <p>Total Students: {{ total_students_count }}</p>
+            </article>
+        </div>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="table-responsive table-shell">
+                <table class="table table-hover align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Roll Number</th>
+                            <th>Class</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if not has_records %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No attendance records found for the selected filters.</td>
+                        </tr>
+                        {% endif %}
+
+                        {% for record in attendances %}
+                        <tr>
+                            <td>
+                                <div class="record-name">
+                                    <strong>{{ record.student.user.get_full_name|default:record.student.user.username }}</strong>
+                                    <span class="record-meta">{{ record.student.user.username }}</span>
+                                </div>
+                            </td>
+                            <td>{{ record.student.roll_number|default:"-" }}</td>
+                            <td>{{ record.student_class|default:record.student.class_name }}</td>
+                            <td>{{ record.date }}</td>
+                            <td>
+                                {% if record.status == "Present" %}
+                                <span class="status-badge status-badge-success">Present</span>
+                                {% else %}
+                                <span class="status-badge status-badge-danger">Absent</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{% url 'edit_attendance' record.id %}" class="btn btn-sm btn-outline-primary">Edit</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-    </div>
-
+    </section>
+    {% endif %}
 </div>
-
-<!-- Attendance Table -->
-<div class="card shadow mt-4">
-    <div class="card-body">
-        <table class="table table-bordered table-striped">
-            <thead class="table-dark">
-                <tr>
-                    <th>Student</th>
-                    <th>Class</th>
-                    <th>Date</th>
-                    <th>Status</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for record in attendances %}
-                <tr>
-                    <td>{{ record.student.user.username }}</td>
-                    <td>{{ record.student.class_name }}</td>
-                    <td>{{ record.date }}</td>
-                    <td>
-                        {% if record.status == "Present" %}
-                            <span class="badge bg-success">Present</span>
-                        {% else %}
-                            <span class="badge bg-danger">Absent</span>
-                        {% endif %}
-                    </td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="4" class="text-center">No records found</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
-</div>
-
 {% endblock %}

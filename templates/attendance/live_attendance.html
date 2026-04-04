@@ -1,68 +1,617 @@
 {% extends "base.html" %}
+{% block title %}Live Face Attendance | School Management System{% endblock %}
+{% block topbar_eyebrow %}Live Monitoring{% endblock %}
+{% block topbar_title %}Live Face Attendance{% endblock %}
+{% block topbar_subtitle %}Monitor classroom camera feeds, recent recognition activity, and unknown captures in one real-time workspace.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'unknown_faces_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-person-fill-exclamation"></i>
+        Unknown Faces
+    </a>
+    <a href="{% url 'admin_dashboard' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-grid-1x2-fill"></i>
+        Dashboard
+    </a>
+</div>
+{% endblock %}
+{% block extra_css %}
+<style>
+    .camera-feed-shell {
+        position: relative;
+        background:
+            radial-gradient(circle at top, rgba(84, 140, 255, 0.16), transparent 45%),
+            linear-gradient(180deg, #08111f, #101b2f);
+    }
+
+    .camera-feed-image {
+        opacity: 0;
+        transform: scale(1.01);
+        transition: opacity 0.35s ease, transform 0.35s ease;
+        background: #08111f;
+    }
+
+    .camera-feed-shell.is-live .camera-feed-image {
+        opacity: 1;
+        transform: scale(1);
+    }
+
+    .camera-feed-overlay {
+        position: absolute;
+        inset: 0;
+        z-index: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 0.65rem;
+        padding: 1rem;
+        color: #eff4ff;
+        text-align: center;
+        background:
+            linear-gradient(180deg, rgba(7, 14, 28, 0.72), rgba(12, 21, 38, 0.88)),
+            radial-gradient(circle at center, rgba(82, 118, 255, 0.14), transparent 55%);
+        transition: opacity 0.25s ease, visibility 0.25s ease;
+    }
+
+    .camera-feed-overlay.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+    }
+
+    .camera-feed-shell.is-error .camera-feed-overlay {
+        background:
+            linear-gradient(180deg, rgba(45, 13, 20, 0.84), rgba(28, 9, 16, 0.92)),
+            radial-gradient(circle at center, rgba(255, 100, 132, 0.16), transparent 55%);
+    }
+
+    .camera-feed-message {
+        font-weight: 700;
+        letter-spacing: 0.01em;
+    }
+
+    .camera-feed-meta {
+        font-size: 0.72rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        color: rgba(225, 234, 255, 0.72);
+    }
+</style>
+{% endblock %}
 {% block content %}
+<div class="container-fluid dashboard-page">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-camera-video-fill"></i>
+            Live Monitoring
+        </span>
+        <h2 class="dashboard-hero-title">Live Face Attendance</h2>
+        <p class="dashboard-hero-subtitle">Monitor classroom camera feeds, recognition events, and unknown face captures from one real-time workspace.</p>
+    </section>
 
-<div class="container mt-4">
+    <section class="row g-4">
+        <div class="col-12 col-md-6 col-xl-3 d-flex">
+            <article class="saas-stat-card w-100">
+                <div class="saas-stat-main">
+                    <span class="saas-stat-icon"><i class="bi bi-check2-circle"></i></span>
+                    <p class="saas-stat-label">Present Today</p>
+                    <h3 class="saas-stat-value">{{ today_present_count }}</h3>
+                    <p class="saas-stat-meta">Students marked by the live system</p>
+                </div>
+            </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3 d-flex">
+            <article class="saas-stat-card w-100">
+                <div class="saas-stat-main">
+                    <span class="saas-stat-icon"><i class="bi bi-person-fill-exclamation"></i></span>
+                    <p class="saas-stat-label">Unknown Today</p>
+                    <h3 class="saas-stat-value">{{ unknown_faces_today }}</h3>
+                    <p class="saas-stat-meta">Captures awaiting review</p>
+                </div>
+            </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3 d-flex">
+            <article class="saas-stat-card w-100">
+                <div class="saas-stat-main">
+                    <span class="saas-stat-icon"><i class="bi bi-person-badge"></i></span>
+                    <p class="saas-stat-label">Profiles Ready</p>
+                    <h3 class="saas-stat-value">{{ face_profile_count }}</h3>
+                    <p class="saas-stat-meta">Registered face profiles available</p>
+                </div>
+            </article>
+        </div>
+        <div class="col-12 col-md-6 col-xl-3 d-flex">
+            <article class="saas-stat-card w-100">
+                <div class="saas-stat-main">
+                    <span class="saas-stat-icon"><i class="bi bi-camera-reels-fill"></i></span>
+                    <p class="saas-stat-label">Active Camera Slots</p>
+                    <h3 class="saas-stat-value">{{ active_camera_count }}</h3>
+                    <p class="saas-stat-meta">Configured feeds ready to start</p>
+                </div>
+            </article>
+        </div>
+    </section>
 
-    <h2 class="mb-3">🤖 Multi-Camera Live Attendance</h2>
-    <hr>
-
-    <!-- 🔵 LIVE STATUS CARD -->
-    <div class="card shadow p-3 mb-4">
-        <h5>📋 Live Attendance Status</h5>
-        <ul id="liveStatus" class="list-group mt-2"></ul>
+    {% if not cameras %}
+    <div class="alert alert-warning mb-0" role="alert">
+        No classroom cameras are configured yet. The system is showing the default camera feed from camera index `0`.
     </div>
+    {% endif %}
 
-    <!-- 🎥 CAMERA SECTION -->
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card shadow p-2">
-                <h5 class="text-center">Camera 0</h5>
-                <img src="{% url 'video_feed' 0 %}" 
-                    class="img-fluid rounded"
-                    style="width:100%; border-radius:10px;">
+    <section class="row g-4">
+        <div class="col-xl-4 d-flex">
+            <section class="saas-panel w-100">
+                <div class="saas-panel-body h-100">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="saas-panel-title mb-0">Recognition Events</h5>
+                        <span class="badge bg-dark-subtle text-dark">Live</span>
+                    </div>
+                    <p class="text-muted small mb-3">This panel refreshes automatically and lists the most recent recognition results.</p>
+                    <div id="liveStatus" class="list-group list-group-flush">
+                        {% for event in recent_events %}
+                        <div class="list-group-item px-0 d-flex justify-content-between align-items-start gap-3">
+                            <div class="fw-semibold">{{ event }}</div>
+                        </div>
+                        {% empty %}
+                        <div class="text-muted small py-2" id="emptyState">No recognition activity yet.</div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <div class="col-xl-8">
+            <div class="row g-4">
+                {% if cameras %}
+                    {% for camera in cameras %}
+                    <div class="col-lg-6 d-flex">
+                        <section class="saas-panel w-100">
+                            <div class="saas-panel-body">
+                                <div class="d-flex justify-content-between align-items-center mb-3 gap-3">
+                                    <div>
+                                        <h5 class="saas-panel-title mb-1">{{ camera.class_name }}</h5>
+                                        <small class="text-muted">Camera Index {{ camera.camera_index }}</small>
+                                    </div>
+                                    <span class="badge bg-primary-subtle text-primary">Async Start</span>
+                                </div>
+                                <div class="ratio ratio-4x3 rounded overflow-hidden camera-feed-shell" data-camera-shell>
+                                    <div class="camera-feed-overlay" data-feed-overlay>
+                                        <div class="spinner-border spinner-border-sm text-light" role="status" aria-hidden="true"></div>
+                                        <div class="camera-feed-message" data-feed-message>Starting Camera...</div>
+                                        <div class="camera-feed-meta" data-feed-meta>Optimized 640 x 480 stream</div>
+                                    </div>
+                                    <img
+                                        data-camera-id="{{ camera.id }}"
+                                        data-start-url="{% url 'start_camera_feed' camera.id %}"
+                                        data-stream-url="{% url 'video_feed' camera.id %}"
+                                        class="camera-feed-image w-100 h-100 object-fit-cover"
+                                        alt="Live feed for {{ camera.class_name }}"
+                                        loading="eager"
+                                        decoding="async"
+                                        fetchpriority="high"
+                                    >
+                                </div>
+                            </div>
+                        </section>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                <div class="col-12">
+                    <section class="saas-panel">
+                        <div class="saas-panel-body">
+                            <div class="d-flex justify-content-between align-items-center mb-3 gap-3">
+                                <div>
+                                    <h5 class="saas-panel-title mb-1">Default Camera Feed</h5>
+                                    <small class="text-muted">Fallback stream using camera index 0</small>
+                                </div>
+                                <span class="badge bg-warning-subtle text-warning">Fallback</span>
+                            </div>
+                            <div class="ratio ratio-4x3 rounded overflow-hidden camera-feed-shell" data-camera-shell>
+                                <div class="camera-feed-overlay" data-feed-overlay>
+                                    <div class="spinner-border spinner-border-sm text-light" role="status" aria-hidden="true"></div>
+                                    <div class="camera-feed-message" data-feed-message>Starting Camera...</div>
+                                    <div class="camera-feed-meta" data-feed-meta>Optimized 640 x 480 stream</div>
+                                </div>
+                                <img
+                                    data-camera-id="0"
+                                    data-start-url="{% url 'start_camera_feed' 0 %}"
+                                    data-stream-url="{% url 'video_feed' 0 %}"
+                                    class="camera-feed-image w-100 h-100 object-fit-cover"
+                                    alt="Default live feed"
+                                    loading="eager"
+                                    decoding="async"
+                                    fetchpriority="high"
+                                >
+                            </div>
+                        </div>
+                    </section>
+                </div>
+                {% endif %}
             </div>
         </div>
-    </div>
-
-    <!-- 🔙 BACK BUTTON -->
-    <div class="mt-4">
-        <a href="{% url 'admin_dashboard' %}" 
-           class="btn btn-secondary w-100">
-           ⬅ Back to Dashboard
-        </a>
-    </div>
-
+    </section>
 </div>
 
+{% endblock %}
 
-<!-- 🔄 AUTO REFRESH LIVE STATUS -->
+{% block extra_js %}
 <script>
+    (function () {
+        const liveMessagesUrl = "{% url 'live_messages' %}";
+        const stopFeedsUrl = "{% url 'stop_camera_feeds' %}";
+        const feedImages = Array.from(document.querySelectorAll(".camera-feed-image"));
+        const feedState = new WeakMap();
+        let feedObserver = null;
+        let liveMessagesTimer = null;
+        let feedsStopped = false;
 
-function fetchLiveMessages() {
-    fetch("{% url 'live_messages' %}")
-        .then(response => response.json())
-        .then(data => {
+        function getCsrfToken() {
+            const cookie = document.cookie
+                .split(";")
+                .map(function (chunk) { return chunk.trim(); })
+                .find(function (chunk) { return chunk.startsWith("csrftoken="); });
+            return cookie ? decodeURIComponent(cookie.split("=")[1]) : "";
+        }
 
-            let list = document.getElementById("liveStatus");
+        function renderLiveMessages(messages) {
+            const list = document.getElementById("liveStatus");
             list.innerHTML = "";
 
-            data.messages.forEach(msg => {
-                let li = document.createElement("li");
-                li.className = "list-group-item";
-                li.innerText = msg;
-                list.appendChild(li);
+            if (!messages.length) {
+                const empty = document.createElement("div");
+                empty.className = "text-muted small py-2";
+                empty.textContent = "No recognition activity yet.";
+                list.appendChild(empty);
+                return;
+            }
+
+            messages.forEach(function (message) {
+                const row = document.createElement("div");
+                row.className = "list-group-item px-0 d-flex justify-content-between align-items-start";
+
+                const text = document.createElement("div");
+                const title = document.createElement("div");
+                title.className = "fw-semibold";
+                title.textContent = message;
+                text.appendChild(title);
+
+                const badge = document.createElement("span");
+                badge.className = message.toLowerCase().includes("unknown")
+                    ? "badge bg-danger-subtle text-danger"
+                    : "badge bg-success-subtle text-success";
+                badge.textContent = message.toLowerCase().includes("unknown") ? "Unknown" : "Matched";
+
+                row.appendChild(text);
+                row.appendChild(badge);
+                list.appendChild(row);
+            });
+        }
+
+        function fetchLiveMessages() {
+            fetch(liveMessagesUrl, {
+                headers: { "X-Requested-With": "XMLHttpRequest" },
+                credentials: "same-origin"
+            })
+                .then(function (response) { return response.json(); })
+                .then(function (data) { renderLiveMessages(data.messages || []); })
+                .catch(function () {
+                    renderLiveMessages(["Unable to fetch live updates right now."]);
+                });
+        }
+
+        function getFeedNodes(img) {
+            const shell = img.closest("[data-camera-shell]");
+            return {
+                shell: shell,
+                overlay: shell ? shell.querySelector("[data-feed-overlay]") : null,
+                messageNode: shell ? shell.querySelector("[data-feed-message]") : null,
+                metaNode: shell ? shell.querySelector("[data-feed-meta]") : null,
+            };
+        }
+
+        function setFeedError(img, message, detail) {
+            const nodes = getFeedNodes(img);
+            if (nodes.shell) {
+                nodes.shell.classList.add("is-error");
+                nodes.shell.classList.remove("is-live");
+            }
+            if (nodes.overlay) {
+                nodes.overlay.classList.remove("is-hidden");
+            }
+            if (nodes.messageNode) {
+                nodes.messageNode.textContent = message;
+            }
+            if (nodes.metaNode && detail) {
+                nodes.metaNode.textContent = detail;
+            }
+        }
+
+        function updateFeedMessage(img, message) {
+            const nodes = getFeedNodes(img);
+            if (nodes.messageNode) {
+                nodes.messageNode.textContent = message;
+            }
+        }
+
+        function updateFeedMeta(img, message) {
+            const nodes = getFeedNodes(img);
+            if (nodes.metaNode && message) {
+                nodes.metaNode.textContent = message;
+            }
+        }
+
+        function showLiveFeed(img) {
+            const nodes = getFeedNodes(img);
+            if (nodes.shell) {
+                nodes.shell.classList.remove("is-error");
+                nodes.shell.classList.add("is-live");
+            }
+            if (nodes.overlay) {
+                nodes.overlay.classList.add("is-hidden");
+            }
+        }
+
+        function cleanupElementStream(img) {
+            img.onload = null;
+            img.onerror = null;
+
+            if (img.srcObject && typeof img.srcObject.getTracks === "function") {
+                img.srcObject.getTracks().forEach(function (track) {
+                    track.stop();
+                });
+                img.srcObject = null;
+            }
+
+            img.removeAttribute("src");
+            img.src = "data:,";
+        }
+
+        function startCameraFeed(img) {
+            if (feedsStopped) {
+                return;
+            }
+
+            const state = feedState.get(img) || {};
+            if (state.started) {
+                return;
+            }
+
+            const nodes = getFeedNodes(img);
+            state.started = true;
+            state.live = false;
+            state.stopped = false;
+            state.startAbortController = new AbortController();
+            feedState.set(img, state);
+
+            if (nodes.shell) {
+                nodes.shell.classList.remove("is-error");
+                nodes.shell.classList.remove("is-live");
+            }
+            if (nodes.overlay) {
+                nodes.overlay.classList.remove("is-hidden");
+            }
+
+            updateFeedMessage(img, "Starting camera...");
+            updateFeedMeta(img, "Detecting camera source...");
+
+            img.onload = function () {
+                const currentState = feedState.get(img);
+                if (!currentState || currentState.stopped) {
+                    return;
+                }
+
+                currentState.live = true;
+                if (currentState.loadTimeoutId) {
+                    clearTimeout(currentState.loadTimeoutId);
+                    currentState.loadTimeoutId = null;
+                }
+                showLiveFeed(img);
+            };
+
+            img.onerror = function () {
+                const currentState = feedState.get(img);
+                if (!currentState || currentState.stopped) {
+                    return;
+                }
+                setFeedError(img, "Unable to load camera stream.");
+            };
+
+            state.loadTimeoutId = window.setTimeout(function () {
+                const currentState = feedState.get(img);
+                if (!currentState || currentState.live || currentState.stopped) {
+                    return;
+                }
+                setFeedError(img, "Camera stream is taking too long to respond.");
+            }, 8000);
+
+            const startUrl = img.dataset.startUrl;
+            if (startUrl) {
+                fetch(startUrl, {
+                    headers: { "X-Requested-With": "XMLHttpRequest" },
+                    credentials: "same-origin",
+                    signal: state.startAbortController.signal
+                })
+                    .then(function (response) {
+                        return response.json().then(function (data) {
+                            return {
+                                ok: response.ok,
+                                data: data || {}
+                            };
+                        });
+                    })
+                    .then(function (result) {
+                        const data = result.data;
+                        const detail = data.detail || "Check device access and camera permissions.";
+
+                        if (!result.ok || data.available === false) {
+                            updateFeedMeta(img, detail);
+                            setFeedError(
+                                img,
+                                data.status || "Camera unavailable.",
+                                detail
+                            );
+                            return;
+                        }
+
+                        if (data.active_index !== null && data.active_index !== undefined) {
+                            const backendLabel = data.backend ? " via " + data.backend : "";
+                            updateFeedMeta(
+                                img,
+                                "Camera " + data.active_index + backendLabel + " - " + data.resolution
+                            );
+                        } else {
+                            updateFeedMeta(img, "Optimized " + data.resolution + " stream");
+                        }
+
+                        updateFeedMessage(img, data.status || "Connecting to live stream...");
+                        const separator = img.dataset.streamUrl.includes("?") ? "&" : "?";
+                        img.src = img.dataset.streamUrl + separator + "ts=" + Date.now();
+                    })
+                    .catch(function (error) {
+                        if (error && error.name === "AbortError") {
+                            return;
+                        }
+                        setFeedError(
+                            img,
+                            "Unable to start camera.",
+                            "The warmup request failed before the stream could open."
+                        );
+                    });
+                return;
+            }
+
+            updateFeedMessage(img, "Connecting to live stream...");
+            updateFeedMeta(img, "Optimized 640 x 480 stream");
+            const separator = img.dataset.streamUrl.includes("?") ? "&" : "?";
+            img.src = img.dataset.streamUrl + separator + "ts=" + Date.now();
+        }
+
+        function stopCameraFeed(img) {
+            const state = feedState.get(img);
+            if (!state || state.stopped) {
+                cleanupElementStream(img);
+                return;
+            }
+
+            state.stopped = true;
+            state.live = false;
+            state.started = false;
+
+            if (state.loadTimeoutId) {
+                clearTimeout(state.loadTimeoutId);
+                state.loadTimeoutId = null;
+            }
+            if (state.startAbortController) {
+                state.startAbortController.abort();
+            }
+
+            cleanupElementStream(img);
+        }
+
+        function notifyServerToStopFeeds(cameraIds) {
+            if (!cameraIds.length) {
+                return;
+            }
+
+            const payload = new URLSearchParams();
+            cameraIds.forEach(function (cameraId) {
+                payload.append("camera_ids", cameraId);
             });
 
-        })
-        .catch(error => console.log("Error fetching messages:", error));
-}
+            fetch(stopFeedsUrl, {
+                method: "POST",
+                body: payload.toString(),
+                keepalive: true,
+                credentials: "same-origin",
+                headers: {
+                    "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
+                    "X-CSRFToken": getCsrfToken(),
+                    "X-Requested-With": "XMLHttpRequest"
+                }
+            }).catch(function () {
+                return null;
+            });
+        }
 
-// Auto refresh every 2 seconds
-setInterval(fetchLiveMessages, 2000);
+        function teardownCameraFeeds() {
+            if (feedsStopped) {
+                return;
+            }
 
-// Load immediately
-fetchLiveMessages();
+            feedsStopped = true;
 
+            if (feedObserver) {
+                feedObserver.disconnect();
+            }
+            if (liveMessagesTimer) {
+                clearInterval(liveMessagesTimer);
+                liveMessagesTimer = null;
+            }
+
+            const cameraIds = [];
+            feedImages.forEach(function (img) {
+                cameraIds.push(img.dataset.cameraId);
+                stopCameraFeed(img);
+            });
+            notifyServerToStopFeeds(cameraIds);
+        }
+
+        function initializeCameraFeeds() {
+            if (!feedImages.length) {
+                return;
+            }
+
+            feedsStopped = false;
+
+            const observerSupported = "IntersectionObserver" in window;
+            feedObserver = observerSupported
+                ? new IntersectionObserver(function (entries) {
+                    entries.forEach(function (entry) {
+                        if (!entry.isIntersecting) {
+                            return;
+                        }
+
+                        feedObserver.unobserve(entry.target);
+                        startCameraFeed(entry.target);
+                    });
+                }, { rootMargin: "120px 0px" })
+                : null;
+
+            feedImages.forEach(function (img, index) {
+                if (feedObserver) {
+                    feedObserver.observe(img);
+                    return;
+                }
+
+                window.setTimeout(function () {
+                    startCameraFeed(img);
+                }, index * 50);
+            });
+        }
+
+        function bootLiveAttendancePage() {
+            fetchLiveMessages();
+            liveMessagesTimer = window.setInterval(fetchLiveMessages, 3000);
+            window.requestAnimationFrame(initializeCameraFeeds);
+        }
+
+        if (document.readyState === "loading") {
+            document.addEventListener("DOMContentLoaded", bootLiveAttendancePage, { once: true });
+        } else {
+            bootLiveAttendancePage();
+        }
+
+        window.addEventListener("pagehide", teardownCameraFeeds);
+        window.addEventListener("beforeunload", teardownCameraFeeds);
+
+        window.addEventListener("pageshow", function (event) {
+            if (!event.persisted) {
+                return;
+            }
+            bootLiveAttendancePage();
+        });
+    })();
 </script>
-
 {% endblock %}
+

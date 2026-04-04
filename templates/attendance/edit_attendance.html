@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+{% block title %}Edit Attendance | School Management System{% endblock %}
+{% block topbar_eyebrow %}Attendance Workspace{% endblock %}
+{% block topbar_title %}Edit Attendance{% endblock %}
+{% block topbar_subtitle %}Adjust a saved attendance record without leaving the streamlined reporting workflow.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'attendance_report' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Attendance Report
+    </a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-pencil-square"></i>
+            Attendance Management
+        </span>
+        <h2 class="dashboard-hero-title">Edit Attendance</h2>
+        <p class="dashboard-hero-subtitle">Update the saved attendance status without oversized spacing or stretched controls.</p>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="metric-grid mb-4">
+                <div class="metric-tile">
+                    <span class="metric-tile-label">Student</span>
+                    <p class="metric-tile-value">{{ attendance.student.user.username }}</p>
+                </div>
+                <div class="metric-tile">
+                    <span class="metric-tile-label">Date</span>
+                    <p class="metric-tile-value">{{ attendance.date }}</p>
+                </div>
+            </div>
+
+            <form method="post" class="d-flex flex-column gap-3">
+                {% csrf_token %}
+
+                <div>
+                    <label class="form-label">Status</label>
+                    <select name="status" class="form-control">
+                        <option value="Present" {% if attendance.status == "Present" %}selected{% endif %}>Present</option>
+                        <option value="Absent" {% if attendance.status == "Absent" %}selected{% endif %}>Absent</option>
+                    </select>
+                </div>
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Update</button>
+                    <a href="{% url 'attendance_report' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -1,0 +1,80 @@
+{% extends 'base.html' %}
+{% block title %}Add Result | School Management System{% endblock %}
+{% block topbar_eyebrow %}Academic Records{% endblock %}
+{% block topbar_title %}Add Result{% endblock %}
+{% block topbar_subtitle %}Record exam performance with a compact, professional teacher workflow and consistent form spacing.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'result_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-graph-up-arrow"></i>
+        Results List
+    </a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-journal-plus"></i>
+            Results
+        </span>
+        <h2 class="dashboard-hero-title">Add Result</h2>
+        <p class="dashboard-hero-subtitle">Record examination results with compact inputs and more consistent spacing across the form.</p>
+    </section>
+
+    {% if messages %}
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show mb-0" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" class="d-flex flex-column gap-3">
+                {% csrf_token %}
+
+                <div>
+                    <label for="student" class="form-label">Student</label>
+                    <select name="student" class="form-control" required>
+                        <option value="">Select Student</option>
+                        {% for student in students %}
+                        <option value="{{ student.id }}">{{ student.user.username }} (Roll: {{ student.roll_number }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="form-grid-2">
+                    <div>
+                        <label for="subject" class="form-label">Subject</label>
+                        <input type="text" name="subject" class="form-control" required>
+                    </div>
+                    <div>
+                        <label for="exam_type" class="form-label">Exam Type</label>
+                        <select name="exam_type" class="form-control" required>
+                            <option value="Midterm">Midterm</option>
+                            <option value="Final">Final</option>
+                            <option value="Quiz">Quiz</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="marks" class="form-label">Marks Obtained</label>
+                        <input type="number" name="marks" class="form-control" required>
+                    </div>
+                    <div>
+                        <label for="total_marks" class="form-label">Total Marks</label>
+                        <input type="number" name="total_marks" class="form-control" value="100" required>
+                    </div>
+                </div>
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Add Result</button>
+                    <a href="{% url 'result_list' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

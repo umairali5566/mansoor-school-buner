@@ -1,51 +1,197 @@
-{% extends 'base.html' %}
-
+{% extends "base.html" %}
+{% block title %}Student Profile | School Management System{% endblock %}
+{% block topbar_eyebrow %}Student Records{% endblock %}
+{% block topbar_title %}Student Profile{% endblock %}
+{% block topbar_subtitle %}View admission details, attendance history, and profile information in one structured student record.{% endblock %}
+{% block topbar_actions %}
+{% if can_edit_admission %}
+<div class="topbar-actions-group">
+    <a href="{% url 'edit_student_admission' student.id %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-pencil-square"></i>
+        Edit Admission
+    </a>
+</div>
+{% endif %}
+{% endblock %}
 {% block content %}
-
-<h2>My Profile</h2>
-
-<form method="POST" enctype="multipart/form-data">
-    {% csrf_token %}
-
-    <div class="mb-3">
-        <label>Username:</label>
-        <input type="text" value="{{ student.user.username }}" class="form-control" disabled>
-    </div>
-
-    <div class="mb-3">
-    <label>Roll Number</label>
-    <input type="text" name="roll_number"
-           value="{{ student.roll_number }}"
-           class="form-control" required>
-    </div>
-
-    <div class="mb-3">
-    <label>Phone</label>
-    <input type="text" name="phone"
-           value="{{ student.phone }}"
-           class="form-control">
-    </div>
-
-    <div class="mb-3">
-        <label>Upload Face Image:</label>
-        <input type="file" name="image" class="form-control">
-    </div>
-
-    {% if student.face_image %}
-        <img src="{{ student.face_image.url }}" width="150">
-    {% endif %}
-
-    <br><br>
-    <button type="submit" class="btn btn-success">
-        Update Profile
-    </button>
-    {% if messages %}
-        {% for message in messages %}
-            <div style="color: green; font-weight: bold;">
-                {{ message }}
+<div class="container-fluid dashboard-page" style="max-width: 1200px; margin: auto;">
+    <section class="profile-layout-grid animate-fade-in">
+        <!-- Left Profile Card -->
+        <div class="profile-main-card">
+            <div class="profile-card-modern">
+                <div class="profile-avatar-modern">
+                    {% if student.image %}
+                        <img src="{{ student.image.url }}" alt="{{ student.display_name }}">
+                    {% else %}
+                        <i class="bi bi-person-fill"></i>
+                    {% endif %}
+                </div>
+                <div class="profile-info-modern">
+                    <h3>{{ student.display_name }}</h3>
+                    <p><strong>Class:</strong> {{ student.class_name|default:"-" }}</p>
+                    <p><strong>Roll No:</strong> {{ student.roll_number }}</p>
+                </div>
             </div>
-        {% endfor %}
-    {% endif %}
-</form>
+        </div>
 
+        <!-- Right Info Cards -->
+        <div class="profile-info-cards">
+            <!-- Personal Info Card -->
+            <div class="saas-panel animate-fade-in stagger-1">
+                <div class="saas-panel-header">
+                    <h4 class="saas-panel-title">
+                        <i class="bi bi-person-circle"></i>
+                        Personal Info
+                    </h4>
+                </div>
+                <div class="saas-panel-body">
+                    <div class="detail-grid">
+                        <div class="detail-card">
+                            <span class="detail-label">Full Name</span>
+                            <span class="detail-value">{{ student.display_name }}</span>
+                        </div>
+                        <div class="detail-card">
+                            <span class="detail-label">Roll Number</span>
+                            <span class="detail-value">{{ student.roll_number }}</span>
+                        </div>
+                        <div class="detail-card">
+                            <span class="detail-label">Date of Birth</span>
+                            <span class="detail-value">{{ student.date_of_birth|date:"M d, Y"|default:"-" }}</span>
+                        </div>
+                        {% if show_parent_contact %}
+                            <div class="detail-card">
+                                <span class="detail-label">Phone</span>
+                                <span class="detail-value">{{ student.phone|default:"-" }}</span>
+                            </div>
+                            <div class="detail-card">
+                                <span class="detail-label">Parent Email</span>
+                                <span class="detail-value">{{ student.parent_email|default:"-" }}</span>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admission Info Card -->
+            <div class="saas-panel animate-fade-in stagger-2">
+                <div class="saas-panel-header">
+                    <h4 class="saas-panel-title">
+                        <i class="bi bi-file-earmark-text"></i>
+                        Admission Info
+                    </h4>
+                </div>
+                <div class="saas-panel-body">
+                    <div class="detail-grid">
+                        <div class="detail-card">
+                            <span class="detail-label">Admission Date</span>
+                            <span class="detail-value">{{ student.admission_date|date:"M d, Y"|default:"-" }}</span>
+                        </div>
+                        <div class="detail-card">
+                            <span class="detail-label">Admission Class</span>
+                            <span class="detail-value">{{ student.admission_class_name }}</span>
+                        </div>
+                        <div class="detail-card detail-card-wide">
+                            <span class="detail-label">Previous School</span>
+                            <span class="detail-value">{{ student.previous_school|default:"Not provided" }}</span>
+                        </div>
+                        <div class="detail-card detail-card-wide">
+                            <span class="detail-label">Notes</span>
+                            <span class="detail-value">{{ student.notes|default:"No admission notes added yet." }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Attendance Summary Card -->
+            <div class="saas-panel animate-fade-in stagger-3">
+                <div class="saas-panel-header">
+                    <h4 class="saas-panel-title">
+                        <i class="bi bi-calendar-check"></i>
+                        Attendance Summary
+                    </h4>
+                </div>
+                <div class="saas-panel-body">
+                    <div class="row g-3">
+                        <div class="col-4">
+                            <div class="text-center">
+                                <div class="attendance-stat">
+                                    <h4 class="text-success">{{ present_count }}</h4>
+                                    <small class="text-muted">Present</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center">
+                                <div class="attendance-stat">
+                                    <h4 class="text-danger">{{ absent_count }}</h4>
+                                    <small class="text-muted">Absent</small>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="text-center">
+                                <div class="attendance-stat">
+                                    <h4 class="text-primary">{{ percentage }}%</h4>
+                                    <small class="text-muted">Rate</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
+                <div>
+                    <h4 class="saas-panel-title">Attendance history</h4>
+                    <p class="text-muted mb-0">Most recent attendance records for this student.</p>
+                </div>
+            </div>
+
+            <div class="table-shell">
+                <div class="table-responsive">
+                    <table class="table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Marked By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for record in attendances %}
+                                <tr>
+                                    <td>{{ record.date|date:"M d, Y" }}</td>
+                                    <td>
+                                        {% if record.status == "Present" %}
+                                            <span class="status-badge status-badge-success">Present</span>
+                                        {% else %}
+                                            <span class="status-badge status-badge-danger">Absent</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ record.get_marked_by_display|default:"System" }}</td>
+                                </tr>
+                            {% empty %}
+                                <tr>
+                                    <td colspan="3">
+                                        <div class="empty-state">
+                                            <span class="empty-state-icon"><i class="bi bi-calendar2-x"></i></span>
+                                            <div>
+                                                <h5 class="mb-2">No attendance records</h5>
+                                                <p class="mb-0">Attendance history will appear here once records are marked.</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock %}

@@ -7,4 +7,6 @@ urlpatterns = [
 
     path("list/", views.homework_list, name="homework_list"),
 
+    path("<int:homework_id>/download/", views.download_homework, name="download_homework"),
+
 ]

@@ -41,6 +41,8 @@ urlpatterns = [
     # =============================
     # Camera Streaming
     # =============================
+    path("start-video-feed/<int:camera_id>/", views.start_camera_feed, name="start_camera_feed"),
+    path("stop-video-feeds/", views.stop_camera_feeds, name="stop_camera_feeds"),
     path("video-feed/<int:camera_id>/", views.video_feed, name="video_feed"),
 
     # =============================
@@ -64,4 +66,13 @@ urlpatterns = [
         views.convert_unknown_to_student,
         name="convert_unknown"
     ),
+    path(
+        "delete-unknown/<int:face_id>/",
+        views.delete_unknown_face,
+        name="delete_unknown_face"
+    ),
+
+    path('test-email/', views.test_email, name='test_email'),
+    path('edit-attendance/<int:id>/', views.edit_attendance, name='edit_attendance'),
+
 ]

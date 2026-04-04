@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+{% block title %}{{ page_title }} | School Management System{% endblock %}
+{% block topbar_eyebrow %}{{ page_eyebrow }}{% endblock %}
+{% block topbar_title %}{{ page_title }}{% endblock %}
+{% block topbar_subtitle %}Capture a complete admission profile with the same premium form flow used throughout the admin workspace.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    {% if student %}
+    <a href="{% url 'student_profile' student.id %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Student Profile
+    </a>
+    {% else %}
+    <a href="{% url 'student_admissions' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Admissions
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid dashboard-page">
+    <section class="dashboard-hero">
+        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
+            <div>
+                <span class="hero-badge">
+                    <i class="bi bi-person-vcard-fill"></i>
+                    {{ page_eyebrow }}
+                </span>
+                <h2 class="dashboard-hero-title">{{ page_title }}</h2>
+                <p class="dashboard-hero-subtitle">Capture the full admission profile including date of birth, admission date, starting class, current class, parent contact details, and optional notes.</p>
+            </div>
+            <div class="hero-mini-grid">
+                <div class="mini-metric">
+                    <span class="mini-label">Username</span>
+                    <strong>{% if student %}{{ student.user.username }}{% else %}Auto-generated{% endif %}</strong>
+                </div>
+                <div class="mini-metric">
+                    <span class="mini-label">Default Password</span>
+                    <strong>{{ form.generated_password|default:"123456" }}</strong>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags|default:'info' }}">
+                {{ message }}
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    {% if not classrooms %}
+        <div class="alert alert-warning mb-0">
+            No classrooms are available yet. Add classroom records first so admissions can be assigned to valid classes.
+        </div>
+    {% endif %}
+
+    <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-4">
+            <div class="col-12 col-xl-8">
+                <section class="saas-panel h-100">
+                    <div class="saas-panel-body">
+                        <div class="page-section-head">
+                            <div>
+                                <h4 class="saas-panel-title">Admission information</h4>
+                                <p class="text-muted mb-0">Required fields are validated before the student account is created or updated.</p>
+                            </div>
+                            <span class="class-pill">
+                                <i class="bi bi-shield-check"></i>
+                                Unique roll number per class
+                            </span>
+                        </div>
+
+                        {% if form.non_field_errors %}
+                            <div class="alert alert-danger mt-3 mb-0">
+                                {{ form.non_field_errors }}
+                            </div>
+                        {% endif %}
+
+                        <div class="admission-form-grid mt-4">
+                            <div>
+                                <label class="form-label" for="{{ form.full_name.id_for_label }}">Full Name</label>
+                                {{ form.full_name }}
+                                {% if form.full_name.errors %}<div class="text-danger small mt-1">{{ form.full_name.errors }}</div>{% endif %}
+                            </div>
+                            <div>
+                                <label class="form-label" for="{{ form.roll_number.id_for_label }}">Roll Number</label>
+                                {{ form.roll_number }}
+                                {% if form.roll_number.errors %}<div class="text-danger small mt-1">{{ form.roll_number.errors }}</div>{% endif %}
+                            </div>
+                            <div>
+                                <label class="form-label" for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
+                                {{ form.date_of_birth }}
+                                {% if form.date_of_birth.errors %}<div class="text-danger small mt-1">{{ form.date_of_birth.errors }}</div>{% endif %}
+                            </div>
+                            <div>
+                                <label class="form-label" for="{{ form.admission_date.id_for_label }}">Admission Date</label>
+                                {{ form.admission_date }}
+                                {% if form.admission_date.errors %}<div class="text-danger small mt-1">{{ form.admission_date.errors }}</div>{% endif %}
+                            </div>
+                            <div>
+                                <label class="form-label" for="{{ form.admission_class.id_for_label }}">Admission Class</label>
+                                {{ form.admission_class }}
+                                {% if form.admission_class.errors %}<div class="text-danger small mt-1">{{ form.admission_class.errors }}</div>{% endif %}
+                            </div>
+                            <div>
+                                <label class="form-label" for="{{ form.current_class.id_for_label }}">Current Class</label>
+                                {{ form.current_class }}
+                                {% if form.current_class.errors %}<div class="text-danger small mt-1">{{ form.current_class.errors }}</div>{% endif %}
+                            </div>
+                            <div>
+                                <label class="form-label" for="{{ form.parent_email.id_for_label }}">Parent Email</label>
+                                {{ form.parent_email }}
+                                {% if form.parent_email.errors %}<div class="text-danger small mt-1">{{ form.parent_email.errors }}</div>{% endif %}
+                            </div>
+                            <div>
+                                <label class="form-label" for="{{ form.phone.id_for_label }}">Phone Number</label>
+                                {{ form.phone }}
+                                {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors }}</div>{% endif %}
+                            </div>
+                            <div class="admission-form-span-2">
+                                <label class="form-label" for="{{ form.previous_school.id_for_label }}">Previous School</label>
+                                {{ form.previous_school }}
+                                {% if form.previous_school.errors %}<div class="text-danger small mt-1">{{ form.previous_school.errors }}</div>{% endif %}
+                            </div>
+                            <div class="admission-form-span-2">
+                                <label class="form-label" for="{{ form.notes.id_for_label }}">Notes</label>
+                                {{ form.notes }}
+                                {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors }}</div>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
+            <div class="col-12 col-xl-4">
+                <section class="saas-panel h-100">
+                    <div class="saas-panel-body d-flex flex-column gap-3 h-100">
+                        <div class="info-card">
+                            <span class="section-badge">Account setup</span>
+                            <h4 class="mt-3 mb-2">Student login credentials</h4>
+                            <p class="text-muted mb-0">The username is generated automatically from the student name and roll number. New admissions receive the default password <strong>123456</strong>.</p>
+                        </div>
+
+                        <div class="info-card">
+                            <span class="section-badge">Admission checks</span>
+                            <ul class="admission-checklist mb-0">
+                                <li>Full name, roll number, dates, class selections, parent email, and phone are required.</li>
+                                <li>Roll numbers are validated against the selected current class.</li>
+                                <li>Admission date must be later than the date of birth.</li>
+                            </ul>
+                        </div>
+
+                        <div class="mt-auto d-flex flex-wrap gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-floppy-fill"></i>
+                                {{ submit_label }}
+                            </button>
+                            {% if student %}
+                                <a href="{% url 'student_profile' student.id %}" class="btn btn-outline-secondary">Cancel</a>
+                            {% else %}
+                                <a href="{% url 'student_admissions' %}" class="btn btn-outline-secondary">Cancel</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

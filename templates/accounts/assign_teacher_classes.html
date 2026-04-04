@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+{% block title %}Assign Teacher Classes | School Management System{% endblock %}
+{% block topbar_eyebrow %}Teacher Assignment{% endblock %}
+{% block topbar_title %}Assign Classes{% endblock %}
+{% block topbar_subtitle %}Manage classroom assignments for {{ teacher.user.get_full_name|default:teacher.user.username }} with a clearer, more touch-friendly selection flow.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'teacher_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Teacher List
+    </a>
+</div>
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-diagram-3-fill"></i>
+            Teacher Management
+        </span>
+        <h2 class="dashboard-hero-title">Assign Classes</h2>
+        <p class="dashboard-hero-subtitle">Manage classroom assignments for <strong>{{ teacher.user.username }}</strong> with a cleaner form width and spacing.</p>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" class="d-flex flex-column gap-3">
+                {% csrf_token %}
+
+                {% if classrooms %}
+                <p class="content-note">Select one or more classes for this teacher.</p>
+                <div class="row g-3">
+                    {% for classroom in classrooms %}
+                    <div class="col-12 col-sm-6">
+                        <label class="metric-tile d-flex align-items-center gap-3 h-100">
+                            <input
+                                class="form-check-input mt-0"
+                                type="checkbox"
+                                name="class_ids"
+                                value="{{ classroom.id }}"
+                                {% if classroom.id in assigned_ids %}checked{% endif %}
+                            >
+                            <span class="fw-semibold text-dark">{{ classroom.name }}</span>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="alert alert-warning mb-0" role="alert">
+                    No classes are available yet. Create classes first from Django Admin.
+                </div>
+                {% endif %}
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Save Assignment</button>
+                    <a href="{% url 'teacher_list' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
