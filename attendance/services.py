@@ -15,6 +15,7 @@ def save_attendance_record(
     student,
     status,
     marked_by="SYSTEM",
+    marked_by_teacher=None,
     attendance_date=None,
     marked_at=None,
     overwrite_existing=True,
@@ -49,26 +50,29 @@ def save_attendance_record(
                         date=attendance_date,
                         status=status,
                         marked_by=marked_by,
+                        marked_by_teacher=marked_by_teacher,
                         marked_at=marked_at,
                     )
                     LOGGER.info(
-                        "Attendance saved: student_id=%s class=%s date=%s status=%s marked_by=%s created=True updated=False",
+                        "Attendance saved: student_id=%s class=%s date=%s status=%s marked_by=%s teacher_id=%s created=True updated=False",
                         student.id,
                         student_class,
                         attendance_date,
                         status,
                         marked_by,
+                        getattr(marked_by_teacher, "id", None),
                     )
                     return attendance, True, False
 
                 if not overwrite_existing:
                     LOGGER.info(
-                        "Attendance unchanged: student_id=%s class=%s date=%s status=%s marked_by=%s created=False updated=False",
+                        "Attendance unchanged: student_id=%s class=%s date=%s status=%s marked_by=%s teacher_id=%s created=False updated=False",
                         student.id,
                         student_class or attendance.student_class,
                         attendance_date,
                         attendance.status,
                         attendance.marked_by,
+                        attendance.marked_by_teacher_id,
                     )
                     return attendance, False, False
 
@@ -76,6 +80,7 @@ def save_attendance_record(
                     attendance.status != status
                     or attendance.marked_by != marked_by
                     or attendance.student_class != student_class
+                    or attendance.marked_by_teacher_id != getattr(marked_by_teacher, "id", None)
                 )
 
                 if changed:
@@ -83,17 +88,25 @@ def save_attendance_record(
                     attendance.marked_by = marked_by
                     attendance.marked_at = marked_at
                     attendance.student_class = student_class
+                    attendance.marked_by_teacher = marked_by_teacher
                     attendance.save(
-                        update_fields=["status", "marked_by", "marked_at", "student_class"]
+                        update_fields=[
+                            "status",
+                            "marked_by",
+                            "marked_at",
+                            "student_class",
+                            "marked_by_teacher",
+                        ]
                     )
 
                 LOGGER.info(
-                    "Attendance saved: student_id=%s class=%s date=%s status=%s marked_by=%s created=False updated=%s",
+                    "Attendance saved: student_id=%s class=%s date=%s status=%s marked_by=%s teacher_id=%s created=False updated=%s",
                     student.id,
                     student_class,
                     attendance_date,
                     status,
                     marked_by,
+                    getattr(marked_by_teacher, "id", None),
                     changed,
                 )
                 return attendance, False, changed
@@ -112,11 +125,15 @@ def save_attendance_record(
         attendance.status != status
         or attendance.marked_by != marked_by
         or attendance.student_class != student_class
+        or attendance.marked_by_teacher_id != getattr(marked_by_teacher, "id", None)
     )
     if changed:
         attendance.status = status
         attendance.marked_by = marked_by
         attendance.marked_at = marked_at
         attendance.student_class = student_class
-        attendance.save(update_fields=["status", "marked_by", "marked_at", "student_class"])
+        attendance.marked_by_teacher = marked_by_teacher
+        attendance.save(
+            update_fields=["status", "marked_by", "marked_at", "student_class", "marked_by_teacher"]
+        )
     return attendance, False, changed

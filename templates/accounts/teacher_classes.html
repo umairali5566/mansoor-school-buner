@@ -1,235 +1,72 @@
 {% extends 'base.html' %}
-{% load static %}
 {% block title %}My Classes | Mansoor School Buner{% endblock %}
-
-{% block extra_css %}
-<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
-<style>
-    .classes-container {
-        padding: 2rem;
-    }
-
-    .classes-header {
-        margin-bottom: 2rem;
-    }
-
-    .classes-header h1 {
-        font-size: 2rem;
-        font-weight: 700;
-        color: #0f172a;
-        margin: 0 0 0.5rem 0;
-    }
-
-    .classes-header p {
-        color: #64748b;
-        font-size: 1rem;
-        margin: 0;
-    }
-
-    .classes-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-        gap: 1.5rem;
-    }
-
-    .class-card {
-        background: rgba(255, 255, 255, 0.78);
-        border: 1px solid rgba(148, 163, 184, 0.16);
-        border-radius: 1rem;
-        padding: 1.5rem;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-        backdrop-filter: blur(18px);
-        transition: all 0.25s ease;
-    }
-
-    .class-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 20px 45px rgba(15, 23, 42, 0.12);
-    }
-
-    .class-card-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 1rem;
-    }
-
-    .class-card-title {
-        font-size: 1.25rem;
-        font-weight: 700;
-        color: #0f172a;
-        margin: 0;
-    }
-
-    .class-card-badge {
-        background: rgba(79, 70, 229, 0.1);
-        color: #4F46E5;
-        padding: 0.25rem 0.75rem;
-        border-radius: 999px;
-        font-size: 0.875rem;
-        font-weight: 600;
-    }
-
-    .class-card-stats {
-        display: flex;
-        gap: 1rem;
-        margin-bottom: 1rem;
-    }
-
-    .class-stat {
-        flex: 1;
-        text-align: center;
-        padding: 0.75rem;
-        background: rgba(248, 250, 252, 0.9);
-        border-radius: 0.5rem;
-    }
-
-    .class-stat-value {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #0f172a;
-        margin: 0;
-    }
-
-    .class-stat-label {
-        font-size: 0.75rem;
-        color: #64748b;
-        margin: 0.25rem 0 0 0;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-    }
-
-    .class-card-actions {
-        display: flex;
-        gap: 0.5rem;
-        margin-top: 1rem;
-    }
-
-    .class-card-btn {
-        flex: 1;
-        padding: 0.75rem 1rem;
-        border-radius: 0.5rem;
-        border: none;
-        font-weight: 600;
-        font-size: 0.875rem;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        text-decoration: none;
-        text-align: center;
-    }
-
-    .class-card-btn-primary {
-        background: linear-gradient(135deg, #4F46E5 0%, #06B6D4 100%);
-        color: #fff;
-    }
-
-    .class-card-btn-primary:hover {
-        box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
-    }
-
-    .class-card-btn-secondary {
-        background: rgba(248, 250, 252, 0.9);
-        color: #0f172a;
-        border: 1px solid rgba(148, 163, 184, 0.24);
-    }
-
-    .class-card-btn-secondary:hover {
-        background: rgba(241, 245, 249, 1);
-    }
-
-    .empty-state {
-        text-align: center;
-        padding: 4rem 2rem;
-        background: rgba(255, 255, 255, 0.78);
-        border: 1px solid rgba(148, 163, 184, 0.16);
-        border-radius: 1rem;
-        box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
-    }
-
-    .empty-state-icon {
-        font-size: 4rem;
-        color: #94a3b8;
-        margin-bottom: 1rem;
-    }
-
-    .empty-state h3 {
-        font-size: 1.5rem;
-        font-weight: 700;
-        color: #0f172a;
-        margin: 0 0 0.5rem 0;
-    }
-
-    .empty-state p {
-        color: #64748b;
-        margin: 0;
-    }
-
-    .back-link {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        color: #4F46E5;
-        text-decoration: none;
-        font-weight: 600;
-        margin-bottom: 1.5rem;
-    }
-
-    .back-link:hover {
-        text-decoration: underline;
-    }
-</style>
+{% block topbar_eyebrow %}Teacher Workspace{% endblock %}
+{% block topbar_title %}My Classes{% endblock %}
+{% block topbar_subtitle %}View assigned classes and quickly jump into attendance or homework workflows.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <a href="{% url 'teacher_dashboard' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-arrow-left"></i>
+        Dashboard
+    </a>
+</div>
 {% endblock %}
 
-{% block topbar_eyebrow %}{% endblock %}
-{% block topbar_title %}{% endblock %}
-{% block topbar_subtitle %}{% endblock %}
-{% block topbar_actions %}{% endblock %}
-
 {% block content %}
-<div class="classes-container">
-    <a href="{% url 'teacher_dashboard' %}" class="back-link">
-        <i class="bi bi-arrow-left"></i>
-        Back to Dashboard
-    </a>
+<div class="dashboard-page">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-diagram-3-fill"></i>
+            Class Management
+        </span>
+        <h2 class="dashboard-hero-title">My Assigned Classes</h2>
+        <p class="dashboard-hero-subtitle">Track your active classes, review student counts, and launch daily teaching actions from one place.</p>
+    </section>
 
-    <div class="classes-header">
-        <h1>My Classes</h1>
-        <p>View and manage your assigned classes</p>
-    </div>
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="page-section-head mb-3">
+                <h3 class="saas-panel-title">Class Overview</h3>
+                <span class="section-badge">{{ classes_data|length }} Classes</span>
+            </div>
 
-    {% if classes_data %}
-    <div class="classes-grid">
-        {% for class in classes_data %}
-        <div class="class-card">
-            <div class="class-card-header">
-                <h3 class="class-card-title">{{ class.name }}</h3>
-                <span class="class-card-badge">Active</span>
+            {% if classes_data %}
+            <div class="quick-actions-grid">
+                {% for class in classes_data %}
+                <article class="quick-action-card">
+                    <span class="quick-action-icon"><i class="bi bi-mortarboard-fill"></i></span>
+                    <h4 class="quick-action-title">{{ class.name }}</h4>
+                    <p class="quick-action-desc">{{ class.student_count }} students currently enrolled in this class.</p>
+                    {% if class.is_attendance_teacher %}
+                    <span class="status-badge status-badge-success">Attendance Teacher</span>
+                    {% else %}
+                    <span class="status-badge status-badge-neutral">Subject Teacher</span>
+                    {% endif %}
+                    <p class="record-meta mt-2 mb-0">Attendance controlled by {{ class.attendance_teacher_name }}</p>
+
+                    <div class="page-actions mt-2">
+                        {% if class.is_attendance_teacher %}
+                        <a href="{% url 'mark_attendance' %}" class="btn btn-primary btn-sm">
+                            <i class="bi bi-clipboard-check-fill"></i>
+                            Mark Attendance
+                        </a>
+                        {% endif %}
+                        <a href="{% url 'upload_homework' %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-cloud-arrow-up-fill"></i>
+                            Homework
+                        </a>
+                    </div>
+                </article>
+                {% endfor %}
             </div>
-            <div class="class-card-stats">
-                <div class="class-stat">
-                    <p class="class-stat-value">{{ class.student_count }}</p>
-                    <p class="class-stat-label">Students</p>
-                </div>
+            {% else %}
+            <div class="empty-state">
+                <span class="empty-state-icon"><i class="bi bi-folder-x"></i></span>
+                <h5>No Classes Assigned</h5>
+                <p>You do not have classes assigned yet. Please contact support.</p>
             </div>
-            <div class="class-card-actions">
-                <a href="{% url 'mark_attendance' %}" class="class-card-btn class-card-btn-primary">
-                    Mark Attendance
-                </a>
-                <a href="{% url 'upload_homework' %}" class="class-card-btn class-card-btn-secondary">
-                    Upload Homework
-                </a>
-            </div>
+            {% endif %}
         </div>
-        {% endfor %}
-    </div>
-    {% else %}
-    <div class="empty-state">
-        <div class="empty-state-icon">
-            <i class="bi bi-folder-x"></i>
-        </div>
-        <h3>No Classes Assigned</h3>
-        <p>You don't have any classes assigned yet. Please contact the administrator.</p>
-    </div>
-    {% endif %}
+    </section>
 </div>
 {% endblock %}

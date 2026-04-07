@@ -5,6 +5,10 @@
 {% block topbar_subtitle %}Keep teacher accounts, class assignments, and support actions organized in one professional directory.{% endblock %}
 {% block topbar_actions %}
 <div class="topbar-actions-group">
+    <a href="{% url 'class_assignment_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-diagram-3-fill"></i>
+        Class Controls
+    </a>
     <a href="{% url 'add_teacher' %}" class="btn btn-primary btn-sm">
         <i class="bi bi-person-plus-fill"></i>
         Add Teacher
@@ -28,11 +32,14 @@
         <div class="saas-panel-body">
             <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
                 <h4 class="saas-panel-title mb-0">Teacher list</h4>
-                <a href="{% url 'add_teacher' %}" class="btn btn-primary">Add Teacher</a>
+                <div class="d-flex gap-2">
+                    <a href="{% url 'class_assignment_list' %}" class="btn btn-outline-primary">Class Controls</a>
+                    <a href="{% url 'add_teacher' %}" class="btn btn-primary">Add Teacher</a>
+                </div>
             </div>
 
             <div class="table-responsive table-shell">
-                    <table class="table align-middle mb-0">
+                    <table class="table saas-table align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Username</th>
@@ -63,10 +70,18 @@
                                 <td>{{ teacher.phone }}</td>
                                 <td>
                                     <div class="row-actions">
-                                        <a href="{% url 'reset_teacher_password' teacher.id %}" class="btn btn-warning btn-sm">Reset</a>
-                                        <a href="{% url 'assign_teacher_classes' teacher.id %}" class="btn btn-primary btn-sm">Assign</a>
-                                        <a href="{% url 'edit_teacher' teacher.id %}" class="btn btn-info btn-sm">Edit</a>
-                                        <a href="{% url 'delete_teacher' teacher.id %}" class="btn btn-danger btn-sm" onclick="return confirm('Are you sure?')">Delete</a>
+                                        <a href="{% url 'reset_teacher_password' teacher.id %}" class="icon-action icon-action-warning" title="Reset password" aria-label="Reset password">
+                                            <i class="bi bi-key-fill"></i>
+                                        </a>
+                                        <a href="{% url 'assign_teacher_classes' teacher.id %}" class="icon-action icon-action-success" title="Assign classes" aria-label="Assign classes">
+                                            <i class="bi bi-diagram-3-fill"></i>
+                                        </a>
+                                        <a href="{% url 'edit_teacher' teacher.id %}" class="icon-action" title="Edit teacher" aria-label="Edit teacher">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="{% url 'delete_teacher' teacher.id %}" class="icon-action icon-action-danger" onclick="return confirm('Are you sure?')" title="Delete teacher" aria-label="Delete teacher">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
                                     </div>
                                 </td>
                             </tr>

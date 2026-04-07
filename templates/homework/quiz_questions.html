@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Manage Quiz Questions | SAAMS{% endblock %}
+{% block topbar_eyebrow %}Smart Academic System{% endblock %}
+{% block topbar_title %}Manage Questions{% endblock %}
+{% block topbar_subtitle %}Add and manage MCQ questions for {{ quiz.title }} with instant structure checks.{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-list-check"></i>
+            Question Manager
+        </span>
+        <h2 class="dashboard-hero-title">{{ quiz.title }}</h2>
+        <p class="dashboard-hero-subtitle">Class {{ quiz.class_assigned.name }} | {{ quiz.time_limit }} minutes | Total Marks {{ quiz.total_marks }}</p>
+    </section>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} mb-0">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <h3 class="saas-panel-title mb-3">Add Question</h3>
+            <form method="post" class="d-flex flex-column gap-3">
+                {% csrf_token %}
+                {% for field in form %}
+                <div>
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <small class="text-danger">{{ field.errors|join:", " }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Add Question</button>
+                    <a href="{% url 'quiz_list' %}" class="btn btn-outline-secondary">Done</a>
+                </div>
+            </form>
+        </div>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <h3 class="saas-panel-title mb-3">Existing Questions</h3>
+            <div class="table-responsive table-shell">
+                <table class="table saas-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Question</th>
+                            <th>Correct</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for question in questions %}
+                        <tr>
+                            <td>{{ question.order }}</td>
+                            <td>{{ question.question_text|truncatechars:160 }}</td>
+                            <td><span class="status-badge status-badge-success">{{ question.correct_answer }}</span></td>
+                            <td>
+                                <form method="post" action="{% url 'quiz_delete_question' quiz.id question.id %}" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this question?')">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No questions added yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

@@ -2,9 +2,12 @@ import logging
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.urls import reverse
 from django.utils import timezone
 
-from accounts.models import Student
+from accounts.models import CustomUser, Student
+from notifications.models import Notification
+from notifications.services import create_notification, create_notifications_for_users
 
 
 LOGGER = logging.getLogger(__name__)
@@ -76,6 +79,31 @@ def send_homework_notification(homework, force=False):
 
     homework.notification_sent_at = timezone.now()
     homework.save(update_fields=["notification_sent_at"])
+
+    # Create in-app notifications for class students and administrators.
+    student_users = [
+        student.user
+        for student in Student.objects.select_related("user").filter(class_name=homework.class_name)
+        if getattr(student, "user", None) and student.user.is_active
+    ]
+    create_notifications_for_users(
+        users=student_users,
+        title=f"New homework: {homework.title}",
+        message=f"{homework.subject} homework was posted for class {homework.class_name}.",
+        notification_type=Notification.TYPE_HOMEWORK,
+        link_url=reverse("homework_list"),
+        metadata={"homework_id": homework.id, "class_name": homework.class_name},
+    )
+
+    admin_users = CustomUser.objects.filter(role="ADMIN", is_active=True)
+    create_notifications_for_users(
+        users=admin_users,
+        title="Homework published",
+        message=f"{homework.subject} homework was published for class {homework.class_name}.",
+        notification_type=Notification.TYPE_HOMEWORK,
+        link_url=reverse("homework_list"),
+        metadata={"homework_id": homework.id, "class_name": homework.class_name},
+    )
     return len(recipients)
 
 
@@ -124,4 +152,16 @@ def send_result_notification(result, force=False):
 
     result.notification_sent_at = timezone.now()
     result.save(update_fields=["notification_sent_at"])
+
+    student_user = getattr(student, "user", None)
+    if student_user and student_user.is_active:
+        create_notification(
+            user=student_user,
+            title=f"New result: {result.subject}",
+            message=f"{result.exam_type} result has been published ({result.marks}/{result.total_marks}).",
+            notification_type=Notification.TYPE_RESULT,
+            link_url=reverse("result_list"),
+            metadata={"result_id": result.id},
+        )
+
     return True

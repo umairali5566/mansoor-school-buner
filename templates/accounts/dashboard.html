@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}{{ dashboard_header.title|default:"Dashboard" }} | Mansoor School Buner{% endblock %}
+
+{% block topbar_eyebrow %}
+<span class="live-indicator">
+    {% if dashboard_header.badge_icon %}
+    <i class="{{ dashboard_header.badge_icon }}"></i>
+    {% endif %}
+    {{ dashboard_header.eyebrow|default:"SAAMS Workspace" }}
+</span>
+{% endblock %}
+
+{% block topbar_title %}{% endblock %}
+{% block topbar_subtitle %}{% endblock %}
+
+{% block content %}
+{% with role_value=request.user.role|default:""|lower %}
+{% if request.GET.debug_role == "1" %}
+<p class="record-meta">Role: {{ request.user.role }}</p>
+{% endif %}
+{% if role_value == "admin" %}
+    {% include "dashboard/admin_dashboard.html" %}
+{% elif role_value == "teacher" %}
+    {% include "dashboard/teacher_dashboard.html" %}
+{% elif role_value == "student" %}
+    {% include "dashboard/student_dashboard.html" %}
+{% else %}
+<div class="dashboard-page animate-fade-in">
+    <div class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="empty-state">
+                <div class="empty-state-icon">
+                    <i class="bi bi-person-x"></i>
+                </div>
+                <h5>Dashboard unavailable</h5>
+                <p>Your account role is not configured for a dashboard view.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endwith %}
+{% endblock %}

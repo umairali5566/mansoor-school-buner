@@ -1,0 +1,203 @@
+{% extends "base.html" %}
+{% block title %}Assignment Detail | SAAMS{% endblock %}
+{% block topbar_eyebrow %}Smart Academic System{% endblock %}
+{% block topbar_title %}Assignment Detail{% endblock %}
+{% block topbar_subtitle %}Review submission progress, late work, and pending students with clear status indicators.{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-card-checklist"></i>
+            Assignment
+        </span>
+        <h2 class="dashboard-hero-title">{{ assignment.title }}</h2>
+        <p class="dashboard-hero-subtitle">
+            Class {{ assignment.class_assigned.name }}
+            {% if assignment.subject %}| {{ assignment.subject }}{% endif %}
+            | Due {{ assignment.due_date|date:"M d, Y h:i A" }}
+        </p>
+    </section>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} mb-0">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <p class="mb-3">{{ assignment.description }}</p>
+            <div class="d-flex flex-wrap gap-2">
+                {% if assignment.file and not is_admin_view %}
+                <a href="{% url 'download_assignment_file' assignment.id %}" class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-download"></i>
+                    Download Assignment File
+                </a>
+                {% endif %}
+                {% if is_teacher_view and can_manage %}
+                <a href="{% url 'assignment_edit' assignment.id %}" class="btn btn-outline-secondary btn-sm">Edit</a>
+                {% endif %}
+                <a href="{% url 'assignment_list' %}" class="btn btn-outline-secondary btn-sm">Back</a>
+            </div>
+        </div>
+    </section>
+
+    {% if is_student_view %}
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <h3 class="saas-panel-title mb-3">My Submission</h3>
+            <div class="d-flex flex-wrap gap-2 mb-3">
+                <span class="status-badge {{ my_status_class }}">{{ my_status }}</span>
+                {% if is_expired %}
+                <span class="status-badge status-badge-danger">Deadline Passed</span>
+                {% else %}
+                <span class="status-badge status-badge-success">Still Open</span>
+                {% endif %}
+            </div>
+
+            {% if my_submission and my_submission.file %}
+            <p class="record-meta">
+                Submitted at {{ my_submission.submitted_at|date:"M d, Y h:i A" }}
+            </p>
+            <a href="{% url 'download_assignment_submission' my_submission.id %}" class="btn btn-outline-primary btn-sm mb-3">
+                <i class="bi bi-download"></i>
+                Download My Submission
+            </a>
+            {% endif %}
+
+            <form method="post" action="{% url 'assignment_submit' assignment.id %}" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+                {% csrf_token %}
+                {{ submission_form.file }}
+                <button type="submit" class="btn btn-primary">Upload / Update Submission</button>
+            </form>
+        </div>
+    </section>
+    {% elif is_teacher_view %}
+    <section class="row g-4">
+        <div class="col-12 col-md-3 d-flex">
+            <article class="summary-card summary-present w-100">
+                <h5>Submitted</h5>
+                <h3>{{ submitted_count }}</h3>
+            </article>
+        </div>
+        <div class="col-12 col-md-3 d-flex">
+            <article class="summary-card summary-unmarked w-100">
+                <h5>Late</h5>
+                <h3>{{ late_count }}</h3>
+            </article>
+        </div>
+        <div class="col-12 col-md-3 d-flex">
+            <article class="summary-card summary-absent w-100">
+                <h5>Pending</h5>
+                <h3>{{ pending_count }}</h3>
+            </article>
+        </div>
+        <div class="col-12 col-md-3 d-flex">
+            <article class="summary-card summary-unmarked w-100">
+                <h5>Total Students</h5>
+                <h3>{{ total_students }}</h3>
+            </article>
+        </div>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="table-responsive table-shell">
+                <table class="table saas-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Roll</th>
+                            <th>Status</th>
+                            <th>Submitted At</th>
+                            <th>File</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in submission_rows %}
+                        <tr>
+                            <td>{{ row.student.display_name }}</td>
+                            <td>{{ row.student.roll_number|default:"-" }}</td>
+                            <td><span class="status-badge {{ row.status_class }}">{{ row.status }}</span></td>
+                            <td>{% if row.submission %}{{ row.submission.submitted_at|date:"M d, Y h:i A" }}{% else %}-{% endif %}</td>
+                            <td>
+                                {% if row.submission and row.submission.file %}
+                                <a href="{% url 'download_assignment_submission' row.submission.id %}" class="icon-action" title="Download submission">
+                                    <i class="bi bi-download"></i>
+                                </a>
+                                {% else %}
+                                <span class="status-badge status-badge-neutral">No File</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center text-muted py-4">No students found in this class.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    {% elif is_admin_view %}
+    <section class="row g-4">
+        <div class="col-12 col-md-3 d-flex">
+            <article class="summary-card summary-present w-100">
+                <h5>Submitted</h5>
+                <h3>{{ submitted_count }}</h3>
+            </article>
+        </div>
+        <div class="col-12 col-md-3 d-flex">
+            <article class="summary-card summary-unmarked w-100">
+                <h5>Late</h5>
+                <h3>{{ late_count }}</h3>
+            </article>
+        </div>
+        <div class="col-12 col-md-3 d-flex">
+            <article class="summary-card summary-absent w-100">
+                <h5>Pending</h5>
+                <h3>{{ pending_count }}</h3>
+            </article>
+        </div>
+        <div class="col-12 col-md-3 d-flex">
+            <article class="summary-card summary-unmarked w-100">
+                <h5>Teacher</h5>
+                <h3 class="fs-6 mb-0">{{ teacher_name }}</h3>
+            </article>
+        </div>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="table-responsive table-shell">
+                <table class="table saas-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Roll</th>
+                            <th>Status</th>
+                            <th>Submitted At</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in submission_rows %}
+                        <tr>
+                            <td>{{ row.student.display_name }}</td>
+                            <td>{{ row.student.roll_number|default:"-" }}</td>
+                            <td><span class="status-badge {{ row.status_class }}">{{ row.status }}</span></td>
+                            <td>{% if row.submission %}{{ row.submission.submitted_at|date:"M d, Y h:i A" }}{% else %}-{% endif %}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4" class="text-center text-muted py-4">No students found in this class.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+</div>
+{% endblock %}

@@ -166,3 +166,118 @@ class StudentAdmissionViewTests(TestCase):
         self.assertEqual(student.admission_class, self.class_8a)
         self.assertEqual(student.previous_school, "Beacon School")
         self.assertContains(response, student.user.username)
+
+
+class StudentProfileEditAccessTests(TestCase):
+    def setUp(self):
+        self.admin_user = CustomUser.objects.create_user(
+            username="profile_admin",
+            password="123456",
+            role="ADMIN",
+        )
+        self.teacher_user = CustomUser.objects.create_user(
+            username="profile_teacher",
+            password="123456",
+            role="TEACHER",
+        )
+        self.student_user = CustomUser.objects.create_user(
+            username="profile_student",
+            password="123456",
+            role="STUDENT",
+            first_name="Ali",
+            last_name="Khan",
+        )
+        self.other_student_user = CustomUser.objects.create_user(
+            username="profile_student_two",
+            password="123456",
+            role="STUDENT",
+            first_name="Sara",
+            last_name="Noor",
+        )
+        self.student = Student.objects.create(
+            user=self.student_user,
+            full_name="Ali Khan",
+            roll_number="1",
+            class_name="8-A",
+            phone="03000000001",
+            parent_email="ali.parent@example.com",
+            date_of_birth=date(2012, 1, 1),
+        )
+        self.other_student = Student.objects.create(
+            user=self.other_student_user,
+            full_name="Sara Noor",
+            roll_number="2",
+            class_name="9-A",
+            phone="03000000002",
+            parent_email="sara.parent@example.com",
+            date_of_birth=date(2011, 5, 2),
+        )
+
+    def test_student_can_edit_own_profile(self):
+        self.client.login(username="profile_student", password="123456")
+        response = self.client.post(
+            reverse("edit_profile"),
+            {
+                "full_name": "Ali Hassan",
+                "phone": "03112223344",
+                "parent_email": "ali.new@example.com",
+                "date_of_birth": "2012-02-03",
+            },
+        )
+
+        self.assertRedirects(response, reverse("student_profile", kwargs={"id": self.student.id}))
+        self.student.refresh_from_db()
+        self.assertEqual(self.student.full_name, "Ali Hassan")
+        self.assertEqual(self.student.phone, "03112223344")
+        self.assertEqual(self.student.parent_email, "ali.new@example.com")
+        self.assertEqual(self.student.date_of_birth, date(2012, 2, 3))
+
+    def test_admin_can_edit_any_student_profile(self):
+        self.client.login(username="profile_admin", password="123456")
+        response = self.client.post(
+            reverse("admin_edit_student", kwargs={"student_id": self.other_student.id}),
+            {
+                "full_name": "Sara Akram",
+                "phone": "03224445566",
+                "parent_email": "sara.new@example.com",
+                "date_of_birth": "2011-08-20",
+                "class_name": "10-A",
+            },
+        )
+
+        self.assertRedirects(response, reverse("student_profile", kwargs={"id": self.other_student.id}))
+        self.other_student.refresh_from_db()
+        self.assertEqual(self.other_student.full_name, "Sara Akram")
+        self.assertEqual(self.other_student.phone, "03224445566")
+        self.assertEqual(self.other_student.parent_email, "sara.new@example.com")
+        self.assertEqual(self.other_student.class_name, "10-A")
+
+    def test_student_cannot_edit_other_student_profile(self):
+        self.client.login(username="profile_student", password="123456")
+        response = self.client.get(reverse("admin_edit_student", kwargs={"student_id": self.other_student.id}))
+
+        self.assertRedirects(response, reverse("edit_profile"))
+        self.other_student.refresh_from_db()
+        self.assertEqual(self.other_student.full_name, "Sara Noor")
+
+    def test_teacher_cannot_open_student_profile_edit(self):
+        self.client.login(username="profile_teacher", password="123456")
+        response = self.client.get(reverse("edit_profile"))
+
+        self.assertRedirects(response, reverse("teacher_dashboard"))
+
+    def test_profile_edit_rejects_empty_required_fields(self):
+        self.client.login(username="profile_student", password="123456")
+        response = self.client.post(
+            reverse("edit_profile"),
+            {
+                "full_name": "",
+                "phone": "",
+                "parent_email": "",
+                "date_of_birth": "",
+            },
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.student.refresh_from_db()
+        self.assertEqual(self.student.full_name, "Ali Khan")

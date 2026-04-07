@@ -1,8 +1,8 @@
 {% extends "base.html" %}
-{% block title %}Student Admissions | School Management System{% endblock %}
-{% block topbar_eyebrow %}Admissions Desk{% endblock %}
-{% block topbar_title %}Student Admissions{% endblock %}
-{% block topbar_subtitle %}Search, filter, review, and update admission records with a cleaner admin workflow and consistent responsive layout.{% endblock %}
+{% block title %}Student Enrollment | School Management System{% endblock %}
+{% block topbar_eyebrow %}Enrollment Desk{% endblock %}
+{% block topbar_title %}Student Enrollment{% endblock %}
+{% block topbar_subtitle %}Search, filter, review, and update student records with a cleaner operations workflow and consistent responsive layout.{% endblock %}
 {% block topbar_actions %}
 <div class="topbar-actions-group">
     <a href="{% url 'student_list' %}" class="btn btn-outline-primary btn-sm">
@@ -22,19 +22,19 @@
             <div>
                 <span class="hero-badge">
                     <i class="bi bi-journal-richtext"></i>
-                    Admissions desk
+                    Enrollment desk
                 </span>
                 <h2 class="dashboard-hero-title">Student admission management</h2>
-                <p class="dashboard-hero-subtitle">Review complete admission records, search by student name or roll number, and filter by class or admission date from one organized admin workspace.</p>
+                <p class="dashboard-hero-subtitle">Review complete student records, search by student name or roll number, and filter by class or admission date from one organized operations workspace.</p>
             </div>
             <div class="d-flex flex-wrap gap-2">
                 <a href="{% url 'student_list' %}" class="btn btn-outline-primary">
                     <i class="bi bi-people-fill"></i>
-                    Manage Students
+                    Students
                 </a>
                 <a href="{% url 'add_student_admission' %}" class="btn btn-primary">
                     <i class="bi bi-person-plus-fill"></i>
-                    Add Student Admission
+                    Add Student
                 </a>
             </div>
         </div>
@@ -53,7 +53,7 @@
             <article class="saas-stat-card w-100">
                 <div class="saas-stat-main">
                     <span class="saas-stat-icon"><i class="bi bi-folder-check"></i></span>
-                    <p class="saas-stat-label">Total Admissions</p>
+                    <p class="saas-stat-label">Total Enrollments</p>
                     <h3 class="saas-stat-value">{{ total_admissions }}</h3>
                     <p class="saas-stat-meta">All admission records in the system</p>
                 </div>
@@ -75,7 +75,7 @@
                     <span class="saas-stat-icon"><i class="bi bi-calendar2-plus-fill"></i></span>
                     <p class="saas-stat-label">This Month</p>
                     <h3 class="saas-stat-value">{{ this_month_count }}</h3>
-                    <p class="saas-stat-meta">Admissions created in the current month</p>
+                    <p class="saas-stat-meta">Enrollments created in the current month</p>
                 </div>
             </article>
         </div>
@@ -90,7 +90,7 @@
                 </div>
                 <span class="class-pill">
                     <i class="bi bi-lock-fill"></i>
-                    Admin only
+                    Restricted
                 </span>
             </div>
 
@@ -123,7 +123,7 @@
 
             <div class="table-shell">
                 <div class="table-responsive">
-                    <table class="table align-middle">
+                    <table class="table saas-table align-middle">
                         <thead>
                             <tr>
                                 <th>Student Name</th>
@@ -153,8 +153,12 @@
                                     <td>{{ student.previous_school|default:"-" }}</td>
                                     <td class="text-end">
                                         <div class="row-actions row-actions-end">
-                                            <a href="{% url 'student_profile' student.id %}" class="btn btn-sm btn-outline-primary">View</a>
-                                            <a href="{% url 'edit_student_admission' student.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
+                                            <a href="{% url 'student_profile' student.id %}" class="icon-action" title="View admission" aria-label="View admission">
+                                                <i class="bi bi-eye"></i>
+                                            </a>
+                                            <a href="{% url 'edit_student_admission' student.id %}" class="icon-action icon-action-warning" title="Edit admission" aria-label="Edit admission">
+                                                <i class="bi bi-pencil-square"></i>
+                                            </a>
                                         </div>
                                     </td>
                                 </tr>

@@ -1,25 +1,83 @@
 {% extends 'base.html' %}
+{% block title %}Students | School Management System{% endblock %}
+{% block topbar_eyebrow %}Students{% endblock %}
+{% block topbar_title %}View Students{% endblock %}
+{% block topbar_subtitle %}Browse enrolled students with a consistent responsive table and quick profile access.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    {% if request.user.role == 'ADMIN' %}
+    <a href="{% url 'student_list' %}" class="btn btn-outline-primary btn-sm">
+        <i class="bi bi-gear-fill"></i>
+        Students
+    </a>
+    {% endif %}
+</div>
+{% endblock %}
 
 {% block content %}
-<h1>View Students</h1>
-<table>
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Email</th>
-            <th>Class</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for student in students %}
-        <tr>
-            <td>{{ student.id }}</td>
-            <td>{{ student.name }}</td>
-            <td>{{ student.email }}</td>
-            <td>{{ student.classroom.name }}</td>
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
+<div class="dashboard-page">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-people-fill"></i>
+            Student Records
+        </span>
+        <h2 class="dashboard-hero-title">Students</h2>
+        <p class="dashboard-hero-subtitle">Review students by class and open detailed profiles in one structured workspace.</p>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="page-section-head mb-3">
+                <h3 class="saas-panel-title">All Visible Students</h3>
+                <span class="section-badge">{{ students|length }} Students</span>
+            </div>
+
+            <div class="table-responsive table-shell">
+                <table class="table saas-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Username</th>
+                            <th>Roll Number</th>
+                            <th>Class</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
+                        <tr>
+                            <td>
+                                <div class="record-name">
+                                    <strong>{{ student.display_name }}</strong>
+                                    <span class="record-meta">{{ student.parent_email|default:'No parent email' }}</span>
+                                </div>
+                            </td>
+                            <td>{{ student.user.username }}</td>
+                            <td>{{ student.roll_number|default:'-' }}</td>
+                            <td><span class="class-pill">{{ student.class_name|default:'-' }}</span></td>
+                            <td>
+                                <div class="row-actions row-actions-end">
+                                    <a href="{% url 'student_profile' student.id %}" class="icon-action" title="View Profile" aria-label="View Profile">
+                                        <i class="bi bi-eye"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">
+                                <div class="empty-state">
+                                    <span class="empty-state-icon"><i class="bi bi-people"></i></span>
+                                    <h5>No Students Found</h5>
+                                    <p>No student records are available for your current access scope.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+</div>
 {% endblock %}

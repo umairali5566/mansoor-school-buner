@@ -5,9 +5,13 @@ from django.contrib.auth import views as auth_views
 urlpatterns = [
 
     # =====================================================
+    # HOMEPAGE
+    # =====================================================
+    path('', views.home, name='home'),
+
+    # =====================================================
     # AUTH
     # =====================================================
-    path('', views.login_view, name='login'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
 
@@ -41,6 +45,8 @@ urlpatterns = [
     # =====================================================
     path('teachers/', views.teacher_list, name='teacher_list'),
     path('add-teacher/', views.add_teacher, name='add_teacher'),
+    path('class-assignments/', views.class_assignment_list, name='class_assignment_list'),
+    path('class-assignments/<int:class_id>/', views.manage_class_assignment, name='manage_class_assignment'),
     path('assign-teacher-classes/<int:teacher_id>/', views.assign_teacher_classes, name='assign_teacher_classes'),
     path('edit-teacher/<int:teacher_id>/', views.edit_teacher, name='edit_teacher'),
     path('delete-teacher/<int:teacher_id>/', views.delete_teacher, name='delete_teacher'),
@@ -54,6 +60,8 @@ urlpatterns = [
     # =====================================================
 
     path('student-profile/<int:id>/', views.student_profile, name='student_profile'),
+    path("my-profile/edit/", views.edit_student_profile, name="edit_profile"),
+    path("student/<int:student_id>/edit/", views.edit_student_profile, name="admin_edit_student"),
 
     # =====================================================
     # CHANGE PASSWORD (BUILT-IN DJANGO)
@@ -102,4 +110,5 @@ urlpatterns = [
     # VIEW STUDENTS
     # =====================================================
     path('view-students/', views.view_students, name='view_students'),
+    path("search/quick/", views.quick_search, name="quick_search"),
 ]

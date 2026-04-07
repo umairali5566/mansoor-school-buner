@@ -2,6 +2,7 @@ import logging
 
 from django.conf import settings
 from django.core.mail import send_mail
+from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import localtime
 
@@ -101,6 +102,29 @@ def send_attendance_notification(attendance, force=False):
     attendance.notification_sent_at = timezone.now()
     attendance.notification_status = attendance.status
     attendance.save(update_fields=["notification_sent_at", "notification_status"])
+
+    # In-app alert for the student portal.
+    try:
+        from notifications.models import Notification
+        from notifications.services import create_notification
+
+        student_user = getattr(student, "user", None)
+        if student_user and student_user.is_active:
+            create_notification(
+                user=student_user,
+                title=f"Attendance marked: {attendance.status}",
+                message=f"Your attendance for {attendance.date.strftime('%b %d, %Y')} was marked as {attendance.status}.",
+                notification_type=Notification.TYPE_ATTENDANCE,
+                link_url=reverse("student_attendance"),
+                metadata={
+                    "attendance_id": attendance.id,
+                    "status": attendance.status,
+                    "date": attendance.date.isoformat(),
+                },
+            )
+    except Exception:
+        LOGGER.exception("Failed to create in-app attendance notification. attendance_id=%s", attendance.id)
+
     return True
 
 

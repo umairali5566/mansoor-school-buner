@@ -39,9 +39,12 @@
                     <select name="class" class="form-control">
                         <option value="">Select Class</option>
                         {% for c in classes %}
-                        <option value="{{ c }}" {% if c == selected_class %}selected{% endif %}>Class {{ c }}</option>
+                        <option value="{{ c }}" {% if c == selected_class %}selected{% endif %}>{{ c }}</option>
                         {% endfor %}
                     </select>
+                    {% if request.user.role == "TEACHER" %}
+                    <p class="content-note mb-0 mt-2">Only classes where you are the attendance teacher are listed.</p>
+                    {% endif %}
                 </div>
 
                 <div class="col-12 col-md-4">
@@ -76,7 +79,7 @@
                 <input type="hidden" name="date" value="{{ selected_date }}">
 
                 <div class="table-responsive table-shell">
-                    <table class="table align-middle mb-0">
+                    <table class="table saas-table align-middle mb-0">
                         <thead>
                             <tr>
                                 <th>Student</th>
@@ -112,7 +115,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="4" class="text-center text-muted py-4">No students found in your class. Please contact admin to assign a class.</td>
+                                <td colspan="4" class="text-center text-muted py-4">No students found in your class. Please contact support to assign a class.</td>
                             </tr>
                             {% endfor %}
                         </tbody>

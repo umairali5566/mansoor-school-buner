@@ -1,650 +1,75 @@
+{% extends 'base.html' %}
 {% load static %}
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Login | SAAMS</title>
-    <meta name="application-name" content="School MS">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <meta name="apple-mobile-web-app-title" content="School MS">
-    <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#0F172A">
-    <link rel="manifest" href="{% static 'manifest.json' %}">
-    <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#0F172A',
-                        secondary: '#1E293B',
-                        accent: '#3B82F6',
-                        purple: '#6366F1',
-                        green: '#22C55E'
-                    },
-                    backgroundImage: {
-                        'gradient-primary': 'linear-gradient(135deg, #3B82F6, #8B5CF6)'
-                    }
-                }
-            }
-        }
-    </script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <style>
-        body {
-            font-family: "Inter", "Segoe UI", sans-serif;
-        }
-
-        .animate-float {
-            animation: float 12s linear infinite;
-        }
-
-        .animate-drift {
-            animation: drift 17s ease-in-out infinite alternate;
-        }
-
-        @keyframes float {
-            0%, 100% { transform: translateY(0px) rotate(0deg); }
-            50% { transform: translateY(-20px) rotate(180deg); }
-        }
-
-        @keyframes drift {
-            0% { transform: translate(0px, 0px) rotate(0deg); }
-            100% { transform: translate(50px, -50px) rotate(360deg); }
-        }
-
-        .scene {
-            position: fixed;
-            inset: 0;
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .wave {
-            position: absolute;
-            width: 42rem;
-            height: 42rem;
-            border-radius: 45% 55% 60% 40% / 45% 45% 55% 55%;
-            filter: blur(6px);
-            opacity: 0.42;
-            animation: drift 17s ease-in-out infinite alternate;
-        }
-
-        .wave.one {
-            left: -6rem;
-            top: -8rem;
-            background: linear-gradient(135deg, rgba(57, 230, 255, 0.55), rgba(79, 125, 255, 0.32));
-        }
-
-        .wave.two {
-            right: -10rem;
-            top: 18%;
-            background: linear-gradient(135deg, rgba(138, 93, 255, 0.54), rgba(235, 97, 255, 0.3));
-            animation-duration: 20s;
-        }
-
-        .wave.three {
-            left: 32%;
-            bottom: -16rem;
-            background: linear-gradient(135deg, rgba(57, 230, 255, 0.34), rgba(138, 93, 255, 0.38));
-            animation-duration: 24s;
-        }
-
-        .particle {
-            position: absolute;
-            width: 14px;
-            height: 14px;
-            border-radius: 4px;
-            background: linear-gradient(135deg, rgba(57, 230, 255, 0.6), rgba(138, 93, 255, 0.52));
-            box-shadow: 0 0 22px rgba(57, 230, 255, 0.45);
-            animation: float 12s linear infinite;
-            opacity: 0.62;
-        }
-
-        .particle.p1 { left: 9%; top: 23%; animation-delay: -2s; }
-        .particle.p2 { right: 18%; top: 18%; animation-delay: -5s; }
-        .particle.p3 { left: 20%; bottom: 16%; animation-delay: -8s; }
-        .particle.p4 { right: 8%; bottom: 18%; animation-delay: -10s; }
-
-        .layout {
-            min-height: 100vh;
-            display: grid;
-            place-items: center;
-            padding: 24px 14px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .shell {
-            width: min(1080px, 100%);
-            border-radius: 28px;
-            border: 1px solid var(--card-line);
-            background: var(--card-glass);
-            box-shadow: 0 30px 90px rgba(0, 4, 16, 0.5);
-            backdrop-filter: blur(20px);
-            overflow: hidden;
-            display: grid;
-            grid-template-columns: 1.03fr 0.97fr;
-        }
-
-        .left, .right { padding: 38px 34px; }
-
-        .left {
-            background: linear-gradient(175deg, rgba(9, 16, 38, 0.86), rgba(10, 21, 44, 0.72));
-            border-right: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .brand {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 26px;
-        }
-
-        .brand-icon {
-            width: 52px;
-            height: 52px;
-            border-radius: 14px;
-            display: grid;
-            place-items: center;
-            background: linear-gradient(145deg, rgba(57, 230, 255, 0.18), rgba(138, 93, 255, 0.22));
-            border: 1px solid rgba(255, 255, 255, 0.25);
-            box-shadow: 0 0 24px rgba(57, 230, 255, 0.28);
-        }
-
-        .brand-icon img { width: 32px; height: 32px; object-fit: contain; }
-        .brand h1 { margin: 0; font-family: "Montserrat", sans-serif; font-size: 1.1rem; letter-spacing: 0.01em; }
-        .brand p { margin: 3px 0 0; color: var(--muted); font-size: 0.82rem; }
-
-        .field { margin-bottom: 14px; }
-        .field label { display: block; margin-bottom: 8px; color: #dbe4ff; font-size: 0.88rem; font-weight: 600; }
-
-        .input-shell {
-            border: 1px solid var(--field-line);
-            background: var(--field-bg);
-            border-radius: 14px;
-            display: flex;
-            align-items: center;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
-        }
-
-        .input-shell:focus-within {
-            border-color: rgba(57, 230, 255, 0.72);
-            box-shadow: 0 0 0 4px rgba(57, 230, 255, 0.15);
-            transform: translateY(-1px);
-        }
-
-        .icon {
-            width: 48px;
-            min-width: 48px;
-            display: grid;
-            place-items: center;
-            color: #9db4eb;
-        }
-
-        .icon svg { width: 18px; height: 18px; }
-
-        .auth-input {
-            width: 100%;
-            border: 0;
-            outline: none;
-            background: transparent;
-            color: #f2f6ff;
-            font-size: 0.95rem;
-            padding: 13px 12px 13px 0;
-            font-family: "Poppins", sans-serif;
-        }
-
-        .auth-input::placeholder { color: #8fa6db; }
-
-        .pw-toggle {
-            width: 46px;
-            min-width: 46px;
-            border: 0;
-            background: transparent;
-            color: #9db4eb;
-            cursor: pointer;
-        }
-
-        .pw-toggle:hover { color: #dff4ff; }
-        .pw-toggle svg { width: 19px; height: 19px; }
-
-        .meta {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 10px;
-            margin: 12px 0 18px;
-        }
-
-        .remember {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            color: #c7d6fb;
-            font-size: 0.86rem;
-        }
-
-        .remember input { accent-color: #4f7dff; }
-
-        .forgot {
-            color: #7ce9ff;
-            text-decoration: none;
-            font-size: 0.86rem;
-            font-weight: 700;
-        }
-
-        .forgot:hover { color: #d9f8ff; }
-
-        .btn-login {
-            width: 100%;
-            border: 0;
-            border-radius: 14px;
-            padding: 13px 14px;
-            color: #fff;
-            font-size: 0.96rem;
-            font-weight: 800;
-            letter-spacing: 0.01em;
-            background: linear-gradient(130deg, var(--cyan), var(--blue) 42%, var(--purple) 80%, var(--pink));
-            box-shadow: 0 16px 36px rgba(57, 111, 255, 0.4), 0 0 24px rgba(138, 93, 255, 0.28);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-            cursor: pointer;
-        }
-
-        .btn-login:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 22px 44px rgba(57, 111, 255, 0.52), 0 0 30px rgba(138, 93, 255, 0.32);
-        }
-
-        .note {
-            margin-top: 14px;
-            color: #9db1df;
-            font-size: 0.82rem;
-            line-height: 1.55;
-        }
-
-        .right {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            overflow: hidden;
-            background: linear-gradient(180deg, rgba(15, 28, 64, 0.62), rgba(11, 21, 47, 0.32));
-        }
-
-        .right h2 {
-            margin: 0 0 10px;
-            font-family: "Montserrat", sans-serif;
-            font-size: clamp(2.4rem, 4vw, 3.8rem);
-            letter-spacing: -0.02em;
-        }
-
-        .right p {
-            margin: 0;
-            max-width: 34ch;
-            color: var(--muted);
-            line-height: 1.8;
-            font-size: 0.94rem;
-        }
-
-        .shape-3d {
-            position: absolute;
-            right: -80px;
-            bottom: -80px;
-            width: 420px;
-            height: 300px;
-            background:
-                radial-gradient(circle at 25% 25%, rgba(57, 230, 255, 0.9), transparent 45%),
-                radial-gradient(circle at 70% 35%, rgba(138, 93, 255, 0.82), transparent 50%),
-                radial-gradient(circle at 45% 75%, rgba(235, 97, 255, 0.72), transparent 45%);
-            filter: blur(10px);
-            border-radius: 52% 48% 60% 40% / 42% 58% 42% 58%;
-            opacity: 0.8;
-            animation: morph 14s ease-in-out infinite;
-        }
-
-        .alert-box {
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, 0.22);
-            margin-bottom: 10px;
-            padding: 10px 12px;
-            font-size: 0.88rem;
-        }
-
-        .alert-danger { background: rgba(255, 106, 149, 0.2); color: #ffd8e8; }
-        .alert-info, .alert-success, .alert-warning { background: rgba(57, 230, 255, 0.18); color: #d8f8ff; }
-        .field-error { margin-top: 7px; color: #ffbbd5; font-size: 0.81rem; }
-
-        .pwa-install-banner {
-            position: fixed;
-            left: 16px;
-            right: 16px;
-            bottom: 16px;
-            z-index: 30;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 12px;
-            padding: 14px 16px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            border-radius: 18px;
-            background: rgba(7, 12, 28, 0.86);
-            box-shadow: 0 22px 46px rgba(0, 0, 0, 0.28);
-            backdrop-filter: blur(18px);
-        }
-
-        .pwa-install-copy {
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            min-width: 0;
-        }
-
-        .pwa-install-copy strong {
-            font-size: 0.95rem;
-            color: #f4f8ff;
-        }
-
-        .pwa-install-copy span {
-            color: #a7b6dc;
-            font-size: 0.82rem;
-            line-height: 1.4;
-        }
-
-        .pwa-install-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            flex-shrink: 0;
-        }
-
-        .pwa-install-button {
-            min-height: 40px;
-            padding-inline: 14px;
-        }
-
-        .pwa-dismiss-button {
-            width: 38px;
-            height: 38px;
-            border: 1px solid rgba(255, 255, 255, 0.16);
-            border-radius: 12px;
-            background: rgba(255, 255, 255, 0.06);
-            color: #dbe4ff;
-            cursor: pointer;
-        }
-
-        @media (max-width: 575.98px) {
-            .pwa-install-banner {
-                flex-direction: column;
-                align-items: stretch;
-            }
-
-            .pwa-install-actions {
-                justify-content: space-between;
-            }
-        }
-
-        @keyframes drift {
-            0% { transform: translate(0, 0) rotate(0deg); }
-            100% { transform: translate(40px, -24px) rotate(14deg); }
-        }
-
-        @keyframes float {
-            0% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-26px) rotate(12deg); }
-            100% { transform: translateY(0) rotate(24deg); }
-        }
-
-        @keyframes morph {
-            0%, 100% { transform: rotate(0deg) scale(1); border-radius: 52% 48% 60% 40% / 42% 58% 42% 58%; }
-            50% { transform: rotate(8deg) scale(1.07); border-radius: 42% 58% 46% 54% / 56% 44% 60% 40%; }
-        }
-
-        @media (max-width: 991.98px) {
-            body { overflow: auto; }
-            .shell { grid-template-columns: 1fr; }
-            .left { border-right: 0; border-bottom: 1px solid rgba(255, 255, 255, 0.1); }
-            .shape-3d { right: -100px; width: 340px; height: 250px; }
-        }
-
-        @media (max-width: 575.98px) {
-            .layout { padding: 10px; }
-            .left, .right { padding: 24px 16px; }
-            .meta { flex-direction: column; align-items: flex-start; }
-            .brand h1 { font-size: 1rem; }
-        }
-
-        .role-select {
-            margin-top: 20px;
-            padding-top: 18px;
-            border-top: 1px solid rgba(255, 255, 255, 0.12);
-        }
-
-        .role-select-label {
-            font-size: 0.86rem;
-            color: var(--muted);
-            margin: 0 0 10px;
-            font-weight: 500;
-        }
-
-        .role-cards {
-            display: flex;
-            gap: 10px;
-        }
-
-        .role-card {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 6px;
-            padding: 14px 8px;
-            border: 1px solid var(--field-line);
-            background: var(--field-bg);
-            border-radius: 14px;
-            cursor: pointer;
-            transition: all 0.25s ease;
-            color: #9db4eb;
-        }
-
-        .role-card:hover {
-            border-color: rgba(57, 230, 255, 0.5);
-            background: rgba(57, 230, 255, 0.08);
-            transform: translateY(-2px);
-        }
-
-        .role-card.selected {
-            border-color: var(--cyan);
-            background: rgba(57, 230, 255, 0.15);
-            color: var(--cyan);
-            box-shadow: 0 0 20px rgba(57, 230, 255, 0.2);
-        }
-
-        .role-icon {
-            font-size: 1.4rem;
-        }
-
-        .role-name {
-            font-size: 0.78rem;
-            font-weight: 600;
-        }
-
-        @media (max-width: 575.98px) {
-            .role-cards {
-                gap: 8px;
-            }
-            .role-card {
-                padding: 12px 6px;
-            }
-            .role-icon {
-                font-size: 1.2rem;
-            }
-            .role-name {
-                font-size: 0.72rem;
-            }
-        }
-    </style>
-</head>
-<body>
-    <div class="scene" aria-hidden="true">
-        <div class="wave one"></div>
-        <div class="wave two"></div>
-        <div class="wave three"></div>
-        <span class="particle p1"></span>
-        <span class="particle p2"></span>
-        <span class="particle p3"></span>
-        <span class="particle p4"></span>
-    </div>
-
-    <main class="layout">
-        <section class="shell">
-            <section class="left">
-                <div class="brand">
-                    <div class="brand-icon">
-                        <img src="{% static 'logo.png' %}" alt="School logo">
-                    </div>
-                    <div>
-                        <h1>School Management System</h1>
-                        <p>Secure Access Portal</p>
-                    </div>
-                </div>
-
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert-box alert-{{ message.tags|default:'info' }}">{{ message }}</div>
-                    {% endfor %}
+{% block title %}Login | SAAMS{% endblock %}
+
+{% block guest_content %}
+<div class="auth-shell auth-shell-wide">
+    <section class="auth-promo-card">
+        <span class="hero-badge">
+            <i class="bi bi-shield-check"></i>
+            Secure Access
+        </span>
+        <h2 class="dashboard-hero-title">Welcome Back to SAAMS</h2>
+        <p class="dashboard-hero-subtitle">Manage students, attendance, homework, and results from one premium school operations platform.</p>
+
+        <div class="hero-mini-grid mt-4">
+            <div class="mini-metric">
+                <span class="mini-label">Live Tracking</span>
+                <strong>24/7</strong>
+            </div>
+            <div class="mini-metric">
+                <span class="mini-label">Role Access</span>
+                <strong>Management / Teacher / Student</strong>
+            </div>
+        </div>
+    </section>
+
+    <section class="card shadow-sm border-0 auth-card">
+        <div class="card-body p-4 p-md-5">
+            <span class="section-badge">Portal Login</span>
+            <h1 class="h3 mt-3 mb-2">Sign In</h1>
+            <p class="text-muted mb-4">Use your assigned credentials to access the dashboard.</p>
+
+            {% if messages %}
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags|default:'info' }} mb-3" role="alert">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+
+            {% if form.non_field_errors %}
+            <div class="alert alert-danger mb-3" role="alert">{{ form.non_field_errors }}</div>
+            {% endif %}
+
+            <form method="post" novalidate class="d-flex flex-column gap-3">
+                {% csrf_token %}
+                {% if next %}
+                <input type="hidden" name="next" value="{{ next }}">
                 {% endif %}
 
-                {% if form.non_field_errors %}
-                    <div class="alert-box alert-danger">{{ form.non_field_errors }}</div>
-                {% endif %}
-
-                <form method="post" novalidate>
-                    {% csrf_token %}
-                    {% if next %}
-                        <input type="hidden" name="next" value="{{ next }}">
-                    {% endif %}
-
-                    <div class="field">
-                        <label for="id_username">Username</label>
-                        <div class="input-shell">
-                            <span class="icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none"><path d="M12 12C14.76 12 17 9.76 17 7C17 4.24 14.76 2 12 2C9.24 2 7 4.24 7 7C7 9.76 9.24 12 12 12Z" stroke="currentColor" stroke-width="1.7"/><path d="M4 21C4.9 17.8 7.9 16 12 16C16.1 16 19.1 17.8 20 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                            </span>
-                            <input type="text" name="username" id="id_username" class="auth-input" placeholder="Enter your username" value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" required>
-                        </div>
-                        {% if form.username.errors %}<div class="field-error">{{ form.username.errors }}</div>{% endif %}
+                <div>
+                    <label class="form-label" for="id_username">Username</label>
+                    <div class="field-with-icon">
+                        <i class="bi bi-person-fill"></i>
+                        <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter your username" value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" required>
                     </div>
-
-                    <div class="field">
-                        <label for="id_password">Password</label>
-                        <div class="input-shell">
-                            <span class="icon" aria-hidden="true">
-                                <svg viewBox="0 0 24 24" fill="none"><path d="M7 10V8C7 5.24 9.24 3 12 3C14.76 3 17 5.24 17 8V10" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><rect x="5" y="10" width="14" height="11" rx="3" stroke="currentColor" stroke-width="1.7"/><path d="M12 14V17" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                            </span>
-                            <input type="password" name="password" id="id_password" class="auth-input" placeholder="Enter your password" autocomplete="current-password" required>
-                            <button type="button" class="pw-toggle" id="passwordToggle" aria-label="Show password">
-                                <svg id="eyeOpen" viewBox="0 0 24 24" fill="none"><path d="M2 12C3.6 8.2 7.2 6 12 6C16.8 6 20.4 8.2 22 12C20.4 15.8 16.8 18 12 18C7.2 18 3.6 15.8 2 12Z" stroke="currentColor" stroke-width="1.7"/><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="1.7"/></svg>
-                                <svg id="eyeClosed" viewBox="0 0 24 24" fill="none" style="display:none"><path d="M3 3L21 21" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M10.6 6.3C11.05 6.1 11.51 6 12 6C16.8 6 20.4 8.2 22 12C21.35 13.56 20.42 14.88 19.24 15.9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/><path d="M6.09 8.52C4.37 9.41 3.01 10.62 2 12C3.6 15.8 7.2 18 12 18C13.58 18 14.99 17.76 16.24 17.31" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
-                            </button>
-                        </div>
-                        {% if form.password.errors %}<div class="field-error">{{ form.password.errors }}</div>{% endif %}
-                    </div>
-
-                    <div class="meta">
-                        <label class="remember">
-                            <input type="checkbox" name="remember">
-                            <span>Remember me</span>
-                        </label>
-                        <a href="{% url 'password_reset' %}" class="forgot">Forgot password?</a>
-                    </div>
-
-                    <button type="submit" class="btn-login">Login</button>
-                </form>
-
-                <div class="role-select">
-                    <p class="role-select-label">Login as:</p>
-                    <div class="role-cards">
-                        <button type="button" class="role-card selected" data-role="admin" onclick="selectRole(this)">
-                            <span class="role-icon"><i class="bi bi-shield-fill-check"></i></span>
-                            <span class="role-name">Admin</span>
-                        </button>
-                        <button type="button" class="role-card" data-role="teacher" onclick="selectRole(this)">
-                            <span class="role-icon"><i class="bi bi-mortarboard-fill"></i></span>
-                            <span class="role-name">Teacher</span>
-                        </button>
-                        <button type="button" class="role-card" data-role="student" onclick="selectRole(this)">
-                            <span class="role-icon"><i class="bi bi-person-fill"></i></span>
-                            <span class="role-name">Student</span>
-                        </button>
-                    </div>
+                    {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors }}</div>{% endif %}
                 </div>
 
-                <div class="note">
-                    Access is available for Admins, Teachers, and Students using assigned credentials.
+                <div>
+                    <label class="form-label" for="id_password">Password</label>
+                    <div class="field-with-icon">
+                        <i class="bi bi-lock-fill"></i>
+                        <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter your password" autocomplete="current-password" required>
+                    </div>
+                    {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors }}</div>{% endif %}
                 </div>
-            </section>
 
-            <section class="right">
-                <h2>Welcome</h2>
-                <p>
-                    Sign in to SAAMS and manage attendance, academics, and student operations through one modern school platform.
-                </p>
-                <div class="shape-3d" aria-hidden="true"></div>
-            </section>
-        </section>
-    </main>
-
-    <div class="pwa-install-banner" id="pwaInstallBanner" hidden>
-        <div class="pwa-install-copy">
-            <strong>Install School MS</strong>
-            <span>Add the app to your home screen for quicker access.</span>
+                <div class="page-actions justify-content-between align-items-center">
+                    <a href="{% url 'password_reset' %}" class="btn btn-outline-secondary">Forgot password?</a>
+                    <button type="submit" class="btn btn-primary">Sign In</button>
+                </div>
+            </form>
         </div>
-        <div class="pwa-install-actions">
-            <button type="button" class="btn btn-primary pwa-install-button" id="pwaInstallButton">Install App</button>
-            <button type="button" class="pwa-dismiss-button" id="pwaDismissButton" aria-label="Dismiss install prompt">
-                <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
-                    <path d="M6 6L18 18M18 6L6 18" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path>
-                </svg>
-            </button>
-        </div>
-    </div>
-
-    <script src="{% static 'js/pwa.js' %}"></script>
-    <script>
-        (function () {
-            const passwordInput = document.getElementById("id_password");
-            const passwordToggle = document.getElementById("passwordToggle");
-            const eyeOpen = document.getElementById("eyeOpen");
-            const eyeClosed = document.getElementById("eyeClosed");
-
-            if (!passwordInput || !passwordToggle || !eyeOpen || !eyeClosed) {
-                return;
-            }
-
-            passwordToggle.addEventListener("click", function () {
-                const show = passwordInput.type === "password";
-                passwordInput.type = show ? "text" : "password";
-                passwordToggle.setAttribute("aria-label", show ? "Hide password" : "Show password");
-                eyeOpen.style.display = show ? "none" : "block";
-                eyeClosed.style.display = show ? "block" : "none";
-            });
-        }());
-
-        // Role selection functionality
-        function selectRole(element) {
-            document.querySelectorAll('.role-card').forEach(function(card) {
-                card.classList.remove('selected');
-            });
-            element.classList.add('selected');
-        }
-    </script>
-</body>
-</html>
+    </section>
+</div>
+{% endblock %}

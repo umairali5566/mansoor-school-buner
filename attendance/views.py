@@ -27,6 +27,8 @@ except ModuleNotFoundError:
 
 import pickle
 import os
+import csv
+import calendar
 import threading
 import textwrap
 import uuid
@@ -34,7 +36,7 @@ import time
 import logging
 from urllib.parse import urlencode
 from collections import deque
-from datetime import date as dt_date
+from datetime import date as dt_date, timedelta, datetime
 
 from django.conf import settings
 from django.db import close_old_connections, transaction
@@ -42,7 +44,9 @@ from django.db.models import Q, Count, Prefetch
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib import messages
-from django.http import StreamingHttpResponse, JsonResponse, HttpResponse
+from django.http import StreamingHttpResponse, JsonResponse, HttpResponse, HttpResponseForbidden
+from django.core.exceptions import PermissionDenied
+from django.core.paginator import Paginator
 from django.urls import reverse
 from django.utils import timezone
 from django.utils.timezone import localdate
@@ -109,6 +113,17 @@ def is_teacher_or_admin(user):
     )
 
 
+def is_global_attendance_manager(user):
+    """Check if the given teacher is configured as global attendance manager."""
+    configured_teacher_id = getattr(settings, "ATTENDANCE_GLOBAL_TEACHER_ID", 0)
+    if not configured_teacher_id:
+        return False
+    teacher = getattr(user, "teacher", None)
+    if teacher is None:
+        return False
+    return teacher.id == configured_teacher_id
+
+
 # =====================================================
 # UTILITY FUNCTIONS
 # =====================================================
@@ -121,6 +136,41 @@ def parse_attendance_date(raw_value):
         return dt_date.fromisoformat(raw_value)
     except ValueError:
         return localdate()
+
+
+def get_attendance_role(user):
+    """Resolve role for attendance reporting access control."""
+    role = getattr(user, "role", "") or ""
+    if getattr(user, "is_superuser", False) or role == "ADMIN":
+        return "admin"
+    if role == "TEACHER" and hasattr(user, "teacher"):
+        return "teacher"
+    return "student"
+
+
+def normalize_report_type(raw_value):
+    """Normalize report type query param."""
+    report_type = (raw_value or "").strip().lower()
+    if report_type in {"daily", "weekly", "monthly"}:
+        return report_type
+    return "daily"
+
+
+def parse_selected_month(raw_value, *, fallback_date):
+    """
+    Parse month input in YYYY-MM format.
+    Returns (month_date_first_day, normalized_value, is_valid).
+    """
+    value = (raw_value or "").strip()
+    if not value:
+        month_date = fallback_date.replace(day=1)
+        return month_date, month_date.strftime("%Y-%m"), True
+    try:
+        month_date = datetime.strptime(value, "%Y-%m").date().replace(day=1)
+        return month_date, month_date.strftime("%Y-%m"), True
+    except ValueError:
+        month_date = fallback_date.replace(day=1)
+        return month_date, month_date.strftime("%Y-%m"), False
 
 
 def normalize_class_label(value):
@@ -145,6 +195,11 @@ def resolve_selected_class(raw_value, available_classes):
     return normalized_lookup.get(normalize_class_label(candidate))
 
 
+def get_teacher_attendance_class_names(teacher):
+    """Return classes where teacher is explicitly assigned for attendance control."""
+    return list(teacher.attendance_classes.order_by("name").values_list("name", flat=True))
+
+
 def filter_attendance_by_class(queryset, class_name):
     """Filter attendance queryset by class name."""
     return queryset.filter(
@@ -159,6 +214,474 @@ def filter_attendance_by_classes(queryset, class_names):
     return queryset.filter(
         Q(student_class__in=class_names) | Q(student_class="", student__class_name__in=class_names)
     )
+
+
+def get_week_bounds(anchor_date):
+    """Return Monday-Sunday bounds for the week of the given date."""
+    week_start = anchor_date - timedelta(days=anchor_date.weekday())
+    week_end = week_start + timedelta(days=6)
+    return week_start, week_end
+
+
+def get_month_bounds(month_date):
+    """Return first and last day of a given month date."""
+    month_start = month_date.replace(day=1)
+    _, last_day = calendar.monthrange(month_start.year, month_start.month)
+    month_end = month_start.replace(day=last_day)
+    return month_start, month_end
+
+
+def percentage(present_count, total_count):
+    """Calculate rounded percentage safely."""
+    if total_count <= 0:
+        return 0.0
+    return round((present_count / total_count) * 100, 1)
+
+
+def resolve_status_badge(period_percentage):
+    """Map attendance percentage to status label and badge tone."""
+    if period_percentage > 75:
+        return "Good", "status-badge-success"
+    if period_percentage >= 50:
+        return "Average", "status-badge-warning"
+    return "Low", "status-badge-danger"
+
+
+def apply_report_type_filter(queryset, report_type, anchor_date, selected_month_date):
+    """Apply daily/weekly/monthly date filtering."""
+    if report_type == "daily":
+        return queryset.filter(date=anchor_date), anchor_date, anchor_date
+    if report_type == "weekly":
+        week_start, week_end = get_week_bounds(anchor_date)
+        return queryset.filter(date__gte=week_start, date__lte=week_end), week_start, week_end
+    if report_type == "monthly":
+        month_start, month_end = get_month_bounds(selected_month_date)
+        return queryset.filter(date__gte=month_start, date__lte=month_end), month_start, month_end
+    return queryset.filter(date=anchor_date), anchor_date, anchor_date
+
+
+def build_day_columns(report_type, period_start, period_end):
+    """Build dynamic day columns used for weekly/monthly daily attendance breakdown."""
+    if report_type not in {"weekly", "monthly"}:
+        return []
+
+    columns = []
+    current_day = period_start
+    while current_day <= period_end:
+        if report_type == "weekly":
+            label = current_day.strftime("%a")
+        else:
+            label = str(current_day.day)
+        columns.append(
+            {
+                "key": current_day.isoformat(),
+                "date": current_day,
+                "label": label,
+                "full_label": f"{current_day.strftime('%B')} {current_day.day}, {current_day.year}",
+            }
+        )
+        current_day += timedelta(days=1)
+    return columns
+
+
+def build_attendance_report_context(request, *, forced_role=None):
+    """Build role-aware attendance analytics table context."""
+    role = forced_role or get_attendance_role(request.user)
+    report_type = normalize_report_type(request.GET.get("type"))
+    selected_class = (request.GET.get("class") or "").strip()
+    search_query = (request.GET.get("q") or "").strip()
+    sort_by = (request.GET.get("sort") or "period_desc").strip().lower()
+    if role == "student":
+        search_query = ""
+        sort_by = "period_desc"
+    today = localdate()
+    selected_month_date, selected_month_value, selected_month_is_valid = parse_selected_month(
+        request.GET.get("month"),
+        fallback_date=today,
+    )
+
+    attendance_scope = Attendance.objects.select_related("student__user", "marked_by_teacher__user").all()
+    class_options = []
+    students_scope = Student.objects.none()
+    locked_class_filter = False
+    class_filter_note = ""
+    current_route = request.resolver_match.url_name if request.resolver_match else "attendance_report"
+    student_overall_attendance_percentage = 0.0
+    student_overall_attendance_status_label = "Low"
+    student_overall_attendance_status_class = "status-badge-danger"
+    sort_options = [
+        ("period_desc", "Selected Period % (High to Low)"),
+        ("period_asc", "Selected Period % (Low to High)"),
+        ("weekly_desc", "Weekly % (High to Low)"),
+        ("weekly_asc", "Weekly % (Low to High)"),
+        ("monthly_desc", "Monthly % (High to Low)"),
+        ("monthly_asc", "Monthly % (Low to High)"),
+        ("name_asc", "Name (A-Z)"),
+        ("name_desc", "Name (Z-A)"),
+    ]
+    valid_sort_keys = {key for key, _ in sort_options}
+    if sort_by not in valid_sort_keys:
+        sort_by = "period_desc"
+
+    if role == "student":
+        student = Student.objects.select_related("user").filter(user=request.user).first()
+        if student is None:
+            return {
+                "role": role,
+                "report_type": report_type,
+                "selected_class": "",
+                "selected_month": selected_month_value,
+                "selected_month_label": selected_month_date.strftime("%B %Y"),
+                "selected_month_is_valid": selected_month_is_valid,
+                "search_query": search_query,
+                "sort_by": sort_by,
+                "sort_options": sort_options,
+                "class_options": [],
+                "locked_class_filter": True,
+                "class_filter_note": "Student profile not found.",
+                "records": Attendance.objects.none(),
+                "rows": [],
+                "page_obj": None,
+                "day_columns": [],
+                "total": 0,
+                "present": 0,
+                "absent": 0,
+                "percentage": 0,
+                "period_start": today,
+                "period_end": today,
+                "period_label": "No attendance scope",
+                "table_has_class_column": False,
+                "table_has_student_column": False,
+                "can_edit": False,
+                "column_count": 8,
+                "has_records": False,
+                "tab_urls": {},
+                "current_report_route": current_route,
+                "querystring_without_page": "",
+                "export_url": reverse(current_route),
+                "export_csv_url": reverse(current_route),
+                "export_excel_url": reverse(current_route),
+                "student_overall_attendance_percentage": 0.0,
+                "student_overall_attendance_status_label": "Low",
+                "student_overall_attendance_status_class": "status-badge-danger",
+                "hide_footer": True,
+            }
+
+        attendance_scope = attendance_scope.filter(student=student)
+        selected_class = student.class_name or ""
+        class_options = [selected_class] if selected_class else []
+        students_scope = Student.objects.filter(id=student.id).select_related("user")
+        locked_class_filter = True
+        class_filter_note = "Class filter is fixed to your enrolled class."
+        student_total_records = attendance_scope.count()
+        student_present_records = attendance_scope.filter(status="Present").count()
+        student_overall_attendance_percentage = percentage(student_present_records, student_total_records)
+        (
+            student_overall_attendance_status_label,
+            student_overall_attendance_status_class,
+        ) = resolve_status_badge(student_overall_attendance_percentage)
+
+    elif role == "teacher":
+        teacher = getattr(request.user, "teacher", None)
+        if teacher is None:
+            attendance_scope = attendance_scope.none()
+            students_scope = Student.objects.none()
+            class_filter_note = "Teacher profile not found."
+        else:
+            class_options = list(teacher.classes.order_by("name").values_list("name", flat=True))
+            students_scope = Student.objects.filter(class_name__in=class_options).select_related("user")
+            attendance_scope = filter_attendance_by_classes(attendance_scope, class_options)
+            if selected_class and selected_class not in class_options:
+                selected_class = ""
+    else:
+        class_options = list(
+            Student.objects.exclude(class_name__exact="")
+            .values_list("class_name", flat=True)
+            .distinct()
+            .order_by("class_name")
+        )
+        students_scope = Student.objects.select_related("user").all()
+
+    if selected_class:
+        attendance_scope = filter_attendance_by_class(attendance_scope, selected_class)
+        students_scope = students_scope.filter(class_name=selected_class)
+
+    if search_query:
+        students_scope = students_scope.filter(
+            Q(full_name__icontains=search_query)
+            | Q(user__first_name__icontains=search_query)
+            | Q(user__last_name__icontains=search_query)
+            | Q(user__username__icontains=search_query)
+            | Q(roll_number__icontains=search_query)
+        )
+        attendance_scope = attendance_scope.filter(
+            Q(student__full_name__icontains=search_query)
+            | Q(student__user__first_name__icontains=search_query)
+            | Q(student__user__last_name__icontains=search_query)
+            | Q(student__user__username__icontains=search_query)
+            | Q(student__roll_number__icontains=search_query)
+        )
+
+    records, period_start, period_end = apply_report_type_filter(attendance_scope, report_type, today, selected_month_date)
+    records = records.order_by("-date", "student_class", "student__roll_number", "student__user__username")
+    day_columns = build_day_columns(report_type, period_start, period_end)
+    week_start, week_end = get_week_bounds(today)
+    month_start, month_end = get_month_bounds(selected_month_date)
+
+    students_scope = students_scope.annotate(
+        period_total=Count(
+            "attendance",
+            filter=Q(attendance__date__gte=period_start, attendance__date__lte=period_end),
+        ),
+        period_present=Count(
+            "attendance",
+            filter=Q(
+                attendance__date__gte=period_start,
+                attendance__date__lte=period_end,
+                attendance__status="Present",
+            ),
+        ),
+        weekly_total=Count(
+            "attendance",
+            filter=Q(attendance__date__gte=week_start, attendance__date__lte=week_end),
+        ),
+        weekly_present=Count(
+            "attendance",
+            filter=Q(attendance__date__gte=week_start, attendance__date__lte=week_end, attendance__status="Present"),
+        ),
+        monthly_total=Count(
+            "attendance",
+            filter=Q(attendance__date__gte=month_start, attendance__date__lte=month_end),
+        ),
+        monthly_present=Count(
+            "attendance",
+            filter=Q(attendance__date__gte=month_start, attendance__date__lte=month_end, attendance__status="Present"),
+        ),
+    )
+
+    rows = []
+    for student in students_scope:
+        total_classes = int(getattr(student, "period_total", 0) or 0)
+        present_count = int(getattr(student, "period_present", 0) or 0)
+        absent_count = max(total_classes - present_count, 0)
+        weekly_percentage = percentage(
+            int(getattr(student, "weekly_present", 0) or 0),
+            int(getattr(student, "weekly_total", 0) or 0),
+        )
+        monthly_percentage = percentage(
+            int(getattr(student, "monthly_present", 0) or 0),
+            int(getattr(student, "monthly_total", 0) or 0),
+        )
+        period_percentage = percentage(present_count, total_classes)
+        status_label, status_class = resolve_status_badge(period_percentage)
+
+        rows.append(
+            {
+                "student_id": student.id,
+                "student_name": student.display_name,
+                "class_name": student.class_name or "-",
+                "total_classes": total_classes,
+                "present_count": present_count,
+                "absent_count": absent_count,
+                "weekly_percentage": weekly_percentage,
+                "monthly_percentage": monthly_percentage,
+                "period_percentage": period_percentage,
+                "status_label": status_label,
+                "status_class": status_class,
+            }
+        )
+
+    if sort_by == "name_asc":
+        rows.sort(key=lambda row: row["student_name"].lower())
+    elif sort_by == "name_desc":
+        rows.sort(key=lambda row: row["student_name"].lower(), reverse=True)
+    elif sort_by == "weekly_asc":
+        rows.sort(key=lambda row: row["weekly_percentage"])
+    elif sort_by == "weekly_desc":
+        rows.sort(key=lambda row: row["weekly_percentage"], reverse=True)
+    elif sort_by == "monthly_asc":
+        rows.sort(key=lambda row: row["monthly_percentage"])
+    elif sort_by == "monthly_desc":
+        rows.sort(key=lambda row: row["monthly_percentage"], reverse=True)
+    elif sort_by == "period_asc":
+        rows.sort(key=lambda row: row["period_percentage"])
+    else:
+        rows.sort(key=lambda row: row["period_percentage"], reverse=True)
+
+    total = sum(row["total_classes"] for row in rows)
+    present = sum(row["present_count"] for row in rows)
+    absent = sum(row["absent_count"] for row in rows)
+    overall_percentage = percentage(present, total)
+
+    export_request = (request.GET.get("export") or "").strip().lower()
+    if export_request in {"csv", "excel"}:
+        if export_request == "excel":
+            response = HttpResponse(content_type="application/vnd.ms-excel")
+            file_extension = "xls"
+            writer = csv.writer(response, delimiter="\t")
+        else:
+            response = HttpResponse(content_type="text/csv")
+            file_extension = "csv"
+            writer = csv.writer(response)
+        response["Content-Disposition"] = (
+            f'attachment; filename="attendance_report_{report_type}_{today.isoformat()}.{file_extension}"'
+        )
+        writer.writerow(
+            [
+                "Student Name",
+                "Class",
+                "Total Classes (Selected Period)",
+                "Present Count",
+                "Absent Count",
+                "Weekly Attendance %",
+                "Monthly Attendance %",
+                "Status",
+            ]
+        )
+        for row in rows:
+            writer.writerow(
+                [
+                    row["student_name"],
+                    row["class_name"],
+                    row["total_classes"],
+                    row["present_count"],
+                    row["absent_count"],
+                    row["weekly_percentage"],
+                    row["monthly_percentage"],
+                    row["status_label"],
+                ]
+            )
+        return {"export_response": response}
+
+    if report_type == "monthly":
+        period_label = selected_month_date.strftime("%B %Y")
+    elif period_start == period_end:
+        period_label = period_start.strftime("%b %d, %Y")
+    else:
+        period_label = f"{period_start.strftime('%b %d, %Y')} to {period_end.strftime('%b %d, %Y')}"
+
+    paginator = Paginator(rows, 15)
+    page_obj = paginator.get_page(request.GET.get("page"))
+    paged_rows = list(page_obj.object_list)
+    paged_student_ids = [row["student_id"] for row in paged_rows]
+
+    daily_status_lookup = {}
+    if day_columns and paged_student_ids:
+        period_entries = Attendance.objects.filter(
+            student_id__in=paged_student_ids,
+            date__gte=period_start,
+            date__lte=period_end,
+        ).values("student_id", "date", "status")
+
+        for entry in period_entries:
+            student_lookup = daily_status_lookup.setdefault(entry["student_id"], {})
+            student_lookup[entry["date"]] = entry["status"]
+
+    for row in paged_rows:
+        attendance_for_student = daily_status_lookup.get(row["student_id"], {})
+        daily_cells = []
+        for day_column in day_columns:
+            day_status = attendance_for_student.get(day_column["date"])
+            if day_status == "Present":
+                daily_cells.append(
+                    {
+                        "code": "P",
+                        "cell_class": "attendance-dot-present",
+                        "status_text": "Present",
+                        "tooltip": f"{day_column['full_label']} - Present",
+                    }
+                )
+            elif day_status == "Absent":
+                daily_cells.append(
+                    {
+                        "code": "A",
+                        "cell_class": "attendance-dot-absent",
+                        "status_text": "Absent",
+                        "tooltip": f"{day_column['full_label']} - Absent",
+                    }
+                )
+            else:
+                daily_cells.append(
+                    {
+                        "code": "*",
+                        "cell_class": "attendance-dot-none",
+                        "status_text": "No record",
+                        "tooltip": f"{day_column['full_label']} - No record",
+                    }
+                )
+        row["daily_cells"] = daily_cells
+
+    base_params = request.GET.copy()
+    base_params.pop("page", None)
+    base_params.pop("export", None)
+    querystring_without_page = base_params.urlencode()
+    export_params = base_params.copy()
+    export_params["export"] = "csv"
+    export_url = f"{reverse(current_route)}?{export_params.urlencode()}"
+    export_excel_params = base_params.copy()
+    export_excel_params["export"] = "excel"
+    export_excel_url = f"{reverse(current_route)}?{export_excel_params.urlencode()}"
+
+    tab_urls = {}
+    for tab in ("daily", "weekly", "monthly"):
+        params = {"type": tab}
+        if selected_class:
+            params["class"] = selected_class
+        if selected_month_value:
+            params["month"] = selected_month_value
+        if search_query:
+            params["q"] = search_query
+        if sort_by:
+            params["sort"] = sort_by
+        tab_urls[tab] = f"{reverse(current_route)}?{urlencode(params)}"
+
+    table_has_class_column = True
+    table_has_student_column = True
+    can_edit = role in {"admin", "teacher"}
+    column_count = 8
+
+    return {
+        "role": role,
+        "report_type": report_type,
+        "selected_class": selected_class,
+        "selected_month": selected_month_value,
+        "selected_month_label": selected_month_date.strftime("%B %Y"),
+        "selected_month_is_valid": selected_month_is_valid,
+        "search_query": search_query,
+        "sort_by": sort_by,
+        "sort_options": sort_options,
+        "class_options": class_options,
+        "locked_class_filter": locked_class_filter,
+        "class_filter_note": class_filter_note,
+        "records": records,
+        "rows": paged_rows,
+        "page_obj": page_obj,
+        "day_columns": day_columns,
+        "total": total,
+        "present": present,
+        "absent": absent,
+        "percentage": overall_percentage,
+        "period_start": period_start,
+        "period_end": period_end,
+        "period_label": period_label,
+        "students_scope_count": len(rows),
+        "table_has_class_column": table_has_class_column,
+        "table_has_student_column": table_has_student_column,
+        "can_edit": can_edit,
+        "column_count": column_count,
+        "has_records": bool(rows),
+        "tab_urls": tab_urls,
+        "current_report_route": current_route,
+        "querystring_without_page": querystring_without_page,
+        "export_url": export_url,
+        "export_csv_url": export_url,
+        "export_excel_url": export_excel_url,
+        "student_overall_attendance_percentage": student_overall_attendance_percentage,
+        "student_overall_attendance_status_label": student_overall_attendance_status_label,
+        "student_overall_attendance_status_class": student_overall_attendance_status_class,
+        "hide_footer": role == "student",
+        "export_response": None,
+    }
 
 
 def push_live_message(message):
@@ -894,9 +1417,11 @@ def upload_face(request, student_id):
 # =====================================================
 
 @login_required
-@user_passes_test(is_teacher_or_admin)
 def mark_attendance(request):
     """Mark manual attendance for students."""
+    if getattr(request.user, "role", "") != "TEACHER" or not hasattr(request.user, "teacher"):
+        return HttpResponseForbidden("Only assigned teachers can mark attendance.")
+
     selected_class_raw = request.GET.get("class") or request.POST.get("class")
     selected_date_raw = request.GET.get("date") or request.POST.get("date")
     selected_date = parse_attendance_date(selected_date_raw)
@@ -904,19 +1429,45 @@ def mark_attendance(request):
     # Determine available classes based on user role
     if hasattr(request.user, "teacher"):
         teacher = request.user.teacher
-        class_names = list(teacher.classes.values_list("name", flat=True))
-        if not class_names:
-            messages.error(request, "Your classes are not assigned. Please contact admin.")
-            return redirect("teacher_dashboard")
-
         selected_class_input = (selected_class_raw or "").strip()
-        selected_class = resolve_selected_class(selected_class_raw, class_names)
-        has_invalid_teacher_class = bool(selected_class_input and not selected_class)
-        allowed_students = Student.objects.filter(class_name__in=class_names).select_related("user")
-        students = allowed_students.filter(class_name=selected_class) if selected_class else Student.objects.none()
 
-        if request.method == "GET" and has_invalid_teacher_class:
-            messages.error(request, f"You are not assigned to class '{selected_class_input}'. Select one of your assigned classes.")
+        if is_global_attendance_manager(request.user):
+            class_names = list(Classroom.objects.order_by("name").values_list("name", flat=True))
+            selected_class = resolve_selected_class(selected_class_raw, class_names)
+            has_invalid_teacher_class = bool(selected_class_input and not selected_class)
+            allowed_students = Student.objects.all().select_related("user")
+            students = allowed_students.filter(class_name=selected_class) if selected_class else allowed_students
+            if request.method == "GET" and has_invalid_teacher_class:
+                messages.error(request, f"Invalid class '{selected_class_input}'. Select one of the available classes.")
+        else:
+            assigned_class_names = list(teacher.classes.values_list("name", flat=True))
+            if not assigned_class_names:
+                messages.error(request, "Your classes are not assigned. Please contact admin.")
+                return redirect("teacher_dashboard")
+
+            class_names = get_teacher_attendance_class_names(teacher)
+            if not class_names:
+                messages.error(
+                    request,
+                    "You can upload homework/results, but attendance marking is available only for attendance-assigned classes.",
+                )
+                return redirect("teacher_dashboard")
+
+            selected_class = resolve_selected_class(selected_class_raw, class_names)
+            has_invalid_teacher_class = bool(selected_class_input and not selected_class)
+            allowed_students = Student.objects.filter(class_name__in=class_names).select_related("user")
+            students = allowed_students.filter(class_name=selected_class) if selected_class else Student.objects.none()
+
+            if selected_class:
+                classroom = Classroom.objects.filter(name=selected_class).only("attendance_teacher_id").first()
+                if classroom is None or classroom.attendance_teacher_id != teacher.id:
+                    raise PermissionDenied("Only the attendance-assigned teacher can mark attendance for this class.")
+
+            if request.method == "GET" and has_invalid_teacher_class:
+                messages.error(
+                    request,
+                    f"You are not the attendance teacher for class '{selected_class_input}'. Select one of your attendance classes.",
+                )
     else:
         classes = list(Student.objects.values_list("class_name", flat=True).distinct())
         selected_class = resolve_selected_class(selected_class_raw, classes)
@@ -928,7 +1479,14 @@ def mark_attendance(request):
     available_classes = class_names if hasattr(request.user, "teacher") else classes
 
     if request.method == "POST":
-        return _handle_attendance_submission(request, selected_class, selected_class_raw, selected_date, allowed_students, has_invalid_teacher_class)
+        return _handle_attendance_submission(
+            request,
+            selected_class,
+            selected_class_raw,
+            selected_date,
+            allowed_students,
+            has_invalid_teacher_class,
+        )
 
     return render(request, "attendance/mark_attendance.html", {
         "students": students, "classes": available_classes,
@@ -939,10 +1497,25 @@ def mark_attendance(request):
 def _handle_attendance_submission(request, selected_class, selected_class_raw, selected_date, allowed_students, has_invalid_teacher_class):
     """Process attendance form submission."""
     is_ajax = request.headers.get("X-Requested-With") == "XMLHttpRequest" or "application/json" in request.headers.get("Accept", "")
+    teacher = getattr(request.user, "teacher", None)
+    is_global_manager = is_global_attendance_manager(request.user)
+
+    if teacher:
+        if not selected_class:
+            message = "Please select one of your attendance-assigned classes before saving attendance."
+            if is_ajax:
+                return JsonResponse({"success": False, "message": message, "created": 0, "updated": 0}, status=400)
+            messages.error(request, message)
+            return redirect("mark_attendance")
+
+        if not is_global_manager:
+            class_obj = Classroom.objects.filter(name=selected_class).only("attendance_teacher_id").first()
+            if class_obj is None or class_obj.attendance_teacher_id != teacher.id:
+                raise PermissionDenied("Only the assigned attendance teacher can mark attendance for this class.")
 
     if has_invalid_teacher_class:
         error_payload = {
-            "success": False, "message": f"You are not assigned to class '{(selected_class_raw or '').strip()}'.",
+            "success": False, "message": f"You are not the attendance teacher for class '{(selected_class_raw or '').strip()}'.",
             "created": 0, "updated": 0, "date": selected_date.isoformat(), "class": (selected_class_raw or "").strip(),
         }
         return JsonResponse(error_payload) if is_ajax else (messages.error(request, error_payload["message"]) or redirect("mark_attendance"))
@@ -985,6 +1558,7 @@ def _handle_attendance_submission(request, selected_class, selected_class_raw, s
         submitted_count += 1
         _, created, updated = save_attendance_record(
             student=student, status=status, marked_by="MANUAL",
+            marked_by_teacher=teacher,
             attendance_date=selected_date, marked_at=timezone.now(), overwrite_existing=True,
         )
         if created:
@@ -1026,54 +1600,22 @@ def _handle_attendance_submission(request, selected_class, selected_class_raw, s
 # =====================================================
 
 @login_required
-@user_passes_test(is_teacher_or_admin)
 def attendance_report(request):
-    """Display attendance report for a date and class."""
-    selected_date_raw = request.GET.get("date")
-    selected_class = request.GET.get("class")
-    selected_date = parse_attendance_date(selected_date_raw)
-
-    if hasattr(request.user, "teacher"):
-        teacher = request.user.teacher
-        class_names = list(teacher.classes.values_list("name", flat=True))
-        classes = class_names
-        students_scope = Student.objects.filter(class_name__in=class_names)
-        if selected_class and selected_class not in class_names:
-            selected_class = None
-    else:
-        classes = list(Student.objects.values_list("class_name", flat=True).distinct())
-        students_scope = Student.objects.all()
-
-    if selected_class:
-        students_scope = students_scope.filter(class_name=selected_class)
-
-    total_students_count = students_scope.count()
-    records = Attendance.objects.select_related("student__user").filter(date=selected_date)
-
-    if selected_class:
-        records = filter_attendance_by_class(records, selected_class)
-    elif hasattr(request.user, "teacher"):
-        records = filter_attendance_by_classes(records, class_names)
-
-    records = records.order_by("student_class", "student__roll_number", "student__user__username")
-
-    marked_count = records.values("student_id").distinct().count()
-    present_count = records.filter(status="Present").values("student_id").distinct().count()
-    absent_count = records.filter(status="Absent").values("student_id").distinct().count()
-
+    """Display role-aware attendance report with daily/weekly/monthly filters."""
+    context = build_attendance_report_context(request)
+    if context.get("export_response") is not None:
+        return context["export_response"]
     LOGGER.info(
-        "Attendance report: user_id=%s role=%s date=%s class=%s total=%s marked=%s present=%s absent=%s",
-        request.user.id, getattr(request.user, "role", ""), selected_date, selected_class or "ALL",
-        total_students_count, marked_count, present_count, absent_count,
+        "Attendance report: user_id=%s role=%s type=%s class=%s total=%s present=%s absent=%s",
+        request.user.id,
+        context["role"],
+        context["report_type"],
+        context["selected_class"] or "ALL",
+        context["total"],
+        context["present"],
+        context["absent"],
     )
-
-    return render(request, "attendance/attendance_report.html", {
-        "attendances": records, "present_count": present_count, "absent_count": absent_count,
-        "not_marked_count": max(total_students_count - marked_count, 0),
-        "total_students_count": total_students_count, "marked_count": marked_count,
-        "has_searched": True, "has_records": records.exists(),
-        "classes": classes, "selected_date": selected_date.isoformat(), "selected_class": selected_class,
-    })
+    return render(request, "attendance/attendance_report.html", context)
 
 
 # =====================================================
@@ -1158,14 +1700,11 @@ def attendance_analytics(request):
 
 @login_required
 def student_attendance(request):
-    """Display student's own attendance records."""
-    student = Student.objects.filter(user=request.user).first()
-    if not student:
-        messages.error(request, "Student profile not found")
-        return redirect("login")
-    return render(request, "attendance/student_attendance.html", {
-        "records": Attendance.objects.filter(student=student)
-    })
+    """Display student attendance with the shared report experience."""
+    context = build_attendance_report_context(request, forced_role="student")
+    if context.get("export_response") is not None:
+        return context["export_response"]
+    return render(request, "attendance/attendance_report.html", context)
 
 
 # =====================================================
@@ -1420,20 +1959,32 @@ def edit_attendance(request, id):
     """Edit an existing attendance record."""
     attendance = get_object_or_404(Attendance, id=id)
 
-    if hasattr(request.user, "student"):
-        messages.error(request, "You are not allowed to edit attendance.")
-        return redirect("attendance_report")
+    if getattr(request.user, "role", "") != "TEACHER" or not hasattr(request.user, "teacher"):
+        return HttpResponseForbidden("Only assigned teachers can edit attendance.")
 
-    if hasattr(request.user, "teacher"):
-        class_names = list(request.user.teacher.classes.values_list("name", flat=True))
-        if attendance.student.class_name not in class_names:
-            messages.error(request, "You cannot modify attendance for this class.")
-            return redirect("attendance_report")
+    teacher = request.user.teacher
+    is_global_manager = is_global_attendance_manager(request.user)
+    class_names = list(teacher.classes.values_list("name", flat=True))
+    attendance_class_name = attendance.student_class or attendance.student.class_name
+    classroom = Classroom.objects.filter(name=attendance_class_name).only("attendance_teacher_id").first()
+    if not is_global_manager and attendance.student.class_name not in class_names:
+        messages.error(request, "You cannot modify attendance for this class.")
+        return redirect("attendance_report")
+    if not is_global_manager and (classroom is None or classroom.attendance_teacher_id != teacher.id):
+        messages.error(request, "Only the attendance-assigned teacher can edit this class attendance.")
+        return redirect("attendance_report")
 
     if request.method == "POST":
         status = request.POST.get("status")
-        attendance.status = status
-        attendance.save()
+        save_attendance_record(
+            student=attendance.student,
+            status=status,
+            marked_by="MANUAL",
+            marked_by_teacher=getattr(request.user, "teacher", None),
+            attendance_date=attendance.date,
+            marked_at=timezone.now(),
+            overwrite_existing=True,
+        )
         return redirect("attendance_report")
 
     return render(request, "attendance/edit_attendance.html", {"attendance": attendance})

@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit Quiz{% else %}Create Quiz{% endif %} | SAAMS{% endblock %}
+{% block topbar_eyebrow %}Smart Academic System{% endblock %}
+{% block topbar_title %}{% if is_edit %}Edit Quiz{% else %}Create Quiz{% endif %}{% endblock %}
+{% block topbar_subtitle %}Configure quiz class, time limit, and marks for instant auto-checking.{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-ui-checks-grid"></i>
+            Quiz Builder
+        </span>
+        <h2 class="dashboard-hero-title">{% if is_edit %}Edit Quiz{% else %}Create New Quiz{% endif %}</h2>
+        <p class="dashboard-hero-subtitle">Define quiz settings first, then add MCQ questions in the next step.</p>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" class="d-flex flex-column gap-3">
+                {% csrf_token %}
+                {% for field in form %}
+                <div>
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <small class="text-danger">{{ field.errors|join:", " }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">{% if is_edit %}Update Quiz{% else %}Create Quiz{% endif %}</button>
+                    <a href="{% url 'quiz_list' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

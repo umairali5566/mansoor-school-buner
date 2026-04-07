@@ -3,6 +3,7 @@ from django.test import TestCase, override_settings
 from django.urls import reverse
 from django.utils.timezone import localdate
 from datetime import timedelta
+import calendar
 
 from accounts.models import Classroom, CustomUser, Student, Teacher
 from attendance.auto_absent import mark_auto_absent
@@ -122,11 +123,22 @@ class AttendanceAccessControlTests(TestCase):
             password="123456",
             role="STUDENT",
         )
-        Student.objects.create(
+        self.student = Student.objects.create(
             user=self.student_user,
             roll_number="S-1",
             class_name="8-A",
             phone="03000000000",
+        )
+        self.other_student_user = CustomUser.objects.create_user(
+            username="other_student",
+            password="123456",
+            role="STUDENT",
+        )
+        self.other_student = Student.objects.create(
+            user=self.other_student_user,
+            roll_number="S-2",
+            class_name="9-A",
+            phone="03000000009",
         )
 
         self.teacher_user = CustomUser.objects.create_user(
@@ -141,20 +153,27 @@ class AttendanceAccessControlTests(TestCase):
         )
         classroom = Classroom.objects.create(name="8-A")
         teacher.classes.add(classroom)
+        classroom.attendance_teacher = teacher
+        classroom.save(update_fields=["attendance_teacher"])
 
     def test_student_cannot_open_mark_attendance(self):
         self.client.login(username="view_student", password="123456")
         response = self.client.get(reverse("mark_attendance"))
 
-        self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse("login"), response.url)
+        self.assertEqual(response.status_code, 403)
 
-    def test_student_cannot_open_attendance_report(self):
+    def test_student_can_open_attendance_report_and_only_view_own_records(self):
+        Attendance.objects.create(student=self.student, date=localdate(), status="Present", marked_by="MANUAL")
+        Attendance.objects.create(student=self.other_student, date=localdate(), status="Absent", marked_by="MANUAL")
+
         self.client.login(username="view_student", password="123456")
         response = self.client.get(reverse("attendance_report"))
 
-        self.assertEqual(response.status_code, 302)
-        self.assertIn(reverse("login"), response.url)
+        self.assertEqual(response.status_code, 200)
+        records = list(response.context["records"])
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].student_id, self.student.id)
+        self.assertEqual(response.context["role"], "student")
 
     def test_teacher_can_open_mark_and_report(self):
         self.client.login(username="view_teacher", password="123456")
@@ -164,6 +183,26 @@ class AttendanceAccessControlTests(TestCase):
 
         self.assertEqual(mark_response.status_code, 200)
         self.assertEqual(report_response.status_code, 200)
+
+    def test_admin_cannot_open_mark_attendance(self):
+        admin_user = CustomUser.objects.create_user(
+            username="view_admin",
+            password="123456",
+            role="ADMIN",
+        )
+        self.client.login(username=admin_user.username, password="123456")
+        response = self.client.get(reverse("mark_attendance"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_student_dashboard_attendance_route_supports_period_filters(self):
+        Attendance.objects.create(student=self.student, date=localdate(), status="Present", marked_by="MANUAL")
+
+        self.client.login(username="view_student", password="123456")
+        response = self.client.get(reverse("student_attendance"), {"type": "weekly"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["role"], "student")
+        self.assertEqual(response.context["report_type"], "weekly")
 
 
 @override_settings(EMAIL_BACKEND="django.core.mail.backends.locmem.EmailBackend")
@@ -190,6 +229,8 @@ class AttendanceFlowIntegrationTests(TestCase):
         self.class_8a = Classroom.objects.create(name="8-A")
         self.class_9a = Classroom.objects.create(name="9-A")
         self.teacher.classes.add(self.class_8a)
+        self.class_8a.attendance_teacher = self.teacher
+        self.class_8a.save(update_fields=["attendance_teacher"])
 
         self.s1 = Student.objects.create(
             user=CustomUser.objects.create_user(
@@ -249,6 +290,7 @@ class AttendanceFlowIntegrationTests(TestCase):
                 date=self.today,
                 status="Present",
                 marked_by="MANUAL",
+                marked_by_teacher=self.teacher,
                 student_class="8-A",
             ).exists()
         )
@@ -350,12 +392,228 @@ class AttendanceFlowIntegrationTests(TestCase):
         self.client.login(username="teacher_user", password="123456")
         response = self.client.get(
             reverse("attendance_report"),
-            {"date": self.today.isoformat(), "class": "8-A"},
+            {"type": "daily", "class": "8-A"},
         )
 
         self.assertEqual(response.status_code, 200)
-        records = list(response.context["attendances"])
+        records = list(response.context["records"])
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0].student_id, self.s1.id)
-        self.assertEqual(response.context["present_count"], 1)
-        self.assertEqual(response.context["absent_count"], 0)
+        self.assertEqual(response.context["present"], 1)
+        self.assertEqual(response.context["absent"], 0)
+
+    def test_attendance_report_supports_weekly_and_monthly_filters(self):
+        week_start = self.today - timedelta(days=self.today.weekday())
+        within_week = week_start
+        older_than_week = week_start - timedelta(days=1)
+        previous_month = (self.today.replace(day=1) - timedelta(days=1)).replace(day=15)
+
+        Attendance.objects.create(
+            student=self.s1,
+            date=within_week,
+            status="Present",
+            marked_by="MANUAL",
+        )
+        Attendance.objects.create(
+            student=self.s2,
+            date=older_than_week,
+            status="Absent",
+            marked_by="MANUAL",
+        )
+        Attendance.objects.create(
+            student=self.other_class_student,
+            date=previous_month,
+            status="Present",
+            marked_by="MANUAL",
+        )
+
+        self.client.login(username="admin_user", password="123456")
+
+        weekly_response = self.client.get(reverse("attendance_report"), {"type": "weekly"})
+        self.assertEqual(weekly_response.status_code, 200)
+        weekly_dates = [record.date for record in weekly_response.context["records"]]
+        self.assertIn(within_week, weekly_dates)
+        self.assertNotIn(older_than_week, weekly_dates)
+
+        monthly_response = self.client.get(reverse("attendance_report"), {"type": "monthly"})
+        self.assertEqual(monthly_response.status_code, 200)
+        monthly_dates = [record.date for record in monthly_response.context["records"]]
+        month_start = self.today.replace(day=1)
+        self.assertTrue(all(item >= month_start for item in monthly_dates))
+
+    def test_month_selector_filters_specific_month(self):
+        selected_month_date = (self.today.replace(day=1) - timedelta(days=1)).replace(day=10)
+        other_month_date = self.today.replace(day=10)
+
+        Attendance.objects.create(
+            student=self.s1,
+            date=selected_month_date,
+            status="Present",
+            marked_by="MANUAL",
+        )
+        Attendance.objects.create(
+            student=self.s2,
+            date=other_month_date,
+            status="Absent",
+            marked_by="MANUAL",
+        )
+
+        self.client.login(username="admin_user", password="123456")
+        response = self.client.get(
+            reverse("attendance_report"),
+            {"type": "monthly", "month": selected_month_date.strftime("%Y-%m")},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["selected_month"], selected_month_date.strftime("%Y-%m"))
+        self.assertEqual(response.context["selected_month_label"], selected_month_date.strftime("%B %Y"))
+        records = list(response.context["records"])
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0].date.month, selected_month_date.month)
+        self.assertEqual(records[0].date.year, selected_month_date.year)
+
+    def test_attendance_report_builds_student_table_rows(self):
+        Attendance.objects.create(
+            student=self.s1,
+            date=self.today,
+            status="Present",
+            marked_by="MANUAL",
+        )
+        Attendance.objects.create(
+            student=self.s2,
+            date=self.today,
+            status="Absent",
+            marked_by="MANUAL",
+        )
+
+        self.client.login(username="admin_user", password="123456")
+        response = self.client.get(reverse("attendance_report"), {"type": "daily"})
+
+        self.assertEqual(response.status_code, 200)
+        rows = response.context["rows"]
+        self.assertGreaterEqual(len(rows), 2)
+
+        row_by_student = {row["student_id"]: row for row in rows}
+        self.assertIn(self.s1.id, row_by_student)
+        self.assertIn(self.s2.id, row_by_student)
+        self.assertEqual(row_by_student[self.s1.id]["present_count"], 1)
+        self.assertEqual(row_by_student[self.s1.id]["absent_count"], 0)
+        self.assertEqual(row_by_student[self.s2.id]["present_count"], 0)
+        self.assertEqual(row_by_student[self.s2.id]["absent_count"], 1)
+        self.assertIn("weekly_percentage", row_by_student[self.s1.id])
+        self.assertIn("monthly_percentage", row_by_student[self.s1.id])
+        self.assertIn("status_label", row_by_student[self.s1.id])
+
+    def test_attendance_report_supports_csv_and_excel_export(self):
+        Attendance.objects.create(
+            student=self.s1,
+            date=self.today,
+            status="Present",
+            marked_by="MANUAL",
+        )
+
+        self.client.login(username="admin_user", password="123456")
+        csv_response = self.client.get(reverse("attendance_report"), {"export": "csv"})
+        self.assertEqual(csv_response.status_code, 200)
+        self.assertIn("text/csv", csv_response["Content-Type"])
+        self.assertIn("Student Name", csv_response.content.decode("utf-8"))
+
+        excel_response = self.client.get(reverse("attendance_report"), {"export": "excel"})
+        self.assertEqual(excel_response.status_code, 200)
+        self.assertIn("application/vnd.ms-excel", excel_response["Content-Type"])
+        self.assertIn("Student Name", excel_response.content.decode("utf-8"))
+
+    def test_weekly_breakdown_contains_day_columns_and_status_cells(self):
+        week_start = self.today - timedelta(days=self.today.weekday())
+        monday = week_start
+        tuesday = week_start + timedelta(days=1)
+
+        Attendance.objects.create(
+            student=self.s1,
+            date=monday,
+            status="Present",
+            marked_by="MANUAL",
+        )
+        Attendance.objects.create(
+            student=self.s1,
+            date=tuesday,
+            status="Absent",
+            marked_by="MANUAL",
+        )
+
+        self.client.login(username="admin_user", password="123456")
+        response = self.client.get(reverse("attendance_report"), {"type": "weekly"})
+
+        self.assertEqual(response.status_code, 200)
+        day_columns = response.context["day_columns"]
+        self.assertEqual(len(day_columns), 7)
+        self.assertEqual(day_columns[0]["label"], "Mon")
+        self.assertEqual(day_columns[-1]["label"], "Sun")
+
+        rows = response.context["rows"]
+        row_by_student = {row["student_id"]: row for row in rows}
+        self.assertIn(self.s1.id, row_by_student)
+        self.assertEqual(len(row_by_student[self.s1.id]["daily_cells"]), 7)
+        self.assertEqual(row_by_student[self.s1.id]["daily_cells"][0]["code"], "P")
+        self.assertEqual(row_by_student[self.s1.id]["daily_cells"][1]["code"], "A")
+
+    def test_monthly_breakdown_contains_day_numbers_and_status_cells(self):
+        selected_month = self.today.strftime("%Y-%m")
+        month_start = self.today.replace(day=1)
+        second_day = month_start + timedelta(days=1)
+
+        Attendance.objects.create(
+            student=self.s1,
+            date=month_start,
+            status="Present",
+            marked_by="MANUAL",
+        )
+        Attendance.objects.create(
+            student=self.s1,
+            date=second_day,
+            status="Absent",
+            marked_by="MANUAL",
+        )
+
+        self.client.login(username="admin_user", password="123456")
+        response = self.client.get(
+            reverse("attendance_report"),
+            {"type": "monthly", "month": selected_month},
+        )
+
+        self.assertEqual(response.status_code, 200)
+        day_columns = response.context["day_columns"]
+        _, days_in_month = calendar.monthrange(self.today.year, self.today.month)
+        self.assertEqual(len(day_columns), days_in_month)
+        self.assertEqual(day_columns[0]["label"], "1")
+        self.assertEqual(day_columns[1]["label"], "2")
+
+        rows = response.context["rows"]
+        row_by_student = {row["student_id"]: row for row in rows}
+        self.assertIn(self.s1.id, row_by_student)
+        self.assertEqual(row_by_student[self.s1.id]["daily_cells"][0]["code"], "P")
+        self.assertEqual(row_by_student[self.s1.id]["daily_cells"][1]["code"], "A")
+
+    def test_student_role_still_sees_only_own_breakdown_row(self):
+        Attendance.objects.create(
+            student=self.s1,
+            date=self.today,
+            status="Present",
+            marked_by="MANUAL",
+        )
+        Attendance.objects.create(
+            student=self.s2,
+            date=self.today,
+            status="Absent",
+            marked_by="MANUAL",
+        )
+
+        self.client.login(username="stu1", password="123456")
+        response = self.client.get(reverse("student_attendance"), {"type": "weekly"})
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["role"], "student")
+        rows = response.context["rows"]
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]["student_id"], self.s1.id)
+        self.assertEqual(len(rows[0]["daily_cells"]), 7)

@@ -2,7 +2,7 @@
 {% block title %}{{ page_title }} | School Management System{% endblock %}
 {% block topbar_eyebrow %}{{ page_eyebrow }}{% endblock %}
 {% block topbar_title %}{{ page_title }}{% endblock %}
-{% block topbar_subtitle %}Capture a complete admission profile with the same premium form flow used throughout the admin workspace.{% endblock %}
+{% block topbar_subtitle %}Capture a complete student profile with the same premium form flow used throughout the operations workspace.{% endblock %}
 {% block topbar_actions %}
 <div class="topbar-actions-group">
     {% if student %}
@@ -13,7 +13,7 @@
     {% else %}
     <a href="{% url 'student_admissions' %}" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-arrow-left"></i>
-        Admissions
+        Enrollment
     </a>
     {% endif %}
 </div>
@@ -83,52 +83,82 @@
                         <div class="admission-form-grid mt-4">
                             <div>
                                 <label class="form-label" for="{{ form.full_name.id_for_label }}">Full Name</label>
-                                {{ form.full_name }}
+                                <div class="field-with-icon">
+                                    <i class="bi bi-person-fill"></i>
+                                    {{ form.full_name }}
+                                </div>
                                 {% if form.full_name.errors %}<div class="text-danger small mt-1">{{ form.full_name.errors }}</div>{% endif %}
                             </div>
                             <div>
                                 <label class="form-label" for="{{ form.roll_number.id_for_label }}">Roll Number</label>
-                                {{ form.roll_number }}
+                                <div class="field-with-icon">
+                                    <i class="bi bi-hash"></i>
+                                    {{ form.roll_number }}
+                                </div>
                                 {% if form.roll_number.errors %}<div class="text-danger small mt-1">{{ form.roll_number.errors }}</div>{% endif %}
                             </div>
                             <div>
                                 <label class="form-label" for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
-                                {{ form.date_of_birth }}
+                                <div class="field-with-icon">
+                                    <i class="bi bi-calendar-heart-fill"></i>
+                                    {{ form.date_of_birth }}
+                                </div>
                                 {% if form.date_of_birth.errors %}<div class="text-danger small mt-1">{{ form.date_of_birth.errors }}</div>{% endif %}
                             </div>
                             <div>
                                 <label class="form-label" for="{{ form.admission_date.id_for_label }}">Admission Date</label>
-                                {{ form.admission_date }}
+                                <div class="field-with-icon">
+                                    <i class="bi bi-calendar-check-fill"></i>
+                                    {{ form.admission_date }}
+                                </div>
                                 {% if form.admission_date.errors %}<div class="text-danger small mt-1">{{ form.admission_date.errors }}</div>{% endif %}
                             </div>
                             <div>
                                 <label class="form-label" for="{{ form.admission_class.id_for_label }}">Admission Class</label>
-                                {{ form.admission_class }}
+                                <div class="field-with-icon">
+                                    <i class="bi bi-door-open-fill"></i>
+                                    {{ form.admission_class }}
+                                </div>
                                 {% if form.admission_class.errors %}<div class="text-danger small mt-1">{{ form.admission_class.errors }}</div>{% endif %}
                             </div>
                             <div>
                                 <label class="form-label" for="{{ form.current_class.id_for_label }}">Current Class</label>
-                                {{ form.current_class }}
+                                <div class="field-with-icon">
+                                    <i class="bi bi-diagram-3-fill"></i>
+                                    {{ form.current_class }}
+                                </div>
                                 {% if form.current_class.errors %}<div class="text-danger small mt-1">{{ form.current_class.errors }}</div>{% endif %}
                             </div>
                             <div>
                                 <label class="form-label" for="{{ form.parent_email.id_for_label }}">Parent Email</label>
-                                {{ form.parent_email }}
+                                <div class="field-with-icon">
+                                    <i class="bi bi-envelope-fill"></i>
+                                    {{ form.parent_email }}
+                                </div>
                                 {% if form.parent_email.errors %}<div class="text-danger small mt-1">{{ form.parent_email.errors }}</div>{% endif %}
                             </div>
                             <div>
                                 <label class="form-label" for="{{ form.phone.id_for_label }}">Phone Number</label>
-                                {{ form.phone }}
+                                <div class="field-with-icon">
+                                    <i class="bi bi-telephone-fill"></i>
+                                    {{ form.phone }}
+                                </div>
                                 {% if form.phone.errors %}<div class="text-danger small mt-1">{{ form.phone.errors }}</div>{% endif %}
                             </div>
                             <div class="admission-form-span-2">
                                 <label class="form-label" for="{{ form.previous_school.id_for_label }}">Previous School</label>
-                                {{ form.previous_school }}
+                                <div class="field-with-icon field-with-icon-textarea">
+                                    <i class="bi bi-building-fill"></i>
+                                    {{ form.previous_school }}
+                                </div>
                                 {% if form.previous_school.errors %}<div class="text-danger small mt-1">{{ form.previous_school.errors }}</div>{% endif %}
                             </div>
                             <div class="admission-form-span-2">
                                 <label class="form-label" for="{{ form.notes.id_for_label }}">Notes</label>
-                                {{ form.notes }}
+                                <div class="field-with-icon field-with-icon-textarea">
+                                    <i class="bi bi-journal-text"></i>
+                                    {{ form.notes }}
+                                </div>
                                 {% if form.notes.errors %}<div class="text-danger small mt-1">{{ form.notes.errors }}</div>{% endif %}
                             </div>
                         </div>

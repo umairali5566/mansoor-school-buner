@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% block title %}Start Quiz | SAAMS{% endblock %}
+{% block topbar_eyebrow %}Smart Academic System{% endblock %}
+{% block topbar_title %}Attempt Quiz{% endblock %}
+{% block topbar_subtitle %}Answer MCQs before time runs out. Your score is auto-calculated instantly.{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-stopwatch-fill"></i>
+            Timed Quiz
+        </span>
+        <h2 class="dashboard-hero-title">{{ quiz.title }}</h2>
+        <p class="dashboard-hero-subtitle">Class {{ quiz.class_assigned.name }} | Time Limit: <strong>{{ quiz.time_limit }} minutes</strong></p>
+        <div class="hero-badge mt-3">
+            <i class="bi bi-clock-fill"></i>
+            <span id="quizTimer">Loading timer...</span>
+        </div>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" id="quizForm" class="d-flex flex-column gap-4">
+                {% csrf_token %}
+                {% for question in questions %}
+                <article class="saas-panel">
+                    <div class="saas-panel-body">
+                        <h4 class="saas-panel-title mb-3">Q{{ forloop.counter }}. {{ question.question_text }}</h4>
+                        <div class="d-flex flex-column gap-2">
+                            <label class="form-check">
+                                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="A">
+                                <span class="form-check-label">A. {{ question.option_a }}</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="B">
+                                <span class="form-check-label">B. {{ question.option_b }}</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="C">
+                                <span class="form-check-label">C. {{ question.option_c }}</span>
+                            </label>
+                            <label class="form-check">
+                                <input type="radio" class="form-check-input" name="question_{{ question.id }}" value="D">
+                                <span class="form-check-label">D. {{ question.option_d }}</span>
+                            </label>
+                        </div>
+                    </div>
+                </article>
+                {% endfor %}
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">Submit Quiz</button>
+                    <a href="{% url 'quiz_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const timerElement = document.getElementById("quizTimer");
+        const form = document.getElementById("quizForm");
+        let remainingSeconds = {{ quiz.time_limit|default:0 }} * 60;
+
+        function formatTime(totalSeconds) {
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = totalSeconds % 60;
+            return minutes.toString().padStart(2, "0") + ":" + seconds.toString().padStart(2, "0");
+        }
+
+        function tick() {
+            timerElement.textContent = formatTime(remainingSeconds) + " remaining";
+            if (remainingSeconds <= 0) {
+                form.submit();
+                return;
+            }
+            remainingSeconds -= 1;
+            setTimeout(tick, 1000);
+        }
+
+        tick();
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Quiz Analytics | SAAMS{% endblock %}
+{% block topbar_eyebrow %}Smart Academic System{% endblock %}
+{% block topbar_title %}Quiz Analytics{% endblock %}
+{% block topbar_subtitle %}Track scores, average class performance, and top performers instantly.{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-graph-up-arrow"></i>
+            Teacher Analytics
+        </span>
+        <h2 class="dashboard-hero-title">{{ quiz.title }}</h2>
+        <p class="dashboard-hero-subtitle">Class {{ quiz.class_assigned.name }} | Attempts {{ attempt_count }} | Avg {{ average_percentage }}%</p>
+    </section>
+
+    <section class="row g-4">
+        <div class="col-12 col-md-4 d-flex">
+            <article class="summary-card summary-unmarked w-100">
+                <h5>Total Attempts</h5>
+                <h3>{{ attempt_count }}</h3>
+            </article>
+        </div>
+        <div class="col-12 col-md-4 d-flex">
+            <article class="summary-card summary-present w-100">
+                <h5>Average %</h5>
+                <h3>{{ average_percentage }}%</h3>
+            </article>
+        </div>
+        <div class="col-12 col-md-4 d-flex">
+            <article class="summary-card summary-absent w-100">
+                <h5>Top Performers</h5>
+                <h3>{{ top_performers|length }}</h3>
+            </article>
+        </div>
+    </section>
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <h3 class="saas-panel-title mb-3">Student Scores</h3>
+            <div class="table-responsive table-shell">
+                <table class="table saas-table align-middle mb-0">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th>Score</th>
+                            <th>Percentage</th>
+                            <th>Status</th>
+                            <th>Result</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in analytics_rows %}
+                        <tr>
+                            <td>{{ row.student_name }}</td>
+                            <td>{{ row.class_name }}</td>
+                            <td>{{ row.attempt.score }}/{{ max_score }}</td>
+                            <td>{{ row.percentage }}%</td>
+                            <td><span class="status-badge {{ row.badge_class }}">{{ row.level }}</span></td>
+                            <td>
+                                <a href="{% url 'quiz_result' quiz.id %}?attempt={{ row.attempt.id }}" class="btn btn-outline-primary btn-sm">View</a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">No attempts recorded yet.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <div class="page-actions mt-3">
+                <a href="{% url 'quiz_list' %}" class="btn btn-primary">Back to Quizzes</a>
+            </div>
+        </div>
+    </section>
+</div>
+{% endblock %}

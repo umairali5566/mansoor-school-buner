@@ -1,0 +1,215 @@
+<div class="dashboard-page dashboard-role-layout dashboard-teacher animate-fade-in">
+    <div class="dashboard-hero role-hero role-hero-teacher">
+        <div class="hero-split">
+            <div class="hero-body">
+                <span class="hero-badge">
+                    <i class="{{ dashboard_header.badge_icon|default:'bi bi-mortarboard-fill' }}"></i>
+                    {{ dashboard_header.badge_label|default:'Teacher Workspace' }}
+                </span>
+                <div class="hero-body-copy">
+                    <h2 class="dashboard-hero-title">{{ dashboard_header.title|default:"Teacher Dashboard" }}</h2>
+                    <p class="dashboard-hero-subtitle">{{ dashboard_header.subtitle|default:"Track class attendance and deliver daily teaching operations from one workspace." }}</p>
+                </div>
+                <div class="role-highlight-grid">
+                    <article class="highlight-pill">
+                        <span class="highlight-kicker">Assigned Classes</span>
+                        <strong class="highlight-value">{{ teacher_classes|length }}</strong>
+                    </article>
+                    <article class="highlight-pill">
+                        <span class="highlight-kicker">Attendance Control</span>
+                        <strong class="highlight-value">{{ attendance_controlled_count|default:0 }}</strong>
+                    </article>
+                    <article class="highlight-pill">
+                        <span class="highlight-kicker">Students</span>
+                        <strong class="highlight-value">{{ total_students|default:0 }}</strong>
+                    </article>
+                </div>
+            </div>
+            <div class="hero-stats-grid">
+                <div class="hero-stat-tile">
+                    <span class="hero-stat-kicker">Present Today</span>
+                    <strong class="hero-stat-value">{{ today_present|default:0 }}</strong>
+                </div>
+                <div class="hero-stat-tile">
+                    <span class="hero-stat-kicker">Absent Today</span>
+                    <strong class="hero-stat-value">{{ today_absent|default:0 }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% include "components/stats.html" with stats=dashboard_stats %}
+
+    <div class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="page-section-head mb-3">
+                <h2 class="saas-panel-title panel-title-inline">
+                    <i class="bi bi-rocket-takeoff-fill panel-title-icon"></i>
+                    Quick Actions
+                </h2>
+                <span class="section-badge">{{ teacher_classes|length }} classes</span>
+            </div>
+            {% include "components/cards.html" with cards=dashboard_cards empty_title="No classes assigned yet" empty_message="Contact support to assign classes and unlock teacher actions." %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="saas-panel">
+            <div class="saas-panel-body">
+                <h3 class="saas-panel-title mb-3">Assigned Classes</h3>
+                {% if teacher_class_roles %}
+                <div class="class-assignment-list">
+                    {% for class_item in teacher_class_roles %}
+                    <article class="class-assignment-card">
+                        <div class="class-assignment-head">
+                            <span class="class-pill">{{ class_item.name }}</span>
+                            {% if class_item.is_attendance_teacher %}
+                            <span class="status-badge status-badge-success">Attendance Teacher</span>
+                            {% else %}
+                            <span class="status-badge status-badge-neutral">Subject Teacher</span>
+                            {% endif %}
+                        </div>
+                        <p class="record-meta mb-0">Attendance controlled by {{ class_item.attendance_teacher_name }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-diagram-3"></i></div>
+                    <p>No classes are assigned to your account yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="saas-panel">
+            <div class="saas-panel-body">
+                <h3 class="saas-panel-title mb-3">Notifications</h3>
+                {% if using_default_password %}
+                <div class="alert mb-3">Your account is still using the default password. Please update it from Settings.</div>
+                {% endif %}
+                <ul class="space-y-2 mb-0 dashboard-note-list">
+                    <li class="record-meta">{{ attendance_controlled_count|default:0 }} classes currently allow you to mark attendance.</li>
+                    <li class="record-meta">{{ total_students|default:0 }} students are currently in your classes.</li>
+                    <li class="record-meta">{{ today_present|default:0 }} present and {{ today_absent|default:0 }} absent today.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="page-section-head mb-3">
+                <h3 class="saas-panel-title">Overall Attendance (My Classes)</h3>
+                <span class="section-badge">{{ overall_attendance_percentage|default:0 }}%</span>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-3 admin-overview-grid mb-3">
+                <div class="summary-card summary-present">
+                    <h5>Good</h5>
+                    <h3>{{ overall_attendance_good_count|default:0 }}</h3>
+                    <p>Above 75%</p>
+                </div>
+                <div class="summary-card summary-unmarked">
+                    <h5>Average</h5>
+                    <h3>{{ overall_attendance_average_count|default:0 }}</h3>
+                    <p>50% to 75%</p>
+                </div>
+                <div class="summary-card summary-absent">
+                    <h5>Low</h5>
+                    <h3>{{ overall_attendance_low_count|default:0 }}</h3>
+                    <p>Below 50%</p>
+                </div>
+                <div class="summary-card summary-unmarked">
+                    <h5>Students With Records</h5>
+                    <h3>{{ overall_attendance_students_with_records|default:0 }}</h3>
+                    <p>Out of {{ total_students|default:0 }}</p>
+                </div>
+            </div>
+
+            <div class="table-shell">
+                <table class="table saas-table w-full">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Class</th>
+                            <th>Present</th>
+                            <th>Absent</th>
+                            <th>Overall %</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in overall_attendance_rows %}
+                        <tr>
+                            <td class="record-name">
+                                <strong>{{ row.student_name }}</strong>
+                                <span class="record-meta">ID: {{ row.student_id }}</span>
+                            </td>
+                            <td>{{ row.class_name }}</td>
+                            <td>{{ row.present_count }}</td>
+                            <td>{{ row.absent_count }}</td>
+                            <td>{{ row.overall_percentage }}%</td>
+                            <td><span class="status-badge {{ row.status_class }}">{{ row.status_label }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i class="bi bi-clipboard-x"></i></div>
+                                    <p>No overall attendance data available for your classes yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="page-section-head mb-4">
+                <h2 class="saas-panel-title">Recent Attendance Logs</h2>
+            </div>
+            <div class="table-shell">
+                <table class="table saas-table w-full">
+                    <thead>
+                        <tr>
+                            <th>Student</th>
+                            <th>Date</th>
+                            <th>Class</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in recent_attendance %}
+                        <tr>
+                            <td class="record-name">
+                                <strong>{{ record.student.user.get_full_name|default:record.student.user.username }}</strong>
+                            </td>
+                            <td>{{ record.date|date:"M d, Y" }}</td>
+                            <td>{{ record.student.class_name|default:"-" }}</td>
+                            <td>
+                                {% if record.status == "Present" %}
+                                <span class="status-badge status-badge-success">Present</span>
+                                {% else %}
+                                <span class="status-badge status-badge-danger">Absent</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="4">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i class="bi bi-calendar-x"></i></div>
+                                    <p>No attendance records available yet.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

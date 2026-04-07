@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+{% block title %}Quizzes | SAAMS{% endblock %}
+{% block topbar_eyebrow %}Smart Academic System{% endblock %}
+{% block topbar_title %}Quiz System{% endblock %}
+{% block topbar_subtitle %}Create, attempt, and analyze auto-checked MCQ quizzes with role-based access.{% endblock %}
+{% block topbar_actions %}
+{% if can_manage %}
+<div class="topbar-actions-group">
+    <a href="{% url 'create_quiz' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle-fill"></i>
+        Create Quiz
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-patch-question-fill"></i>
+            Quiz Center
+        </span>
+        <h2 class="dashboard-hero-title">{% if request.user.role == "STUDENT" %}My Quizzes{% else %}Quiz Management{% endif %}</h2>
+        <p class="dashboard-hero-subtitle">Timed MCQ quizzes with instant scoring and class performance analytics.</p>
+    </section>
+
+    {% if request.user.role == "TEACHER" %}
+    <section class="d-flex justify-content-end">
+        <a href="{% url 'create_quiz' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle-fill"></i>
+            Create Quiz
+        </a>
+    </section>
+    {% endif %}
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} mb-0">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <section class="dashboard-actions">
+        {% for row in quizzes %}
+        <article class="saas-panel">
+            <div class="saas-panel-body">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <div>
+                        <h3 class="saas-panel-title mb-1">{{ row.quiz.title }}</h3>
+                        <p class="record-meta mb-0">
+                            Class {{ row.quiz.class_assigned.name }} | {{ row.quiz.time_limit }} min | {{ row.question_total }} questions
+                        </p>
+                    </div>
+                    <span class="status-badge status-badge-neutral">Total Marks: {{ row.max_score }}</span>
+                </div>
+
+                {% if request.user.role == "STUDENT" %}
+                <div class="mb-3">
+                    {% if row.attempt %}
+                    <span class="status-badge status-badge-success">Attempted</span>
+                    <span class="status-badge status-badge-neutral">Score: {{ row.attempt.score }}/{{ row.max_score }} ({{ row.attempt_percentage }}%)</span>
+                    {% else %}
+                    <span class="status-badge status-badge-warning">Not Attempted</span>
+                    {% endif %}
+                </div>
+                {% else %}
+                <div class="mb-3">
+                    <span class="status-badge status-badge-neutral">Attempts: {{ row.attempt_total }}</span>
+                </div>
+                {% endif %}
+
+                <div class="d-flex flex-wrap gap-2">
+                    {% if request.user.role == "STUDENT" %}
+                        {% if row.attempt %}
+                        <a href="{% url 'quiz_result' row.quiz.id %}" class="btn btn-primary btn-sm">View Result</a>
+                        {% else %}
+                        <a href="{% url 'quiz_start' row.quiz.id %}" class="btn btn-primary btn-sm">Start Quiz</a>
+                        {% endif %}
+                    {% elif can_manage %}
+                    <a href="{% url 'quiz_manage_questions' row.quiz.id %}" class="btn btn-primary btn-sm">Manage Questions</a>
+                    <a href="{% url 'quiz_analytics' row.quiz.id %}" class="btn btn-outline-primary btn-sm">Analytics</a>
+                    <a href="{% url 'quiz_edit' row.quiz.id %}" class="btn btn-outline-secondary btn-sm">Edit</a>
+                    <form method="post" action="{% url 'quiz_delete' row.quiz.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this quiz?')">Delete</button>
+                    </form>
+                    {% elif is_admin_view %}
+                    <a href="{% url 'quiz_analytics' row.quiz.id %}" class="btn btn-outline-primary btn-sm">View Analytics</a>
+                    <span class="status-badge status-badge-neutral">Admin Analytics Only</span>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <article class="saas-panel">
+            <div class="saas-panel-body">
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-ui-checks-grid"></i></div>
+                    <p>No quizzes available right now.</p>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

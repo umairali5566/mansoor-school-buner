@@ -1,8 +1,9 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
 {% block title %}Edit Student Profile | School Management System{% endblock %}
-{% block topbar_eyebrow %}Student Records{% endblock %}
-{% block topbar_title %}Edit Student Profile{% endblock %}
-{% block topbar_subtitle %}Refine student profile details with consistent form sizing and a cleaner editing workflow.{% endblock %}
+{% block topbar_eyebrow %}Student Profile{% endblock %}
+{% block topbar_title %}Edit Profile{% endblock %}
+{% block topbar_subtitle %}Update student profile details with secure role-based access for students and administrators.{% endblock %}
 {% block topbar_actions %}
 <div class="topbar-actions-group">
     <a href="{% url 'student_profile' student.id %}" class="btn btn-outline-primary btn-sm">
@@ -16,15 +17,15 @@
     <section class="dashboard-hero">
         <span class="hero-badge">
             <i class="bi bi-person-lines-fill"></i>
-            Student Profile
+            {% if is_admin_editor %}Admin Control{% else %}Self Service{% endif %}
         </span>
         <h2 class="dashboard-hero-title">Edit Student Profile</h2>
-        <p class="dashboard-hero-subtitle">Update profile information with consistent field sizes and cleaner spacing.</p>
+        <p class="dashboard-hero-subtitle">Manage phone, email, date of birth, and profile image. Administrators can also update class assignment.</p>
     </section>
 
     <section class="saas-panel">
         <div class="saas-panel-body">
-            <form method="post" novalidate class="d-flex flex-column gap-3">
+            <form method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3" novalidate>
                 {% csrf_token %}
 
                 {% if form.non_field_errors %}
@@ -33,50 +34,111 @@
                 </div>
                 {% endif %}
 
-                <div class="form-grid-2">
-                    <div>
+                <div class="student-profile-edit-media">
+                    {% if student.image %}
+                    <img id="profilePreviewImage" src="{{ student.image.url }}" alt="{{ student.display_name }}" class="student-profile-avatar">
+                    {% else %}
+                    <img id="profilePreviewImage" src="{% static 'default-user.svg' %}" alt="Default avatar" class="student-profile-avatar">
+                    {% endif %}
+                    <p class="record-meta mb-0">Profile image preview</p>
+                </div>
+
+                <div class="row g-3">
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="{{ form.full_name.id_for_label }}">Full Name</label>
                         {{ form.full_name }}
                         {% if form.full_name.errors %}
                         <div class="text-danger small mt-1">{{ form.full_name.errors }}</div>
                         {% endif %}
                     </div>
-                    <div>
-                        <label class="form-label" for="{{ form.roll_number.id_for_label }}">Roll Number</label>
-                        {{ form.roll_number }}
-                        {% if form.roll_number.errors %}
-                        <div class="text-danger small mt-1">{{ form.roll_number.errors }}</div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="{{ form.phone.id_for_label }}">Phone</label>
+                        {{ form.phone }}
+                        {% if form.phone.errors %}
+                        <div class="text-danger small mt-1">{{ form.phone.errors }}</div>
                         {% endif %}
                     </div>
-                    <div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="{{ form.parent_email.id_for_label }}">Email</label>
+                        {{ form.parent_email }}
+                        {% if form.parent_email.errors %}
+                        <div class="text-danger small mt-1">{{ form.parent_email.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12 col-md-6">
+                        <label class="form-label" for="{{ form.date_of_birth.id_for_label }}">Date of Birth</label>
+                        {{ form.date_of_birth }}
+                        {% if form.date_of_birth.errors %}
+                        <div class="text-danger small mt-1">{{ form.date_of_birth.errors }}</div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.class_name %}
+                    <div class="col-12 col-md-6">
                         <label class="form-label" for="{{ form.class_name.id_for_label }}">Class</label>
                         {{ form.class_name }}
                         {% if form.class_name.errors %}
                         <div class="text-danger small mt-1">{{ form.class_name.errors }}</div>
                         {% endif %}
                     </div>
-                    <div>
-                        <label class="form-label" for="{{ form.phone.id_for_label }}">Phone Number</label>
-                        {{ form.phone }}
-                        {% if form.phone.errors %}
-                        <div class="text-danger small mt-1">{{ form.phone.errors }}</div>
-                        {% endif %}
-                    </div>
-                    <div>
-                        <label class="form-label" for="{{ form.parent_email.id_for_label }}">Parent Email</label>
-                        {{ form.parent_email }}
-                        {% if form.parent_email.errors %}
-                        <div class="text-danger small mt-1">{{ form.parent_email.errors }}</div>
+                    {% endif %}
+
+                    <div class="col-12 {% if form.class_name %}col-md-6{% endif %}">
+                        <label class="form-label" for="{{ form.image.id_for_label }}">Profile Picture</label>
+                        {{ form.image }}
+                        {% if form.image.errors %}
+                        <div class="text-danger small mt-1">{{ form.image.errors }}</div>
                         {% endif %}
                     </div>
                 </div>
 
-                <div class="page-actions">
-                    <button type="submit" class="btn btn-primary">Save Changes</button>
+                <div class="page-actions mt-1">
+                    <button type="submit" class="btn btn-primary">Update Profile</button>
                     <a href="{% url 'student_profile' student.id %}" class="btn btn-outline-secondary">Cancel</a>
                 </div>
             </form>
         </div>
     </section>
 </div>
+{% endblock %}
+{% block extra_css %}
+<style>
+.student-profile-edit-media {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.55rem;
+    padding-bottom: 0.35rem;
+}
+</style>
+{% endblock %}
+{% block extra_js %}
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const fileInput = document.getElementById("{{ form.image.id_for_label }}");
+    const previewImage = document.getElementById("profilePreviewImage");
+    if (!fileInput || !previewImage) {
+        return;
+    }
+
+    fileInput.addEventListener("change", function () {
+        const [file] = fileInput.files || [];
+        if (!file) {
+            return;
+        }
+        if (!file.type.startsWith("image/")) {
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = function (event) {
+            previewImage.src = event.target.result;
+        };
+        reader.readAsDataURL(file);
+    });
+});
+</script>
 {% endblock %}

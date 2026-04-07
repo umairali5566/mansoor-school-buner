@@ -1,0 +1,28 @@
+{% if stats %}
+<div class="dashboard-actions">
+    {% for stat in stats %}
+    <article class="saas-stat-card saas-stat-card-pro">
+        <div class="saas-stat-main">
+            {% if stat.icon %}
+            <div class="saas-stat-icon">
+                <i class="{{ stat.icon }}"></i>
+            </div>
+            {% endif %}
+            <h3 class="saas-stat-value">{{ stat.value }}</h3>
+            <span class="saas-stat-label">{{ stat.label }}</span>
+            {% if stat.meta %}
+            <p class="saas-stat-meta">{{ stat.meta }}</p>
+            {% endif %}
+        </div>
+        {% if stat.href %}
+        <div class="saas-stat-footer">
+            <a href="{{ stat.href }}" class="btn btn-sm btn-outline-primary w-100">
+                {{ stat.cta|default:"Open" }}
+                <i class="bi bi-arrow-up-right ms-1"></i>
+            </a>
+        </div>
+        {% endif %}
+    </article>
+    {% endfor %}
+</div>
+{% endif %}

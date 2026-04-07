@@ -255,3 +255,82 @@ class TeacherCreateForm(forms.Form):
 
 class AdminStudentProfileEditForm(StudentAdmissionForm):
     pass
+
+
+class StudentProfileForm(forms.ModelForm):
+    """Profile edit form for student self-service."""
+
+    class Meta:
+        model = Student
+        fields = ["full_name", "phone", "parent_email", "date_of_birth", "image"]
+        widgets = {
+            "date_of_birth": forms.DateInput(attrs={"type": "date"}),
+        }
+        labels = {
+            "parent_email": "Email",
+            "image": "Profile Picture",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        for field in self.fields.values():
+            existing_class = field.widget.attrs.get("class", "")
+            if isinstance(field.widget, forms.FileInput):
+                field.widget.attrs["class"] = (f"{existing_class} form-control").strip()
+            else:
+                field.widget.attrs["class"] = (f"{existing_class} form-control").strip()
+
+        self.fields["full_name"].widget.attrs.update({"placeholder": "Enter full name"})
+        self.fields["phone"].widget.attrs.update({"placeholder": "Enter phone number"})
+        self.fields["parent_email"].widget.attrs.update({"placeholder": "Enter email"})
+        self.fields["image"].widget.attrs.update({"accept": "image/*"})
+
+        self.fields["full_name"].required = True
+        self.fields["phone"].required = True
+        self.fields["parent_email"].required = True
+        self.fields["date_of_birth"].required = True
+
+    def clean_full_name(self):
+        value = (self.cleaned_data.get("full_name") or "").strip()
+        if not value:
+            raise forms.ValidationError("Full name is required.")
+        return value
+
+    def clean_phone(self):
+        value = (self.cleaned_data.get("phone") or "").strip()
+        if not value:
+            raise forms.ValidationError("Phone number is required.")
+        sanitized = "".join(ch for ch in value if ch.isdigit())
+        if len(sanitized) < 7 or len(sanitized) > 15:
+            raise forms.ValidationError("Enter a valid phone number.")
+        return value
+
+    def clean_parent_email(self):
+        value = (self.cleaned_data.get("parent_email") or "").strip()
+        if not value:
+            raise forms.ValidationError("Email is required.")
+        return value
+
+    def clean_date_of_birth(self):
+        value = self.cleaned_data.get("date_of_birth")
+        if value is None:
+            raise forms.ValidationError("Date of birth is required.")
+        if value > localdate():
+            raise forms.ValidationError("Date of birth cannot be in the future.")
+        return value
+
+
+class AdminStudentProfileForm(StudentProfileForm):
+    """Admin profile edit form with class control."""
+
+    class Meta(StudentProfileForm.Meta):
+        fields = StudentProfileForm.Meta.fields + ["class_name"]
+        labels = {
+            **StudentProfileForm.Meta.labels,
+            "class_name": "Class",
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["class_name"].widget.attrs.update({"placeholder": "Enter class"})

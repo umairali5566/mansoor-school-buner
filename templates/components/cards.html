@@ -1,0 +1,24 @@
+{% if cards %}
+<div class="quick-actions-grid">
+    {% for card in cards %}
+    <a href="{{ card.href|default:'#' }}" class="quick-action-card quick-action-card-pro">
+        {% if card.icon %}
+        <span class="quick-action-icon"><i class="{{ card.icon }}"></i></span>
+        {% endif %}
+        <h3 class="quick-action-title">{{ card.title }}</h3>
+        {% if card.description %}
+        <p class="quick-action-desc">{{ card.description }}</p>
+        {% endif %}
+        <span class="quick-action-arrow"><i class="bi bi-arrow-up-right"></i></span>
+    </a>
+    {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+    <div class="empty-state-icon">
+        <i class="bi bi-grid"></i>
+    </div>
+    <h5>{{ empty_title|default:"No items available" }}</h5>
+    <p>{{ empty_message|default:"Items will appear here once they are configured." }}</p>
+</div>
+{% endif %}

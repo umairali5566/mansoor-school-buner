@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}{% if is_edit %}Edit Assignment{% else %}Create Assignment{% endif %} | SAAMS{% endblock %}
+{% block topbar_eyebrow %}Smart Academic System{% endblock %}
+{% block topbar_title %}{% if is_edit %}Edit Assignment{% else %}Create Assignment{% endif %}{% endblock %}
+{% block topbar_subtitle %}Publish assignment deadlines, files, and class targets with professional teacher controls.{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack page-stack-sm">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-journal-plus"></i>
+            Assignment Builder
+        </span>
+        <h2 class="dashboard-hero-title">{% if is_edit %}Edit Assignment{% else %}Create New Assignment{% endif %}</h2>
+        <p class="dashboard-hero-subtitle">Set class, deadline, subject, and file so students can submit on time.</p>
+    </section>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} mb-0">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <section class="saas-panel">
+        <div class="saas-panel-body">
+            <form method="post" enctype="multipart/form-data" class="d-flex flex-column gap-3">
+                {% csrf_token %}
+                {% for field in form %}
+                <div>
+                    <label class="form-label">{{ field.label }}</label>
+                    {{ field }}
+                    {% if field.errors %}
+                    <small class="text-danger">{{ field.errors|join:", " }}</small>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <div class="page-actions">
+                    <button type="submit" class="btn btn-primary">
+                        {% if is_edit %}Update Assignment{% else %}Create Assignment{% endif %}
+                    </button>
+                    <a href="{% url 'assignment_list' %}" class="btn btn-outline-secondary">Back</a>
+                </div>
+            </form>
+        </div>
+    </section>
+</div>
+{% endblock %}

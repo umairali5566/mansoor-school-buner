@@ -1,0 +1,179 @@
+<aside class="sidebar-panel" id="appSidebar" aria-label="Primary navigation" tabindex="-1">
+    <div class="sidebar-surface">
+        <div class="sidebar-brand">
+            <a class="brand-block" href="{% if request.user.role == 'ADMIN' %}{% url 'admin_dashboard' %}{% elif request.user.role == 'TEACHER' %}{% url 'teacher_dashboard' %}{% else %}{% url 'student_dashboard' %}{% endif %}">
+                <span class="brand-logo"><i class="bi bi-mortarboard-fill"></i></span>
+                <span class="brand-copy">
+                    <span class="brand-title">SAAMS</span>
+                    <span class="brand-subtitle">School Operations Platform</span>
+                </span>
+            </a>
+            <button type="button" class="sidebar-toggle sidebar-toggle-desktop" id="desktopSidebarToggle" aria-label="Toggle sidebar" aria-expanded="true">
+                <i class="bi bi-layout-sidebar"></i>
+            </button>
+        </div>
+
+        <div class="sidebar-scroll">
+            <p class="sidebar-group-label">Main Menu</p>
+            <nav class="sidebar-nav">
+                {% if request.user.role == 'ADMIN' %}
+                <a href="{% url 'admin_dashboard' %}" class="sidebar-link {% if current_url == 'admin_dashboard' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+                    <span class="sidebar-link-text">Dashboard</span>
+                </a>
+                <a href="{% url 'student_list' %}" class="sidebar-link {% if current_url == 'student_list' or current_url == 'add_student' or current_url == 'edit_student' or current_url == 'delete_student' or current_url == 'reset_student_password' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
+                    <span class="sidebar-link-text">Students</span>
+                </a>
+                <a href="{% url 'student_admissions' %}" class="sidebar-link {% if current_url == 'student_admissions' or current_url == 'add_student_admission' or current_url == 'edit_student_admission' or current_url == 'edit_student_profile' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-journal-richtext"></i></span>
+                    <span class="sidebar-link-text">Enrollment</span>
+                </a>
+                <a href="{% url 'teacher_list' %}" class="sidebar-link {% if current_url == 'teacher_list' or current_url == 'add_teacher' or current_url == 'edit_teacher' or current_url == 'delete_teacher' or current_url == 'reset_teacher_password' or current_url == 'assign_teacher_classes' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-person-workspace"></i></span>
+                    <span class="sidebar-link-text">Teachers</span>
+                </a>
+                <a href="{% url 'class_assignment_list' %}" class="sidebar-link {% if current_url == 'class_assignment_list' or current_url == 'manage_class_assignment' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-diagram-3-fill"></i></span>
+                    <span class="sidebar-link-text">Class Controls</span>
+                </a>
+                <a href="{% url 'attendance_report' %}" class="sidebar-link {% if current_url == 'attendance_report' or current_url == 'edit_attendance' or current_url == 'attendance_analytics' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-clipboard-data-fill"></i></span>
+                    <span class="sidebar-link-text">Attendance</span>
+                </a>
+                <a href="{% url 'live_attendance' %}" class="sidebar-link {% if current_url == 'live_attendance' or current_url == 'video_feed' or current_url == 'live_messages' or current_url == 'face_attendance' or current_url == 'mark_face_attendance' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-camera-video-fill"></i></span>
+                    <span class="sidebar-link-text">Live Attendance</span>
+                </a>
+                <a href="{% url 'unknown_faces_list' %}" class="sidebar-link {% if current_url == 'unknown_faces_list' or current_url == 'convert_unknown' or current_url == 'delete_unknown_face' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-person-fill-exclamation"></i></span>
+                    <span class="sidebar-link-text">Unknown Faces</span>
+                </a>
+                <a href="{% url 'homework_list' %}" class="sidebar-link {% if current_url == 'homework_list' or current_url == 'upload_homework' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-journal-text"></i></span>
+                    <span class="sidebar-link-text">Homework</span>
+                </a>
+                <a href="{% url 'assignment_list' %}" class="sidebar-link {% if current_url == 'assignment_list' or current_url == 'assignment_create' or current_url == 'assignment_detail' or current_url == 'assignment_edit' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-journal-check"></i></span>
+                    <span class="sidebar-link-text">Assignments</span>
+                </a>
+                <a href="{% url 'quiz_list' %}" class="sidebar-link {% if current_url == 'quiz_list' or current_url == 'quiz_create' or current_url == 'quiz_edit' or current_url == 'quiz_manage_questions' or current_url == 'quiz_analytics' or current_url == 'quiz_result' or current_url == 'quiz_start' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-ui-checks-grid"></i></span>
+                    <span class="sidebar-link-text">Quizzes</span>
+                </a>
+                <a href="{% url 'result_list' %}" class="sidebar-link {% if current_url == 'result_list' or current_url == 'add_result' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-trophy-fill"></i></span>
+                    <span class="sidebar-link-text">Results</span>
+                </a>
+                <a href="{% url 'notification_center' %}" class="sidebar-link {% if current_url == 'notification_center' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-bell-fill"></i></span>
+                    <span class="sidebar-link-text">Notifications</span>
+                </a>
+                <a href="{% url 'change_password' %}" class="sidebar-link {% if current_url == 'change_password' or current_url == 'password_change_done' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-gear-fill"></i></span>
+                    <span class="sidebar-link-text">Settings</span>
+                </a>
+                {% elif request.user.role == 'TEACHER' %}
+                <a href="{% url 'teacher_dashboard' %}" class="sidebar-link {% if current_url == 'teacher_dashboard' or current_url == 'teacher_classes' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+                    <span class="sidebar-link-text">Dashboard</span>
+                </a>
+                <a href="{% url 'view_students' %}" class="sidebar-link {% if current_url == 'view_students' or current_url == 'teacher_add_student' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-people-fill"></i></span>
+                    <span class="sidebar-link-text">Students</span>
+                </a>
+                <a href="{% url 'mark_attendance' %}" class="sidebar-link {% if current_url == 'mark_attendance' or current_url == 'edit_attendance' or current_url == 'attendance_report' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-clipboard-check-fill"></i></span>
+                    <span class="sidebar-link-text">Attendance</span>
+                </a>
+                <a href="{% url 'upload_homework' %}" class="sidebar-link {% if current_url == 'upload_homework' or current_url == 'homework_list' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-journal-arrow-up"></i></span>
+                    <span class="sidebar-link-text">Homework</span>
+                </a>
+                <a href="{% url 'assignment_list' %}" class="sidebar-link {% if current_url == 'assignment_list' or current_url == 'assignment_create' or current_url == 'assignment_detail' or current_url == 'assignment_edit' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-journal-check"></i></span>
+                    <span class="sidebar-link-text">Assignments</span>
+                </a>
+                <a href="{% url 'quiz_list' %}" class="sidebar-link {% if current_url == 'quiz_list' or current_url == 'quiz_create' or current_url == 'quiz_edit' or current_url == 'quiz_manage_questions' or current_url == 'quiz_analytics' or current_url == 'quiz_result' or current_url == 'quiz_start' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-ui-checks-grid"></i></span>
+                    <span class="sidebar-link-text">Quizzes</span>
+                </a>
+                <a href="{% url 'add_result' %}" class="sidebar-link {% if current_url == 'add_result' or current_url == 'result_list' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-award-fill"></i></span>
+                    <span class="sidebar-link-text">Results</span>
+                </a>
+                <a href="{% url 'notification_center' %}" class="sidebar-link {% if current_url == 'notification_center' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-bell-fill"></i></span>
+                    <span class="sidebar-link-text">Notifications</span>
+                </a>
+                <a href="{% url 'change_password' %}" class="sidebar-link {% if current_url == 'change_password' or current_url == 'password_change_done' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-gear-fill"></i></span>
+                    <span class="sidebar-link-text">Settings</span>
+                </a>
+                {% else %}
+                <a href="{% url 'student_dashboard' %}" class="sidebar-link {% if current_url == 'student_dashboard' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-grid-1x2-fill"></i></span>
+                    <span class="sidebar-link-text">Dashboard</span>
+                </a>
+                <a href="{% url 'student_attendance' %}" class="sidebar-link {% if current_url == 'student_attendance' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-calendar-check-fill"></i></span>
+                    <span class="sidebar-link-text">Attendance</span>
+                </a>
+                <a href="{% url 'homework_list' %}" class="sidebar-link {% if current_url == 'homework_list' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-journal-text"></i></span>
+                    <span class="sidebar-link-text">Homework</span>
+                </a>
+                <a href="{% url 'assignment_list' %}" class="sidebar-link {% if current_url == 'assignment_list' or current_url == 'assignment_detail' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-journal-check"></i></span>
+                    <span class="sidebar-link-text">Assignments</span>
+                </a>
+                <a href="{% url 'quiz_list' %}" class="sidebar-link {% if current_url == 'quiz_list' or current_url == 'quiz_result' or current_url == 'quiz_start' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-ui-checks-grid"></i></span>
+                    <span class="sidebar-link-text">Quizzes</span>
+                </a>
+                <a href="{% url 'result_list' %}" class="sidebar-link {% if current_url == 'result_list' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-trophy-fill"></i></span>
+                    <span class="sidebar-link-text">Results</span>
+                </a>
+                <a href="{% url 'notification_center' %}" class="sidebar-link {% if current_url == 'notification_center' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-bell-fill"></i></span>
+                    <span class="sidebar-link-text">Notifications</span>
+                </a>
+                <a href="{% url 'change_password' %}" class="sidebar-link {% if current_url == 'change_password' or current_url == 'password_change_done' %}is-active{% endif %}">
+                    <span class="sidebar-link-icon"><i class="bi bi-gear-fill"></i></span>
+                    <span class="sidebar-link-text">Settings</span>
+                </a>
+                {% endif %}
+            </nav>
+        </div>
+
+        <div class="sidebar-footer">
+            <div class="profile-card">
+                <div class="profile-main">
+                    <span class="profile-avatar">
+                        {% if request.user.role == 'STUDENT' and current_student_profile and current_student_profile.image %}
+                        <img src="{{ current_student_profile.image.url }}" alt="{{ request.user.get_full_name|default:request.user.username }}">
+                        {% else %}
+                        <i class="bi bi-person-fill"></i>
+                        {% endif %}
+                    </span>
+                    <span class="profile-copy">
+                        <p class="profile-name">{{ request.user.get_full_name|default:request.user.username }}</p>
+                        <span class="profile-role">User</span>
+                    </span>
+                </div>
+            </div>
+            <button type="button" id="themeToggle" class="theme-toggle-btn" aria-label="Switch to dark mode" title="Switch to dark mode">
+                Dark Mode
+            </button>
+            <form method="post" action="{% url 'logout' %}" class="logout-form">
+                {% csrf_token %}
+                <button type="submit" class="sidebar-logout-btn">
+                    <i class="bi bi-box-arrow-right"></i>
+                    <span class="sidebar-logout-label">Logout</span>
+                </button>
+            </form>
+        </div>
+    </div>
+</aside>
+

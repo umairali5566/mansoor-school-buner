@@ -1,0 +1,401 @@
+{% extends "base.html" %}
+{% block title %}AI Tutor | SAAMS{% endblock %}
+{% block topbar_eyebrow %}Student Tools{% endblock %}
+{% block topbar_title %}AI Tutor{% endblock %}
+{% block topbar_subtitle %}Ask questions in English, Urdu, or Roman Urdu and get clear study help instantly.{% endblock %}
+{% block extra_css %}
+<style>
+    .ai-tutor-page {
+        display: grid;
+        gap: 1rem;
+    }
+
+    .ai-chat-shell {
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        min-height: calc(100vh - 10rem);
+        border-radius: 28px;
+        overflow: hidden;
+        border: 1px solid rgba(15, 23, 42, 0.08);
+        box-shadow: 0 24px 70px rgba(15, 23, 42, 0.12);
+        background:
+            radial-gradient(circle at top left, rgba(14, 165, 233, 0.12), transparent 32%),
+            linear-gradient(180deg, #f8fcff 0%, #ffffff 100%);
+    }
+
+    .ai-chat-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 1rem;
+        padding: 1.1rem 1.25rem;
+        border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+        background: rgba(255, 255, 255, 0.82);
+        backdrop-filter: blur(10px);
+    }
+
+    .ai-chat-title {
+        display: flex;
+        align-items: center;
+        gap: 0.9rem;
+    }
+
+    .ai-chat-badge {
+        width: 3rem;
+        height: 3rem;
+        border-radius: 1rem;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #fff;
+        background: linear-gradient(135deg, #0f766e, #0284c7);
+        box-shadow: 0 12px 28px rgba(2, 132, 199, 0.28);
+    }
+
+    .ai-chat-history {
+        overflow-y: auto;
+        padding: 1.25rem;
+        display: grid;
+        gap: 0.95rem;
+        align-content: start;
+        background:
+            linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(248, 250, 252, 0.98)),
+            radial-gradient(circle at center, rgba(14, 165, 233, 0.05), transparent 55%);
+    }
+
+    .chat-row {
+        display: flex;
+    }
+
+    .chat-row-user {
+        justify-content: flex-end;
+    }
+
+    .chat-row-ai {
+        justify-content: flex-start;
+    }
+
+    .chat-bubble {
+        max-width: min(80%, 720px);
+        padding: 0.95rem 1rem;
+        border-radius: 1.2rem;
+        line-height: 1.6;
+        white-space: pre-wrap;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+    }
+
+    .chat-bubble-user {
+        color: #fff;
+        border-bottom-right-radius: 0.4rem;
+        background: linear-gradient(135deg, #0f766e, #14b8a6);
+    }
+
+    .chat-bubble-ai {
+        color: #0f172a;
+        border-bottom-left-radius: 0.4rem;
+        background: #fff;
+        border: 1px solid rgba(15, 23, 42, 0.06);
+    }
+
+    .chat-meta {
+        margin-top: 0.45rem;
+        font-size: 0.74rem;
+        opacity: 0.72;
+    }
+
+    .chat-form-wrap {
+        padding: 1rem 1.1rem 1.1rem;
+        border-top: 1px solid rgba(15, 23, 42, 0.08);
+        background: rgba(255, 255, 255, 0.92);
+        backdrop-filter: blur(10px);
+    }
+
+    .chat-form {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        gap: 0.8rem;
+        align-items: end;
+    }
+
+    .chat-input {
+        min-height: 62px;
+        max-height: 180px;
+        resize: vertical;
+        border-radius: 18px;
+        border: 1px solid rgba(15, 23, 42, 0.12);
+        padding: 0.95rem 1rem;
+        font-size: 0.98rem;
+        outline: none;
+        background: #fff;
+    }
+
+    .chat-submit {
+        min-width: 132px;
+        min-height: 58px;
+        border: 0;
+        border-radius: 18px;
+        color: #fff;
+        font-weight: 700;
+        background: linear-gradient(135deg, #0f766e, #0284c7);
+        box-shadow: 0 16px 30px rgba(2, 132, 199, 0.2);
+    }
+
+    .typing-indicator {
+        display: none;
+        align-items: center;
+        gap: 0.7rem;
+    }
+
+    .typing-indicator.is-visible {
+        display: flex;
+    }
+
+    .typing-dots {
+        display: inline-flex;
+        gap: 0.3rem;
+    }
+
+    .typing-dots span {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 999px;
+        background: #0284c7;
+        animation: aiTutorBounce 1s infinite ease-in-out;
+    }
+
+    .typing-dots span:nth-child(2) {
+        animation-delay: 0.15s;
+    }
+
+    .typing-dots span:nth-child(3) {
+        animation-delay: 0.3s;
+    }
+
+    .empty-chat {
+        text-align: center;
+        padding: 3.5rem 1rem;
+        color: #475569;
+    }
+
+    .chat-helper-note {
+        font-size: 0.8rem;
+        color: #64748b;
+        margin-top: 0.65rem;
+    }
+
+    @keyframes aiTutorBounce {
+        0%, 80%, 100% { transform: translateY(0); opacity: 0.5; }
+        40% { transform: translateY(-4px); opacity: 1; }
+    }
+
+    @media (max-width: 768px) {
+        .ai-chat-shell {
+            min-height: calc(100vh - 8rem);
+        }
+
+        .chat-form {
+            grid-template-columns: 1fr;
+        }
+
+        .chat-submit {
+            width: 100%;
+        }
+
+        .chat-bubble {
+            max-width: 92%;
+        }
+    }
+
+    body.theme-dark .ai-chat-shell {
+        border-color: rgba(148, 163, 184, 0.22);
+        background:
+            radial-gradient(circle at top left, rgba(34, 211, 238, 0.1), transparent 32%),
+            linear-gradient(180deg, #0f172a 0%, #111827 100%);
+    }
+
+    body.theme-dark .ai-chat-header,
+    body.theme-dark .chat-form-wrap {
+        background: rgba(15, 23, 42, 0.88);
+        border-color: rgba(148, 163, 184, 0.18);
+    }
+
+    body.theme-dark .ai-chat-history {
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.95), rgba(17, 24, 39, 0.98));
+    }
+
+    body.theme-dark .chat-bubble-ai,
+    body.theme-dark .chat-input {
+        color: #e2e8f0;
+        background: #162033;
+        border-color: rgba(148, 163, 184, 0.16);
+    }
+
+    body.theme-dark .empty-chat,
+    body.theme-dark .chat-helper-note {
+        color: #94a3b8;
+    }
+</style>
+{% endblock %}
+{% block content %}
+<div class="container-fluid ai-tutor-page">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-robot"></i>
+            AI Tutor Assistant
+        </span>
+        <h2 class="dashboard-hero-title">Study With Your AI Tutor</h2>
+        <p class="dashboard-hero-subtitle">Ask school questions in English, Urdu, or Roman Urdu. Math answers can be solved step by step.</p>
+    </section>
+
+    <section class="ai-chat-shell">
+        <div class="ai-chat-header">
+            <div class="ai-chat-title">
+                <span class="ai-chat-badge"><i class="bi bi-stars"></i></span>
+                <div>
+                    <h3 class="saas-panel-title mb-1">AI Tutor</h3>
+                    <p class="record-meta mb-0">Simple explanations for homework, concepts, grammar, and problem solving.</p>
+                </div>
+            </div>
+            <span class="status-badge status-badge-success">Student Only</span>
+        </div>
+
+        <div class="ai-chat-history" id="chatHistory">
+            {% for item in history %}
+            <div class="chat-row chat-row-user">
+                <div class="chat-bubble chat-bubble-user">
+                    {{ item.question }}
+                    <div class="chat-meta">{{ item.timestamp|date:"M d, Y h:i A" }}</div>
+                </div>
+            </div>
+            <div class="chat-row chat-row-ai">
+                <div class="chat-bubble chat-bubble-ai">
+                    {{ item.answer }}
+                    <div class="chat-meta">AI Tutor</div>
+                </div>
+            </div>
+            {% empty %}
+            <div class="empty-chat" id="emptyChatState">
+                <div class="empty-state-icon mx-auto mb-3"><i class="bi bi-chat-dots-fill"></i></div>
+                <h4 class="mb-2">Start your first question</h4>
+                <p class="mb-0">Try: "Explain photosynthesis", "2x + 5 = 17 solve karo", or "Urdu grammar mein fail aur pass ka farq?"</p>
+            </div>
+            {% endfor %}
+
+            <div class="chat-row chat-row-ai typing-indicator" id="typingIndicator">
+                <div class="chat-bubble chat-bubble-ai">
+                    <div class="typing-dots" aria-hidden="true">
+                        <span></span>
+                        <span></span>
+                        <span></span>
+                    </div>
+                    <div class="chat-meta">AI is typing...</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-form-wrap">
+            <form id="aiTutorForm" class="chat-form" action="{% url 'ai_tutor_send' %}" method="post">
+                {% csrf_token %}
+                <textarea
+                    id="questionInput"
+                    name="question"
+                    class="chat-input"
+                    placeholder="Ask your question here..."
+                    maxlength="2000"
+                    required
+                ></textarea>
+                <button type="submit" class="chat-submit" id="sendButton">
+                    <i class="bi bi-send-fill"></i>
+                    Send
+                </button>
+            </form>
+            <p class="chat-helper-note" id="chatHelperNote">Keep questions clear for the best answer. Rate limit is active to prevent spam.</p>
+        </div>
+    </section>
+</div>
+{% endblock %}
+{% block extra_js %}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("aiTutorForm");
+        const input = document.getElementById("questionInput");
+        const history = document.getElementById("chatHistory");
+        const sendButton = document.getElementById("sendButton");
+        const typingIndicator = document.getElementById("typingIndicator");
+        const helperNote = document.getElementById("chatHelperNote");
+        const emptyState = document.getElementById("emptyChatState");
+
+        function scrollToBottom() {
+            history.scrollTop = history.scrollHeight;
+        }
+
+        function appendBubble(text, type, meta) {
+            const row = document.createElement("div");
+            row.className = "chat-row " + (type === "user" ? "chat-row-user" : "chat-row-ai");
+
+            const bubble = document.createElement("div");
+            bubble.className = "chat-bubble " + (type === "user" ? "chat-bubble-user" : "chat-bubble-ai");
+            bubble.textContent = text;
+
+            const metaLine = document.createElement("div");
+            metaLine.className = "chat-meta";
+            metaLine.textContent = meta;
+            bubble.appendChild(metaLine);
+
+            row.appendChild(bubble);
+            history.appendChild(row);
+            scrollToBottom();
+        }
+
+        scrollToBottom();
+
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+
+            const question = input.value.trim();
+            if (!question) {
+                helperNote.textContent = "Please enter a question first.";
+                return;
+            }
+
+            if (emptyState) {
+                emptyState.remove();
+            }
+
+            appendBubble(question, "user", "You");
+            input.value = "";
+            sendButton.disabled = true;
+            typingIndicator.classList.add("is-visible");
+            helperNote.textContent = "AI Tutor is thinking...";
+            scrollToBottom();
+
+            try {
+                const response = await fetch(form.action, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRFToken": form.querySelector("[name=csrfmiddlewaretoken]").value,
+                    },
+                    body: JSON.stringify({ question: question }),
+                });
+
+                const payload = await response.json();
+                if (!response.ok || !payload.ok) {
+                    throw new Error(payload.error || "Unable to get AI Tutor response right now.");
+                }
+
+                appendBubble(payload.answer, "ai", payload.timestamp || "AI Tutor");
+                helperNote.textContent = "Ask another question any time.";
+            } catch (error) {
+                appendBubble(error.message, "ai", "System");
+                helperNote.textContent = "Something went wrong. Please try again in a moment.";
+            } finally {
+                typingIndicator.classList.remove("is-visible");
+                sendButton.disabled = false;
+                input.focus();
+                scrollToBottom();
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,95 @@
+<details class="topbar-notifications-menu" id="notificationMenu">
+    <summary class="topbar-icon-btn" aria-label="Notifications">
+        <i class="bi bi-bell"></i>
+        <span
+            class="topbar-icon-dot topbar-icon-count {% if topbar_unread_notifications_count == 0 %}is-hidden{% endif %}"
+            id="topbarNotificationCount"
+        >
+            {{ topbar_unread_notifications_count }}
+        </span>
+    </summary>
+    <div class="notification-menu-list" id="topbarNotificationList">
+        <div class="notification-menu-head">
+            <strong>Notifications</strong>
+            <button
+                type="button"
+                class="notification-mark-all js-mark-all-notifications"
+                data-url="{% url 'mark_all_notifications_read' %}"
+            >
+                Mark all read
+            </button>
+        </div>
+        <div class="notification-menu-items">
+            {% for notification in topbar_notifications %}
+            <article class="notification-item {% if not notification.is_read %}is-unread{% endif %}" data-notification-id="{{ notification.id }}">
+                <div class="notification-item-main">
+                    {% if notification.link_url %}
+                    <a href="{{ notification.link_url }}" class="notification-item-title">{{ notification.title }}</a>
+                    {% else %}
+                    <span class="notification-item-title">{{ notification.title }}</span>
+                    {% endif %}
+                    {% if notification.message %}
+                    <p class="notification-item-message">{{ notification.message }}</p>
+                    {% endif %}
+                    <time class="notification-item-time">{{ notification.created_at|timesince }} ago</time>
+                </div>
+                {% if not notification.is_read %}
+                <button
+                    type="button"
+                    class="icon-action js-mark-notification-read"
+                    data-url="{% url 'mark_notification_read' notification.id %}"
+                    aria-label="Mark notification as read"
+                >
+                    <i class="bi bi-check2"></i>
+                </button>
+                {% endif %}
+            </article>
+            {% empty %}
+            <div class="notification-empty">
+                <i class="bi bi-bell-slash"></i>
+                <p>No notifications yet.</p>
+            </div>
+            {% endfor %}
+        </div>
+        <div class="notification-menu-footer">
+            <a href="{% url 'notification_center' %}">View all notifications</a>
+        </div>
+    </div>
+</details>
+
+<details class="topbar-profile-menu" id="profileMenu">
+    <summary class="topbar-user-chip" aria-label="Profile menu">
+        <span class="topbar-user-avatar">
+            {% if request.user.role == 'STUDENT' and current_student_profile and current_student_profile.image %}
+            <img src="{{ current_student_profile.image.url }}" alt="{{ request.user.get_full_name|default:request.user.username }}">
+            {% else %}
+            <i class="bi bi-person-fill"></i>
+            {% endif %}
+        </span>
+        {% if current_url != 'admin_dashboard' and current_url != 'teacher_dashboard' and current_url != 'student_dashboard' %}
+        <span class="topbar-user-copy">
+            <strong>{{ request.user.get_full_name|default:request.user.username }}</strong>
+            <span>User</span>
+        </span>
+        {% endif %}
+        <i class="bi bi-chevron-down profile-menu-chevron"></i>
+    </summary>
+    <div class="profile-menu-list">
+        {% if request.user.role == 'ADMIN' %}
+        <a href="{% url 'admin_dashboard' %}"><i class="bi bi-grid-1x2-fill"></i>Dashboard</a>
+        {% elif request.user.role == 'TEACHER' %}
+        <a href="{% url 'teacher_dashboard' %}"><i class="bi bi-grid-1x2-fill"></i>Dashboard</a>
+        {% else %}
+        <a href="{% url 'student_dashboard' %}"><i class="bi bi-grid-1x2-fill"></i>Dashboard</a>
+        {% if current_student_profile %}
+        <a href="{% url 'student_profile' current_student_profile.id %}"><i class="bi bi-person-circle"></i>My Profile</a>
+        {% endif %}
+        {% endif %}
+        <a href="{% url 'notification_center' %}"><i class="bi bi-bell-fill"></i>Notifications</a>
+        <a href="{% url 'change_password' %}"><i class="bi bi-gear-fill"></i>Settings</a>
+        <form method="post" action="{% url 'logout' %}">
+            {% csrf_token %}
+            <button type="submit"><i class="bi bi-box-arrow-right"></i>Logout</button>
+        </form>
+    </div>
+</details>

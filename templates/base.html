@@ -17,26 +17,16 @@
     <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        primary: '#0F172A',
-                        secondary: '#1E293B',
-                        accent: '#3B82F6',
-                        purple: '#6366F1',
-                        green: '#22C55E'
-                    },
-                    backgroundImage: {
-                        'gradient-primary': 'linear-gradient(135deg, #3B82F6, #8B5CF6)'
-                    }
-                }
+        (function () {
+            const savedTheme = window.localStorage.getItem("theme") || window.localStorage.getItem("saams.theme");
+            if (savedTheme === "dark") {
+                document.documentElement.classList.add("theme-dark");
+                document.documentElement.classList.add("dark-mode");
             }
-        }
+        })();
     </script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="{% static 'css/app.css' %}">
@@ -44,236 +34,57 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="app-body {% if request.user.is_authenticated %}role-{{ request.user.role|lower }}{% else %}role-guest{% endif %}">
-{% with current_url=request.resolver_match.url_name|default:'' current_path=request.path|default:'' %}
-    <div class="fixed inset-0 bg-gradient-to-br from-primary via-secondary to-accent opacity-90" aria-hidden="true">
-        <div class="absolute top-10 left-10 w-72 h-72 bg-gradient-to-r from-accent to-purple rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse"></div>
-        <div class="absolute top-0 right-4 w-72 h-72 bg-gradient-to-r from-purple to-green rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-2000"></div>
-        <div class="absolute -bottom-8 left-20 w-72 h-72 bg-gradient-to-r from-green to-accent rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse animation-delay-4000"></div>
+{% with current_url=request.resolver_match.url_name|default:'' %}
+    {% if request.user.is_authenticated %}
+    <div class="app-background" aria-hidden="true">
+        <span class="bg-orb bg-orb-one"></span>
+        <span class="bg-orb bg-orb-two"></span>
+        <span class="bg-grid"></span>
+        <p class="app-watermark">SAAMS</p>
     </div>
 
-    {% if request.user.is_authenticated %}
     <div class="app-shell" id="appShell">
         <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
 
-        <aside class="fixed left-0 top-0 z-40 h-screen w-64 bg-white/10 backdrop-blur-lg border-r border-white/20 shadow-xl" id="appSidebar" aria-label="Primary navigation" tabindex="-1">
-            <div class="flex flex-col h-full">
-                <div class="p-6 border-b border-white/20">
-                    <a class="flex items-center space-x-3" href="{% if request.user.role == 'ADMIN' %}{% url 'admin_dashboard' %}{% elif request.user.role == 'TEACHER' %}{% url 'teacher_dashboard' %}{% else %}{% url 'student_dashboard' %}{% endif %}">
-                        <div class="w-10 h-10 bg-gradient-to-r from-accent to-purple rounded-lg flex items-center justify-center">
-                            <i class="bi bi-mortarboard-fill text-white text-xl"></i>
-                        </div>
-                        <div>
-                            <span class="text-xl font-bold text-white">SAAMS</span>
-                            <span class="text-xs text-gray-300">Premium SaaS</span>
-                        </div>
-                    </a>
-                </div>
-                <div class="flex-1 px-6 py-4">
-                    <nav class="space-y-2">
-                        {% if request.user.role == 'ADMIN' %}
-                        <a href="{% url 'admin_dashboard' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'admin_dashboard' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-grid-1x2-fill"></i>
-                            <span>Dashboard</span>
-                        </a>
+        {% include "partials/sidebar.html" %}
 
-                        <a href="{% url 'student_list' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'student_list' or current_url == 'add_student' or current_url == 'edit_student' or current_url == 'delete_student' or current_url == 'reset_student_password' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-people-fill"></i>
-                            <span>Manage Students</span>
-                        </a>
+        <main class="content-area">
+            <button type="button" class="dashboard-mobile-nav-toggle" id="mobileSidebarToggle" aria-label="Open navigation" aria-expanded="false">
+                <i class="bi bi-list"></i>
+            </button>
 
-                        <a href="{% url 'student_admissions' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'student_admissions' or current_url == 'add_student_admission' or current_url == 'edit_student_admission' or current_url == 'edit_student_profile' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-journal-richtext"></i>
-                            <span>Student Admissions</span>
-                        </a>
-
-                        <a href="{% url 'teacher_list' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'teacher_list' or current_url == 'add_teacher' or current_url == 'edit_teacher' or current_url == 'delete_teacher' or current_url == 'reset_teacher_password' or current_url == 'assign_teacher_classes' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-person-workspace"></i>
-                            <span>Manage Teachers</span>
-                        </a>
-
-                        <a href="{% url 'attendance_report' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'attendance_report' or current_url == 'edit_attendance' or current_url == 'attendance_analytics' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-bar-chart-line-fill"></i>
-                            <span>Reports</span>
-                        </a>
-
-                        <a href="{% url 'live_attendance' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'live_attendance' or current_url == 'video_feed' or current_url == 'live_messages' or current_url == 'face_attendance' or current_url == 'mark_face_attendance' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-camera-video-fill"></i>
-                            <span>Live Attendance</span>
-                        </a>
-
-                        <a href="{% url 'unknown_faces_list' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'unknown_faces_list' or current_url == 'convert_unknown' or current_url == 'delete_unknown_face' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-person-fill-exclamation"></i>
-                            <span>Unknown Faces</span>
-                        </a>
-
-                        <a href="{% url 'change_password' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'change_password' or current_url == 'password_change_done' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-gear-fill"></i>
-                            <span>Settings</span>
-                        </a>
-                        {% elif request.user.role == 'TEACHER' %}
-                        <a href="{% url 'teacher_dashboard' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'teacher_dashboard' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}" data-hash-default="true">
-                            <i class="bi bi-grid-1x2-fill"></i>
-                            <span>Dashboard</span>
-                        </a>
-
-                        <a href="{% url 'mark_attendance' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'mark_attendance' or current_url == 'edit_attendance' or current_url == 'face_attendance' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-clipboard-check-fill"></i>
-                            <span>Attendance</span>
-                        </a>
-
-                        <a href="{% url 'upload_homework' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'upload_homework' or current_url == 'homework_list' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-cloud-arrow-up-fill"></i>
-                            <span>Homework</span>
-                        </a>
-
-                        <a href="{% url 'add_result' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'add_result' or current_url == 'result_list' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-journal-plus"></i>
-                            <span>Results</span>
-                        </a>
-
-                        <a href="{% url 'change_password' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'change_password' or current_url == 'password_change_done' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-key-fill"></i>
-                            <span>Settings</span>
-                        </a>
-                        {% else %}
-                        <a href="{% url 'student_dashboard' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'student_dashboard' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-grid-1x2-fill"></i>
-                            <span>Dashboard</span>
-                        </a>
-
-                        <a href="{% url 'student_profile' request.user.student.id %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'student_profile' or current_url == 'edit_student_profile' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-person-circle"></i>
-                            <span>Profile</span>
-                        </a>
-
-                        <a href="{% url 'student_attendance' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'student_attendance' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-calendar-check-fill"></i>
-                            <span>Attendance</span>
-                        </a>
-
-                        <a href="{% url 'homework_list' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'homework_list' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-journal-arrow-down"></i>
-                            <span>Homework</span>
-                        </a>
-
-                        <a href="{% url 'result_list' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'result_list' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-trophy-fill"></i>
-                            <span>Results</span>
-                        </a>
-
-                        <a href="{% url 'change_password' %}" class="flex items-center space-x-3 px-3 py-2 rounded-lg text-white hover:bg-white/10 transition-all duration-300 {% if current_url == 'change_password' or current_url == 'password_change_done' %}bg-gradient-to-r from-accent to-purple shadow-lg{% endif %}">
-                            <i class="bi bi-key-fill"></i>
-                            <span>Settings</span>
-                        </a>
-                        {% endif %}
-                    </nav>
-                </div>
-
-                <div class="p-6 border-t border-white/20">
-                    <div class="flex items-center space-x-3 mb-4">
-                        <div class="w-10 h-10 rounded-full bg-gradient-to-r from-accent to-purple flex items-center justify-center">
-                            {% if request.user.role == 'STUDENT' and request.user.student.image %}
-                            <img src="{{ request.user.student.image.url }}" alt="{{ request.user.username }}" class="w-full h-full rounded-full object-cover">
-                            {% else %}
-                            <i class="bi bi-person-fill text-white"></i>
-                            {% endif %}
-                        </div>
-                        <div>
-                            <p class="text-white font-medium text-sm">{{ request.user.get_full_name|default:request.user.username }}</p>
-                            <p class="text-gray-300 text-xs">{{ request.user.role|title }}</p>
-                        </div>
-                    </div>
-                    <form method="post" action="{% url 'logout' %}">
-                        {% csrf_token %}
-                        <button type="submit" class="w-full bg-red-500/20 hover:bg-red-500/30 text-red-300 px-4 py-2 rounded-lg transition-all duration-300 flex items-center space-x-2">
-                            <i class="bi bi-box-arrow-right"></i>
-                            <span>Logout</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-        </aside>
-
-                <main class="ml-64 flex-1 min-h-screen">
-            <header class="bg-white/10 backdrop-blur-lg border-b border-white/20 p-6 sticky top-0 z-10" role="banner">
-                <div class="flex-1">
-                    <div class="flex items-center space-x-4">
-                        <div class="relative">
-                            <i class="bi bi-search text-gray-400 absolute left-3 top-1/2 transform -translate-y-1/2"></i>
-                            <input type="text" placeholder="Search..." class="pl-10 pr-4 py-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-accent">
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center space-x-4">
-                    {% block topbar_actions %}{% endblock %}
-
-                    <button class="relative p-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg hover:bg-white/20 transition-all duration-300">
-                        <i class="bi bi-bell-fill text-white"></i>
-                        <span class="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
-                    </button>
-
-                    <div class="relative">
-                        <button class="flex items-center space-x-3 p-2 bg-white/10 backdrop-blur-sm border border-white/20 rounded-lg hover:bg-white/20 transition-all duration-300">
-                            <div class="w-8 h-8 rounded-full bg-gradient-to-r from-accent to-purple flex items-center justify-center">
-                                {% if request.user.role == 'STUDENT' and request.user.student.image %}
-                                <img src="{{ request.user.student.image.url }}" alt="{{ request.user.username }}" class="w-full h-full rounded-full object-cover">
-                                {% elif request.user.role == 'ADMIN' %}
-                                <i class="bi bi-shield-check text-white text-sm"></i>
-                                {% elif request.user.role == 'TEACHER' %}
-                                <i class="bi bi-person-workspace text-white text-sm"></i>
-                                {% else %}
-                                <i class="bi bi-person-badge-fill text-white text-sm"></i>
-                                {% endif %}
-                            </div>
-                            <div class="text-left hidden md:block">
-                                <p class="text-white text-sm font-medium">{{ request.user.get_full_name|default:request.user.username }}</p>
-                                <p class="text-gray-300 text-xs">{{ request.user.role|title }}</p>
-                            </div>
-                            <i class="bi bi-chevron-down text-white"></i>
-                        </button>
-                        <!-- Dropdown menu would go here -->
-                    </div>
-                </div>
-            </header>
-
-            <div class="p-6">
-                <div class="max-w-7xl mx-auto">
-    {% else %}
-    <main class="guest-shell">
-        <div class="guest-brand">
-            <span class="brand-logo">
-                <i class="bi bi-mortarboard-fill"></i>
-            </span>
-            <div>
-                <p class="guest-title">School Management System</p>
-                <p class="guest-subtitle">Secure access portal</p>
-            </div>
-        </div>
-
-        <div class="guest-content">
-    {% endif %}
+            <div class="content-surface">
+                <div class="page-shell animate-fade-in">
                     {% block content %}{% endblock %}
-    {% if request.user.is_authenticated %}
                 </div>
+                {% if not hide_footer %}
+                {% include "partials/footer.html" %}
+                {% endif %}
             </div>
         </main>
-        <div class="pwa-install-banner" id="pwaInstallBanner" hidden>
-            <div class="pwa-install-copy">
-                <strong>Install School MS</strong>
-                <span>Keep the app on your home screen for faster access.</span>
-            </div>
-            <div class="pwa-install-actions">
-                <button type="button" class="btn btn-sm btn-primary pwa-install-button" id="pwaInstallButton">
-                    Install App
-                </button>
-                <button type="button" class="pwa-dismiss-button" id="pwaDismissButton" aria-label="Dismiss install prompt">
-                    <i class="bi bi-x-lg"></i>
-                </button>
-            </div>
+    </div>
+
+    <div class="pwa-install-banner" id="pwaInstallBanner" hidden>
+        <div class="pwa-install-copy">
+            <strong>Install School MS</strong>
+            <span>Keep the app on your home screen for faster access.</span>
+        </div>
+        <div class="pwa-install-actions">
+            <button type="button" class="btn btn-sm btn-primary pwa-install-button" id="pwaInstallButton">Install App</button>
+            <button type="button" class="pwa-dismiss-button" id="pwaDismissButton" aria-label="Dismiss install prompt">
+                <i class="bi bi-x-lg"></i>
+            </button>
         </div>
     </div>
     {% else %}
+    <main class="guest-shell">
+        <div class="app-background" aria-hidden="true">
+            <span class="bg-orb bg-orb-one"></span>
+            <span class="bg-orb bg-orb-two"></span>
+            <span class="bg-grid"></span>
+        </div>
+        <div class="guest-content animate-fade-in">
+            {% block guest_content %}{% endblock %}
         </div>
     </main>
     {% endif %}
@@ -283,22 +94,38 @@
 <script>
 document.addEventListener("DOMContentLoaded", function () {
     const shell = document.getElementById("appShell");
-    if (!shell) {
-        return;
-    }
-
     const sidebar = document.getElementById("appSidebar");
     const desktopToggle = document.getElementById("desktopSidebarToggle");
     const mobileToggle = document.getElementById("mobileSidebarToggle");
     const overlay = document.getElementById("sidebarOverlay");
-    const collapseKey = "schoolms.sidebar.collapsed";
+    const themeToggle = document.getElementById("themeToggle");
+    const profileMenu = document.getElementById("profileMenu");
+    const notificationMenu = document.getElementById("notificationMenu");
+
+    const collapseKey = "saams.sidebar.collapsed";
+    const themeKey = "theme";
     const desktopQuery = window.matchMedia("(min-width: 769px)");
     const mobileQuery = window.matchMedia("(max-width: 768px)");
-    const desktopToggleIcon = desktopToggle ? desktopToggle.querySelector("i") : null;
-    const mobileToggleIcon = mobileToggle ? mobileToggle.querySelector("i") : null;
 
-    const syncSidebarAccessibility = function () {
-        if (!sidebar) {
+    function applyTheme(theme) {
+        const isDark = theme === "dark";
+        document.documentElement.classList.toggle("theme-dark", isDark);
+        document.body.classList.toggle("theme-dark", isDark);
+        document.documentElement.classList.toggle("dark-mode", isDark);
+        document.body.classList.toggle("dark-mode", isDark);
+
+        if (themeToggle) {
+            themeToggle.textContent = isDark ? "Light Mode" : "Dark Mode";
+            themeToggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
+            themeToggle.setAttribute("title", isDark ? "Switch to light mode" : "Switch to dark mode");
+        }
+
+        window.localStorage.setItem(themeKey, isDark ? "dark" : "light");
+        window.localStorage.setItem("saams.theme", isDark ? "dark" : "light");
+    }
+
+    function syncSidebarAccessibility() {
+        if (!shell || !sidebar) {
             return;
         }
 
@@ -307,156 +134,186 @@ document.addEventListener("DOMContentLoaded", function () {
         const shouldHideSidebar = !isDesktop && !isOpen;
 
         sidebar.setAttribute("aria-hidden", String(shouldHideSidebar));
-
         if (overlay) {
             overlay.setAttribute("aria-hidden", String(!(mobileQuery.matches && isOpen)));
         }
-    };
+    }
 
-    const applySavedCollapseState = function () {
-        if (desktopQuery.matches && window.localStorage.getItem(collapseKey) === "true") {
-            shell.classList.add("is-collapsed");
-        } else if (!desktopQuery.matches) {
-            shell.classList.remove("is-collapsed");
-        }
-        updateDesktopToggleState();
-        syncSidebarAccessibility();
-    };
-
-    const updateDesktopToggleState = function () {
-        if (!desktopToggle) {
+    function updateDesktopToggleState() {
+        if (!shell || !desktopToggle) {
             return;
         }
 
+        const icon = desktopToggle.querySelector("i");
         const isCollapsed = shell.classList.contains("is-collapsed");
+
         desktopToggle.setAttribute("aria-expanded", String(!isCollapsed));
-
-        if (desktopToggleIcon) {
-            desktopToggleIcon.className = isCollapsed ? "bi bi-layout-sidebar-inset" : "bi bi-layout-sidebar";
+        if (icon) {
+            icon.className = isCollapsed ? "bi bi-layout-sidebar-inset" : "bi bi-layout-sidebar";
         }
-    };
+    }
 
-    const updateMobileToggleState = function () {
-        if (!mobileToggle) {
+    function updateMobileToggleState() {
+        if (!shell || !mobileToggle) {
             return;
         }
 
+        const icon = mobileToggle.querySelector("i");
         const isOpen = shell.classList.contains("is-sidebar-open");
+
         mobileToggle.setAttribute("aria-expanded", String(isOpen));
-
-        if (mobileToggleIcon) {
-            mobileToggleIcon.className = isOpen ? "bi bi-x-lg" : "bi bi-list";
+        if (icon) {
+            icon.className = isOpen ? "bi bi-x-lg" : "bi bi-list";
         }
-    };
+    }
 
-    const closeMobileSidebar = function () {
-        shell.classList.remove("is-sidebar-open");
-        document.body.classList.remove("sidebar-mobile-open");
-        updateMobileToggleState();
-        syncSidebarAccessibility();
-    };
+    function openMobileSidebar() {
+        if (!shell) {
+            return;
+        }
 
-    const openMobileSidebar = function () {
         shell.classList.add("is-sidebar-open");
         document.body.classList.add("sidebar-mobile-open");
         updateMobileToggleState();
         syncSidebarAccessibility();
+
         if (sidebar) {
             sidebar.focus();
         }
-    };
+    }
 
-    if (desktopToggle) {
-        desktopToggle.addEventListener("click", function () {
-            if (!desktopQuery.matches) {
-                return;
+    function closeMobileSidebar() {
+        if (!shell) {
+            return;
+        }
+
+        shell.classList.remove("is-sidebar-open");
+        document.body.classList.remove("sidebar-mobile-open");
+        updateMobileToggleState();
+        syncSidebarAccessibility();
+    }
+
+    if (shell) {
+        if (desktopToggle) {
+            desktopToggle.addEventListener("click", function () {
+                if (!desktopQuery.matches) {
+                    return;
+                }
+
+                shell.classList.toggle("is-collapsed");
+                window.localStorage.setItem(collapseKey, shell.classList.contains("is-collapsed") ? "true" : "false");
+                updateDesktopToggleState();
+            });
+        }
+
+        if (mobileToggle) {
+            mobileToggle.addEventListener("click", function () {
+                if (shell.classList.contains("is-sidebar-open")) {
+                    closeMobileSidebar();
+                } else {
+                    openMobileSidebar();
+                }
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener("click", closeMobileSidebar);
+        }
+
+        document.querySelectorAll(".sidebar-link").forEach(function (link) {
+            link.addEventListener("click", function () {
+                if (mobileQuery.matches) {
+                    closeMobileSidebar();
+                }
+            });
+        });
+
+        window.addEventListener("resize", function () {
+            if (desktopQuery.matches) {
+                closeMobileSidebar();
             }
 
-            shell.classList.toggle("is-collapsed");
-            window.localStorage.setItem(collapseKey, shell.classList.contains("is-collapsed"));
+            if (desktopQuery.matches && window.localStorage.getItem(collapseKey) === "true") {
+                shell.classList.add("is-collapsed");
+            } else if (!desktopQuery.matches) {
+                shell.classList.remove("is-collapsed");
+            }
+
             updateDesktopToggleState();
+            syncSidebarAccessibility();
         });
-    }
 
-    if (mobileToggle) {
-        mobileToggle.addEventListener("click", function () {
-            if (shell.classList.contains("is-sidebar-open")) {
+        window.addEventListener("keydown", function (event) {
+            if (event.key === "Escape" && shell.classList.contains("is-sidebar-open")) {
                 closeMobileSidebar();
-            } else {
-                openMobileSidebar();
             }
         });
-    }
 
-    if (overlay) {
-        overlay.addEventListener("click", closeMobileSidebar);
-    }
-
-    window.addEventListener("resize", function () {
-        if (desktopQuery.matches) {
-            closeMobileSidebar();
+        if (desktopQuery.matches && window.localStorage.getItem(collapseKey) === "true") {
+            shell.classList.add("is-collapsed");
         }
-        applySavedCollapseState();
-    });
 
-    window.addEventListener("keydown", function (event) {
-        if (event.key === "Escape" && shell.classList.contains("is-sidebar-open")) {
-            closeMobileSidebar();
+        updateDesktopToggleState();
+        updateMobileToggleState();
+        syncSidebarAccessibility();
+    }
+
+    if (profileMenu) {
+        document.addEventListener("click", function (event) {
+            if (!profileMenu.contains(event.target)) {
+                profileMenu.removeAttribute("open");
+            }
+        });
+    }
+
+    if (notificationMenu) {
+        document.addEventListener("click", function (event) {
+            if (!notificationMenu.contains(event.target)) {
+                notificationMenu.removeAttribute("open");
+            }
+        });
+    }
+
+    if (themeToggle) {
+        const savedTheme =
+            window.localStorage.getItem(themeKey) ||
+            window.localStorage.getItem("saams.theme") ||
+            (document.documentElement.classList.contains("theme-dark") ? "dark" : "light");
+        applyTheme(savedTheme);
+
+        themeToggle.addEventListener("click", function () {
+            const currentTheme = document.body.classList.contains("dark-mode") ? "dark" : "light";
+            applyTheme(currentTheme === "dark" ? "light" : "dark");
+        });
+    }
+
+    document.addEventListener("click", function (event) {
+        const target = event.target.closest(".btn, .icon-action, .sidebar-link, .sidebar-logout-btn");
+        if (!target || target.classList.contains("no-ripple")) {
+            return;
         }
+
+        const ripple = document.createElement("span");
+        ripple.className = "btn-ripple";
+
+        const rect = target.getBoundingClientRect();
+        const size = Math.max(rect.width, rect.height);
+        ripple.style.width = size + "px";
+        ripple.style.height = size + "px";
+        ripple.style.left = (event.clientX - rect.left - size / 2) + "px";
+        ripple.style.top = (event.clientY - rect.top - size / 2) + "px";
+
+        target.appendChild(ripple);
+
+        window.setTimeout(function () {
+            ripple.remove();
+        }, 500);
     });
-
-    applySavedCollapseState();
-    updateMobileToggleState();
-    syncSidebarAccessibility();
-
-    const hashLinks = Array.from(document.querySelectorAll("[data-nav-hash]"));
-    const hashDefaults = Array.from(document.querySelectorAll("[data-hash-default='true']"));
-    const regularNavLinks = Array.from(document.querySelectorAll(".sidebar-nav a.sidebar-link"));
-
-    const syncHashNavigation = function () {
-        const currentHash = window.location.hash.replace("#", "");
-        let hashMatched = false;
-
-        hashLinks.forEach(function (link) {
-            const isMatch = currentHash && link.dataset.navHash === currentHash;
-            link.classList.toggle("is-active", !!isMatch);
-            hashMatched = hashMatched || !!isMatch;
-        });
-
-        hashDefaults.forEach(function (link) {
-            if (link.dataset.baseActive === undefined) {
-                link.dataset.baseActive = link.classList.contains("is-active") ? "true" : "false";
-            }
-
-            if (hashMatched) {
-                link.classList.remove("is-active");
-            } else if (link.dataset.baseActive === "true") {
-                link.classList.add("is-active");
-            }
-        });
-    };
-
-    hashLinks.forEach(function (link) {
-        link.addEventListener("click", function () {
-            if (mobileQuery.matches) {
-                closeMobileSidebar();
-            }
-        });
-    });
-
-    regularNavLinks.forEach(function (link) {
-        link.addEventListener("click", function () {
-            if (mobileQuery.matches) {
-                closeMobileSidebar();
-            }
-        });
-    });
-
-    window.addEventListener("hashchange", syncHashNavigation);
-    syncHashNavigation();
 });
 </script>
+<script src="{% static 'js/app-shell.js' %}"></script>
 <script src="{% static 'js/pwa.js' %}"></script>
 {% block extra_js %}{% endblock %}
 </body>
 </html>
+

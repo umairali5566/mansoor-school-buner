@@ -1,16 +1,20 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import HttpResponseForbidden
 from .models import Result
 from accounts.models import Student
 
 @login_required
 def add_result(request):
-    if not hasattr(request.user, 'teacher'):
-        return redirect('teacher_dashboard')
+    if getattr(request.user, "role", "") != "TEACHER" or not hasattr(request.user, "teacher"):
+        return HttpResponseForbidden("Only teachers allowed")
 
     teacher = request.user.teacher
     class_names = list(teacher.classes.values_list('name', flat=True))
+    if not class_names:
+        messages.error(request, "Cannot add results until classes are assigned.")
+        return redirect("teacher_dashboard")
     students = Student.objects.filter(class_name__in=class_names)
 
     if request.method == 'POST':
@@ -24,6 +28,7 @@ def add_result(request):
 
         Result.objects.create(
             student=student,
+            teacher=teacher,
             subject=subject,
             marks=int(marks),
             total_marks=int(total_marks),

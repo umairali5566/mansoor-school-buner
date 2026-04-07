@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Assignments | SAAMS{% endblock %}
+{% block topbar_eyebrow %}Smart Academic System{% endblock %}
+{% block topbar_title %}Assignments{% endblock %}
+{% block topbar_subtitle %}Track assignment deadlines, submissions, late work, and pending students in one workflow.{% endblock %}
+{% block topbar_actions %}
+{% if can_manage %}
+<div class="topbar-actions-group">
+    <a href="{% url 'create_assignment' %}" class="btn btn-primary btn-sm">
+        <i class="bi bi-plus-circle-fill"></i>
+        Create Assignment
+    </a>
+</div>
+{% endif %}
+{% endblock %}
+{% block content %}
+<div class="container-fluid page-stack">
+    <section class="dashboard-hero">
+        <span class="hero-badge">
+            <i class="bi bi-journal-check"></i>
+            Assignment Center
+        </span>
+        <h2 class="dashboard-hero-title">{% if role == "STUDENT" %}My Assignments{% else %}Class Assignments{% endif %}</h2>
+        <p class="dashboard-hero-subtitle">Deadline-aware assignment workflow with submission status badges and class-level visibility.</p>
+    </section>
+
+    {% if is_teacher_view %}
+    <section class="d-flex justify-content-end">
+        <a href="{% url 'create_assignment' %}" class="btn btn-primary">
+            <i class="bi bi-plus-circle-fill"></i>
+            Create Assignment
+        </a>
+    </section>
+    {% endif %}
+
+    {% if is_admin_view %}
+    <section class="saas-panel">
+        <div class="saas-panel-body d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div>
+                <h3 class="saas-panel-title mb-1">Assignment Monitoring</h3>
+                <p class="record-meta mb-0">Read-only overview across all teachers and classes.</p>
+            </div>
+            <span class="status-badge status-badge-neutral">Total Assignments: {{ total_assignments }}</span>
+        </div>
+    </section>
+    {% endif %}
+
+    {% if messages %}
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags|default:'info' }} mb-0">{{ message }}</div>
+    {% endfor %}
+    {% endif %}
+
+    <section class="dashboard-actions">
+        {% for row in assignment_cards %}
+        <article class="saas-panel">
+            <div class="saas-panel-body">
+                <div class="d-flex justify-content-between align-items-start gap-2 mb-2">
+                    <div>
+                        <h3 class="saas-panel-title mb-1">{{ row.assignment.title }}</h3>
+                        <p class="record-meta mb-0">
+                            {% if is_student_view %}
+                            {% if row.assignment.subject %}{{ row.assignment.subject }}{% else %}General{% endif %}
+                            {% else %}
+                            Class {{ row.assignment.class_assigned.name }}
+                            {% if row.assignment.subject %}
+                            | {{ row.assignment.subject }}
+                            {% endif %}
+                            {% endif %}
+                        </p>
+                    </div>
+                    {% if row.is_expired %}
+                    <span class="status-badge status-badge-danger">Expired</span>
+                    {% else %}
+                    <span class="status-badge status-badge-success">Active</span>
+                    {% endif %}
+                </div>
+
+                <p class="mb-3">{{ row.assignment.description|truncatechars:180 }}</p>
+
+                <div class="d-flex flex-wrap gap-2 mb-3">
+                    <span class="status-badge status-badge-neutral">Due: {{ row.assignment.due_date|date:"M d, Y h:i A" }}</span>
+                    {% if is_student_view %}
+                    <span class="status-badge {{ row.my_status_class }}">{{ row.my_status }}</span>
+                    {% elif is_admin_view %}
+                    <span class="status-badge status-badge-neutral">Teacher: {{ row.teacher_name }}</span>
+                    {% endif %}
+                </div>
+
+                {% if is_teacher_view %}
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3">
+                    <div class="summary-card summary-present">
+                        <h5>Submitted</h5>
+                        <h3>{{ row.submitted_count }}</h3>
+                    </div>
+                    <div class="summary-card summary-unmarked">
+                        <h5>Late</h5>
+                        <h3>{{ row.late_count }}</h3>
+                    </div>
+                    <div class="summary-card summary-absent">
+                        <h5>Pending</h5>
+                        <h3>{{ row.pending_count }}</h3>
+                    </div>
+                    <div class="summary-card summary-unmarked">
+                        <h5>Class Size</h5>
+                        <h3>{{ row.total_students }}</h3>
+                    </div>
+                </div>
+                {% elif is_admin_view %}
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-3">
+                    <div class="summary-card summary-present">
+                        <h5>Submitted</h5>
+                        <h3>{{ row.submitted_count }}</h3>
+                    </div>
+                    <div class="summary-card summary-unmarked">
+                        <h5>Late</h5>
+                        <h3>{{ row.late_count }}</h3>
+                    </div>
+                    <div class="summary-card summary-absent">
+                        <h5>Pending</h5>
+                        <h3>{{ row.pending_count }}</h3>
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="d-flex flex-wrap gap-2">
+                    {% if is_student_view %}
+                    <a href="{% url 'assignment_detail' row.assignment.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye-fill"></i>
+                        {% if row.my_submission %}Open Assignment{% elif row.is_expired %}View Status{% else %}Submit Assignment{% endif %}
+                    </a>
+                    {% elif is_teacher_view %}
+                    <a href="{% url 'assignment_detail' row.assignment.id %}" class="btn btn-primary btn-sm">
+                        <i class="bi bi-eye-fill"></i>
+                        View Submissions
+                    </a>
+                    {% elif is_admin_view %}
+                    <a href="{% url 'assignment_detail' row.assignment.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-bar-chart-line-fill"></i>
+                        View Report
+                    </a>
+                    {% endif %}
+                    {% if row.assignment.file and not is_admin_view %}
+                    <a href="{% url 'download_assignment_file' row.assignment.id %}" class="btn btn-outline-primary btn-sm">
+                        <i class="bi bi-download"></i>
+                        Download
+                    </a>
+                    {% endif %}
+                    {% if is_teacher_view %}
+                    <a href="{% url 'assignment_edit' row.assignment.id %}" class="btn btn-outline-secondary btn-sm">Edit</a>
+                    <form method="post" action="{% url 'assignment_delete' row.assignment.id %}" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-outline-danger btn-sm" onclick="return confirm('Delete this assignment?')">Delete</button>
+                    </form>
+                    {% endif %}
+                </div>
+            </div>
+        </article>
+        {% empty %}
+        <article class="saas-panel">
+            <div class="saas-panel-body">
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-journal-x"></i></div>
+                    <p>No assignments available right now.</p>
+                </div>
+            </div>
+        </article>
+        {% endfor %}
+    </section>
+</div>
+{% endblock %}

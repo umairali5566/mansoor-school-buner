@@ -1,7 +1,8 @@
 from django.core import mail
 from django.test import TestCase, override_settings
+from django.urls import reverse
 
-from accounts.models import CustomUser, Student
+from accounts.models import Classroom, CustomUser, Student, Teacher
 from results.models import Result
 
 
@@ -68,3 +69,47 @@ class ResultNotificationTests(TestCase):
         result.refresh_from_db()
         self.assertEqual(len(mail.outbox), 0)
         self.assertIsNone(result.notification_sent_at)
+
+
+class ResultPermissionTests(TestCase):
+    def setUp(self):
+        self.classroom = Classroom.objects.create(name="10-C")
+        self.teacher_user = CustomUser.objects.create_user(
+            username="result_teacher",
+            password="123456",
+            role="TEACHER",
+        )
+        teacher_profile = Teacher.objects.create(
+            user=self.teacher_user,
+            subject="Physics",
+            phone="03003334444",
+        )
+        teacher_profile.classes.add(self.classroom)
+
+        self.admin_user = CustomUser.objects.create_user(
+            username="result_admin",
+            password="123456",
+            role="ADMIN",
+        )
+
+        student_user = CustomUser.objects.create_user(
+            username="result_student",
+            password="123456",
+            role="STUDENT",
+        )
+        Student.objects.create(
+            user=student_user,
+            roll_number="T-1",
+            class_name="10-C",
+            phone="03005556666",
+        )
+
+    def test_admin_cannot_open_add_result(self):
+        self.client.login(username="result_admin", password="123456")
+        response = self.client.get(reverse("add_result"))
+        self.assertEqual(response.status_code, 403)
+
+    def test_teacher_can_open_add_result(self):
+        self.client.login(username="result_teacher", password="123456")
+        response = self.client.get(reverse("add_result"))
+        self.assertEqual(response.status_code, 200)

@@ -1,0 +1,113 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications | School Management System{% endblock %}
+{% block topbar_eyebrow %}Alerts Center{% endblock %}
+{% block topbar_title %}Notifications{% endblock %}
+{% block topbar_subtitle %}Review activity updates and keep your dashboard inbox clear.{% endblock %}
+{% block topbar_actions %}
+<div class="topbar-actions-group">
+    <button
+        type="button"
+        class="btn btn-outline-primary btn-sm js-mark-all-notifications"
+        data-url="{% url 'mark_all_notifications_read' %}"
+    >
+        <i class="bi bi-check2-all"></i>
+        Mark all read
+    </button>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-page">
+    <section class="saas-panel">
+        <div class="saas-panel-header">
+            <h3 class="saas-panel-title">
+                <i class="bi bi-bell-fill"></i>
+                Inbox
+            </h3>
+        </div>
+        <div class="saas-panel-body">
+            {% if notifications %}
+            <div class="table-shell">
+                <div class="table-responsive">
+                    <table class="table saas-table align-middle">
+                        <thead>
+                            <tr>
+                                <th>Type</th>
+                                <th>Title</th>
+                                <th>Message</th>
+                                <th>Time</th>
+                                <th>Status</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for notification in notifications %}
+                            <tr class="{% if not notification.is_read %}notification-row-unread{% endif %}">
+                                <td><span class="class-pill">{{ notification.notification_type|title }}</span></td>
+                                <td><strong>{{ notification.title }}</strong></td>
+                                <td>{{ notification.message|default:"-" }}</td>
+                                <td>{{ notification.created_at|date:"M d, Y h:i A" }}</td>
+                                <td>
+                                    {% if notification.is_read %}
+                                    <span class="status-badge status-badge-neutral">Read</span>
+                                    {% else %}
+                                    <span class="status-badge status-badge-success">Unread</span>
+                                    {% endif %}
+                                </td>
+                                <td class="text-end">
+                                    <div class="row-actions row-actions-end">
+                                        {% if notification.link_url %}
+                                        <a href="{{ notification.link_url }}" class="icon-action" title="Open">
+                                            <i class="bi bi-box-arrow-up-right"></i>
+                                        </a>
+                                        {% endif %}
+                                        {% if not notification.is_read %}
+                                        <button
+                                            type="button"
+                                            class="icon-action js-mark-notification-read"
+                                            data-url="{% url 'mark_notification_read' notification.id %}"
+                                            aria-label="Mark read"
+                                        >
+                                            <i class="bi bi-check2"></i>
+                                        </button>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% else %}
+            <div class="empty-state">
+                <div class="empty-state-icon"><i class="bi bi-bell-slash"></i></div>
+                <h5>No notifications yet</h5>
+                <p>You are all caught up.</p>
+            </div>
+            {% endif %}
+
+            {% if page_obj.paginator.num_pages > 1 %}
+            <nav class="pagination-shell mt-4" aria-label="Notifications pagination">
+                <ul class="pagination justify-content-end mb-0">
+                    {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                    {% endif %}
+                    <li class="page-item active">
+                        <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    </li>
+                    {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                    {% endif %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+    </section>
+</div>
+{% endblock %}

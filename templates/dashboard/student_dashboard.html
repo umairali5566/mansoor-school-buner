@@ -1,0 +1,160 @@
+<div class="dashboard-page dashboard-role-layout dashboard-student animate-fade-in">
+    <div class="dashboard-hero role-hero role-hero-student">
+        <div class="student-hero-layout">
+            <div class="student-identity">
+                {% if student.image %}
+                <img src="{{ student.image.url }}" alt="{{ request.user.get_full_name|default:request.user.username }}" class="student-avatar">
+                {% else %}
+                <div class="student-avatar student-avatar-placeholder">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                {% endif %}
+                <div class="student-identity-copy">
+                    <span class="hero-badge">
+                        <i class="{{ dashboard_header.badge_icon|default:'bi bi-person-fill' }}"></i>
+                        {{ dashboard_header.badge_label|default:'Student Workspace' }}
+                    </span>
+                    <h2 class="dashboard-hero-title">{{ student.display_name|default:request.user.get_full_name|default:request.user.username }}</h2>
+                    <p class="dashboard-hero-subtitle">Class {{ student.class_name|default:"-" }} | Roll {{ student.roll_number|default:"-" }}</p>
+                </div>
+            </div>
+            <div class="hero-mini-grid">
+                <div class="mini-metric">
+                    <span class="mini-label">Overall Attendance</span>
+                    <strong>{{ overall_attendance_percentage|default:"0" }}%</strong>
+                    <span class="status-badge {{ overall_attendance_status_class|default:'status-badge-neutral' }} mt-2">
+                        {{ overall_attendance_status|default:"Average" }}
+                    </span>
+                </div>
+                <div class="mini-metric">
+                    <span class="mini-label">Results</span>
+                    <strong>{{ results_count|default:0 }}</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="saas-panel">
+        <div class="saas-panel-body text-center">
+            <h3 class="saas-panel-title mb-2">Overall Attendance</h3>
+            <h2 class="mb-2">{{ overall_attendance_percentage|default:"0" }}%</h2>
+            <span class="status-badge {{ overall_attendance_status_class|default:'status-badge-neutral' }}">
+                {{ overall_attendance_status|default:"Average" }}
+            </span>
+            <p class="record-meta mt-2 mb-0">
+                Present: {{ overall_attendance_present_count|default:0 }} | Absent: {{ overall_attendance_absent_count|default:0 }}
+            </p>
+        </div>
+    </div>
+
+    {% include "components/stats.html" with stats=dashboard_stats %}
+
+    <div class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="page-section-head mb-3">
+                <h2 class="saas-panel-title panel-title-inline">
+                    <i class="bi bi-stars panel-title-icon"></i>
+                    Quick Actions
+                </h2>
+            </div>
+            {% include "components/cards.html" with cards=dashboard_cards %}
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div class="saas-panel">
+            <div class="saas-panel-body">
+                <h3 class="saas-panel-title mb-3">Recent Homework</h3>
+                {% if recent_homework %}
+                <div class="table-shell">
+                    <table class="table saas-table w-full">
+                        <thead>
+                            <tr>
+                                <th>Title</th>
+                                <th>Due Date</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for hw in recent_homework|slice:":5" %}
+                            <tr>
+                                <td class="record-name">
+                                    <strong>{{ hw.title }}</strong>
+                                    <span class="record-meta">{{ hw.teacher_name|default:"-" }}</span>
+                                </td>
+                                <td>{{ hw.due_date|date:"M d, Y"|default:"-" }}</td>
+                                <td>
+                                    {% if hw.is_overdue %}
+                                    <span class="status-badge status-badge-danger">Overdue</span>
+                                    {% else %}
+                                    <span class="status-badge status-badge-success">Active</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="empty-state">
+                    <div class="empty-state-icon"><i class="bi bi-journal-text"></i></div>
+                    <p>No homework assigned yet.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        <div class="saas-panel">
+            <div class="saas-panel-body">
+                <h3 class="saas-panel-title mb-3">Notifications</h3>
+                <ul class="space-y-2 mb-0 dashboard-note-list">
+                    <li class="record-meta">Your attendance is {{ attendance_percentage|default:"0" }}%.</li>
+                    <li class="record-meta">You have {{ homework_count|default:0 }} homework items assigned.</li>
+                    <li class="record-meta">{{ results_count|default:0 }} result records are available.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="page-section-head mb-4">
+                <h2 class="saas-panel-title">Recent Attendance Activity</h2>
+            </div>
+            <div class="table-shell">
+                <table class="table saas-table w-full">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Status</th>
+                            <th>Marked By</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in recent_attendance %}
+                        <tr>
+                            <td>{{ record.date|date:"M d, Y" }}</td>
+                            <td>
+                                {% if record.status == "Present" %}
+                                <span class="status-badge status-badge-success">Present</span>
+                                {% else %}
+                                <span class="status-badge status-badge-danger">Absent</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ record.marked_by|default:"System" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3">
+                                <div class="empty-state">
+                                    <div class="empty-state-icon"><i class="bi bi-calendar-x"></i></div>
+                                    <p>No recent attendance activity recorded.</p>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

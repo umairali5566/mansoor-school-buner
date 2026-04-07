@@ -1,4 +1,5 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from django.utils.timezone import localdate
 
@@ -86,6 +87,15 @@ class Student(models.Model):
     def admission_class_name(self):
         return self.admission_class.name if self.admission_class else "-"
 
+    @property
+    def profile_picture(self):
+        """Alias for compatibility with profile-picture naming."""
+        return self.image
+
+    @profile_picture.setter
+    def profile_picture(self, value):
+        self.image = value
+
     def save(self, *args, **kwargs):
         if self.user_id:
             resolved_name = (self.full_name or self.user.get_full_name().strip() or self.user.username).strip()
@@ -113,6 +123,24 @@ class Student(models.Model):
 # =========================
 class Classroom(models.Model):
     name = models.CharField(max_length=50, unique=True)
+    attendance_teacher = models.ForeignKey(
+        "Teacher",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="attendance_classes",
+    )
+
+    def clean(self):
+        super().clean()
+        if (
+            self.attendance_teacher_id
+            and self.pk
+            and not self.teachers.filter(pk=self.attendance_teacher_id).exists()
+        ):
+            raise ValidationError(
+                {"attendance_teacher": "Attendance teacher must be one of the assigned class teachers."}
+            )
 
     def __str__(self):
         return self.name

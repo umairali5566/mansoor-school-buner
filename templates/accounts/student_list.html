@@ -1,44 +1,22 @@
 {% extends "base.html" %}
-{% block title %}Manage Students | School Management System{% endblock %}
-{% block topbar_eyebrow %}Student Directory{% endblock %}
-{% block topbar_title %}Manage Students{% endblock %}
-{% block topbar_subtitle %}Review student accounts, move into admissions workflows, and manage daily account actions from one unified list.{% endblock %}
+{% block title %}Students | School Management System{% endblock %}
+{% block topbar_eyebrow %}Students{% endblock %}
+{% block topbar_title %}Students{% endblock %}
+{% block topbar_subtitle %}Review student records and manage daily account actions from one unified list.{% endblock %}
 {% block topbar_actions %}
 <div class="topbar-actions-group">
     <a href="{% url 'student_admissions' %}" class="btn btn-outline-primary btn-sm">
         <i class="bi bi-journal-richtext"></i>
-        Admissions
+        Enrollment
     </a>
     <a href="{% url 'add_student_admission' %}" class="btn btn-primary btn-sm">
         <i class="bi bi-person-plus-fill"></i>
-        Add Admission
+        Add Student
     </a>
 </div>
 {% endblock %}
 {% block content %}
-<div class="container-fluid dashboard-page">
-    <section class="dashboard-hero">
-        <div class="d-flex flex-wrap justify-content-between align-items-start gap-3">
-            <div>
-                <span class="hero-badge">
-                    <i class="bi bi-people-fill"></i>
-                    Student directory
-                </span>
-                <h2 class="dashboard-hero-title">Manage active student accounts</h2>
-                <p class="dashboard-hero-subtitle">Use this page for day-to-day account actions. Detailed admission records now live in the dedicated Student Admissions workspace.</p>
-            </div>
-            <div class="d-flex flex-wrap gap-2">
-                <a href="{% url 'student_admissions' %}" class="btn btn-outline-primary">
-                    <i class="bi bi-journal-richtext"></i>
-                    Open Admissions
-                </a>
-                <a href="{% url 'add_student_admission' %}" class="btn btn-primary">
-                    <i class="bi bi-person-plus-fill"></i>
-                    Add Admission
-                </a>
-            </div>
-        </div>
-    </section>
+<div class="dashboard-page">
 
     {% if messages %}
         {% for message in messages %}
@@ -48,74 +26,101 @@
         {% endfor %}
     {% endif %}
 
-    <section class="saas-panel">
+    <!-- Action Bar -->
+    <div class="saas-panel">
         <div class="saas-panel-body">
-            <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3">
-                <div>
-                    <h4 class="saas-panel-title">Student directory</h4>
-                    <p class="text-muted mb-0">{{ students|length }} student account{{ students|length|pluralize }} available.</p>
+            <div class="page-actions">
+                <div class="flex-1">
+                    <input type="text" class="form-control" placeholder="Search students by name, roll number, or class...">
                 </div>
-                <span class="class-pill">
-                    <i class="bi bi-shield-lock-fill"></i>
-                    Admin only actions
-                </span>
+                <button class="btn btn-outline-secondary">
+                    <i class="bi bi-funnel-fill"></i>
+                    Filter
+                </button>
+                <button class="btn btn-outline-secondary">
+                    <i class="bi bi-download"></i>
+                    Export
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Student Table -->
+    <div class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="page-section-head mb-4">
+                <h2 class="saas-panel-title">Students</h2>
+                <span class="section-badge">{{ students|length }} Students</span>
             </div>
 
             <div class="table-shell">
-                <div class="table-responsive">
-                    <table class="table align-middle">
-                        <thead>
+                <table class="table saas-table w-full">
+                    <thead>
+                        <tr>
+                            <th>Student Name</th>
+                            <th>Username</th>
+                            <th>Roll Number</th>
+                            <th>Class</th>
+                            <th>Admission Date</th>
+                            <th>Phone</th>
+                            <th class="text-end">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for student in students %}
                             <tr>
-                                <th>Student</th>
-                                <th>Username</th>
-                                <th>Roll Number</th>
-                                <th>Current Class</th>
-                                <th>Admission Date</th>
-                                <th>Phone</th>
-                                <th class="text-end">Action</th>
+                                <td>
+                                    <div class="record-name">
+                                        <strong>{{ student.display_name }}</strong>
+                                        <span class="record-meta">{{ student.parent_email|default:"No parent email" }}</span>
+                                    </div>
+                                </td>
+                                <td>{{ student.user.username }}</td>
+                                <td>{{ student.roll_number }}</td>
+                                <td>
+                                    <span class="class-pill">{{ student.class_name|default:"Unassigned" }}</span>
+                                </td>
+                                <td>{{ student.admission_date|date:"M d, Y"|default:"-" }}</td>
+                                <td>{{ student.phone|default:"-" }}</td>
+                                <td>
+                                    <div class="row-actions row-actions-end">
+                                        <a href="{% url 'student_profile' student.id %}" class="icon-action" title="View student" aria-label="View student">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{% url 'edit_student' student.id %}" class="icon-action" title="Edit student" aria-label="Edit student">
+                                            <i class="bi bi-pencil-square"></i>
+                                        </a>
+                                        <a href="{% url 'reset_student_password' student.id %}" class="icon-action icon-action-warning" title="Reset password" aria-label="Reset password">
+                                            <i class="bi bi-key-fill"></i>
+                                        </a>
+                                        <a href="{% url 'delete_student' student.id %}" class="icon-action icon-action-danger" onclick="return confirm('Are you sure you want to delete this student?')" title="Delete student" aria-label="Delete student">
+                                            <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
-                        </thead>
-                        <tbody>
-                            {% for student in students %}
-                                <tr>
-                                    <td>
-                                        <div class="record-name">
-                                            <strong>{{ student.display_name }}</strong>
-                                            <span class="record-meta">{{ student.parent_email|default:"No parent email" }}</span>
+                        {% empty %}
+                            <tr>
+                                <td colspan="7">
+                                    <div class="empty-state">
+                                        <div class="empty-state-icon">
+                                            <i class="bi bi-people"></i>
                                         </div>
-                                    </td>
-                                    <td>{{ student.user.username }}</td>
-                                    <td>{{ student.roll_number }}</td>
-                                    <td>{{ student.class_name|default:"-" }}</td>
-                                    <td>{{ student.admission_date|date:"M d, Y"|default:"-" }}</td>
-                                    <td>{{ student.phone|default:"-" }}</td>
-                                    <td class="text-end">
-                                        <div class="row-actions row-actions-end">
-                                            <a href="{% url 'student_profile' student.id %}" class="btn btn-sm btn-outline-primary">Profile</a>
-                                            <a href="{% url 'edit_student' student.id %}" class="btn btn-sm btn-outline-secondary">Edit</a>
-                                            <a href="{% url 'reset_student_password' student.id %}" class="btn btn-sm btn-warning">Reset</a>
-                                            <a href="{% url 'delete_student' student.id %}" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure you want to delete this student?')">Delete</a>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% empty %}
-                                <tr>
-                                    <td colspan="7">
-                                        <div class="empty-state">
-                                            <span class="empty-state-icon"><i class="bi bi-people"></i></span>
-                                            <div>
-                                                <h5 class="mb-2">No students found</h5>
-                                                <p class="mb-0">Create the first admission record to populate the student directory.</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                </div>
+                                        <h5>No Students Found</h5>
+                                        <p>Create the first admission record to populate the student directory.</p>
+                                        <a href="{% url 'add_student_admission' %}" class="btn btn-primary mt-3">
+                                            <i class="bi bi-person-plus-fill"></i>
+                                            Add First Student
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
         </div>
-    </section>
+    </div>
+
 </div>
 {% endblock %}

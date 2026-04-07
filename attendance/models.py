@@ -25,6 +25,13 @@ class Attendance(models.Model):
     created_at = models.DateTimeField(default=timezone.now)
     marked_at = models.DateTimeField(default=timezone.now)
     marked_by = models.CharField(max_length=20, choices=MARKED_BY, default="SYSTEM")
+    marked_by_teacher = models.ForeignKey(
+        "accounts.Teacher",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="attendance_marks",
+    )
     notification_sent_at = models.DateTimeField(null=True, blank=True)
     notification_status = models.CharField(max_length=10, blank=True, default="")
 
