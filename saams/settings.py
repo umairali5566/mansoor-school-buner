@@ -40,14 +40,14 @@ def _env_list(name, default=""):
 
 
 DEBUG = False
-SECRET_KEY = os.getenv("DJANGO_SECRET_KEY", "").strip()
+SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
 if not SECRET_KEY:
     if DEBUG:
         SECRET_KEY = "dev-only-change-me-in-env"
     else:
         raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set when DJANGO_DEBUG is False.")
 
-ALLOWED_HOSTS = ["*"]
+ALLOWED_HOSTS = ['mansoor-school-buner.onrender.com']
 
 INSTALLED_APPS = [
     'django.contrib.admin',
