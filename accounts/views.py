@@ -110,13 +110,14 @@ def filter_attendance_for_classes(queryset, class_names):
 # =========================================================
 
 def _get_redirect_url(user):
-    """Get the appropriate redirect URL based on user role."""
-    role_redirects = {
-        "ADMIN": "admin_dashboard",
-        "TEACHER": "teacher_dashboard",
-        "STUDENT": "student_dashboard",
-    }
-    return role_redirects.get(get_user_role(user), "login")
+    """Return role-based dashboard URL."""
+    if user.is_superuser:
+        return "/admin-dashboard/"
+    if getattr(user, "role", "") == "TEACHER":
+        return "/teacher-dashboard/"
+    if getattr(user, "role", "") == "STUDENT":
+        return "/student-dashboard/"
+    return "/"
 
 
 def _reset_login_attempts(request):
@@ -193,14 +194,6 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             _reset_login_attempts(request)
-
-            next_url = (request.POST.get("next") or request.GET.get("next") or "").strip()
-            if next_url and url_has_allowed_host_and_scheme(
-                url=next_url,
-                allowed_hosts={request.get_host()},
-                require_https=request.is_secure(),
-            ):
-                return redirect(next_url)
             return redirect(_get_redirect_url(user))
 
         _register_login_failure(request)
@@ -1045,8 +1038,9 @@ def student_dashboard(request):
             },
             {
                 "icon": "bi bi-trophy-fill",
-                "title": "Results",
-                "description": "Check your latest exam performance.",
+                "value": results_count,
+                "label": "Total Results",
+                "meta": "Published exam records",
                 "href": reverse("result_list"),
             },
             {
