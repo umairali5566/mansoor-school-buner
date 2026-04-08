@@ -3,73 +3,133 @@
 {% block title %}Login | SAAMS{% endblock %}
 
 {% block guest_content %}
-<div class="auth-shell auth-shell-wide">
-    <section class="auth-promo-card">
-        <span class="hero-badge">
-            <i class="bi bi-shield-check"></i>
-            Secure Access
-        </span>
-        <h2 class="dashboard-hero-title">Welcome Back to SAAMS</h2>
-        <p class="dashboard-hero-subtitle">Manage students, attendance, homework, and results from one premium school operations platform.</p>
-
-        <div class="hero-mini-grid mt-4">
-            <div class="mini-metric">
-                <span class="mini-label">Live Tracking</span>
-                <strong>24/7</strong>
+<div class="row g-0 min-vh-100">
+    <!-- Left Side - Promo -->
+    <div class="col-lg-6 d-none d-lg-block position-relative">
+        <div class="h-100 d-flex align-items-center justify-content-center p-5" style="background: linear-gradient(135deg, #4f46e5, #7c3aed);">
+            <div class="text-center text-white">
+                <div class="mb-4">
+                    <i class="bi bi-building display-1"></i>
+                </div>
+                <h2 class="display-5 fw-bold mb-3">Welcome to SAAMS</h2>
+                <p class="lead mb-4">School Administration & Attendance Management System</p>
+                <div class="row g-3 justify-content-center">
+                    <div class="col-auto">
+                        <div class="bg-white bg-opacity-10 rounded-pill px-4 py-2">
+                            <i class="bi bi-shield-check me-2"></i>
+                            <strong>Secure Access</strong>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="bg-white bg-opacity-10 rounded-pill px-4 py-2">
+                            <i class="bi bi-clock me-2"></i>
+                            <strong>24/7 Monitoring</strong>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <div class="bg-white bg-opacity-10 rounded-pill px-4 py-2">
+                            <i class="bi bi-people me-2"></i>
+                            <strong>Multi-Role Access</strong>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="mini-metric">
-                <span class="mini-label">Role Access</span>
-                <strong>Management / Teacher / Student</strong>
+            <!-- Background Pattern -->
+            <div class="position-absolute top-0 end-0 opacity-10">
+                <svg width="200" height="200" viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="100" cy="100" r="80" stroke="white" stroke-width="2" fill="none"/>
+                    <circle cx="100" cy="100" r="60" stroke="white" stroke-width="1" fill="none"/>
+                    <circle cx="100" cy="100" r="40" stroke="white" stroke-width="1" fill="none"/>
+                </svg>
             </div>
         </div>
-    </section>
+    </div>
 
-    <section class="card shadow-sm border-0 auth-card">
-        <div class="card-body p-4 p-md-5">
-            <span class="section-badge">Portal Login</span>
-            <h1 class="h3 mt-3 mb-2">Sign In</h1>
-            <p class="text-muted mb-4">Use your assigned credentials to access the dashboard.</p>
+    <!-- Right Side - Login Form -->
+    <div class="col-lg-6 col-12 d-flex align-items-center justify-content-center p-4">
+        <div class="w-100" style="max-width: 400px;">
+            <div class="text-center mb-4 d-lg-none">
+                <div class="bg-primary rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style="width: 60px; height: 60px; background: linear-gradient(135deg, #4f46e5, #7c3aed);">
+                    <i class="bi bi-building text-white fs-2"></i>
+                </div>
+                <h2 class="h4 fw-bold text-dark mb-2">Welcome to SAAMS</h2>
+                <p class="text-muted">Sign in to your account</p>
+            </div>
 
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} mb-3" role="alert">{{ message }}</div>
-                {% endfor %}
-            {% endif %}
-
-            {% if form.non_field_errors %}
-            <div class="alert alert-danger mb-3" role="alert">{{ form.non_field_errors }}</div>
-            {% endif %}
-
-            <form method="post" novalidate class="d-flex flex-column gap-3">
-                {% csrf_token %}
-                {% if next %}
-                <input type="hidden" name="next" value="{{ next }}">
-                {% endif %}
-
-                <div>
-                    <label class="form-label" for="id_username">Username</label>
-                    <div class="field-with-icon">
-                        <i class="bi bi-person-fill"></i>
-                        <input type="text" name="username" id="id_username" class="form-control" placeholder="Enter your username" value="{{ form.username.value|default_if_none:'' }}" autocomplete="username" required>
+            <div class="card border-0 shadow-lg rounded-custom" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
+                <div class="card-body p-4 p-md-5">
+                    <div class="text-center mb-4 d-none d-lg-block">
+                        <h3 class="fw-bold text-dark mb-2">Sign In</h3>
+                        <p class="text-muted">Access your dashboard</p>
                     </div>
-                    {% if form.username.errors %}<div class="text-danger small mt-1">{{ form.username.errors }}</div>{% endif %}
-                </div>
 
-                <div>
-                    <label class="form-label" for="id_password">Password</label>
-                    <div class="field-with-icon">
-                        <i class="bi bi-lock-fill"></i>
-                        <input type="password" name="password" id="id_password" class="form-control" placeholder="Enter your password" autocomplete="current-password" required>
-                    </div>
-                    {% if form.password.errors %}<div class="text-danger small mt-1">{{ form.password.errors }}</div>{% endif %}
-                </div>
+                    {% if messages %}
+                        {% for message in messages %}
+                        <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show rounded-custom" role="alert">
+                            {{ message }}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                        {% endfor %}
+                    {% endif %}
 
-                <div class="page-actions justify-content-between align-items-center">
-                    <a href="{% url 'password_reset' %}" class="btn btn-outline-secondary">Forgot password?</a>
-                    <button type="submit" class="btn btn-primary">Sign In</button>
+                    {% if form.non_field_errors %}
+                    <div class="alert alert-danger rounded-custom" role="alert">{{ form.non_field_errors }}</div>
+                    {% endif %}
+
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% if next %}
+                        <input type="hidden" name="next" value="{{ next }}">
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="id_username" class="form-label fw-semibold">Username</label>
+                            <div class="input-group">
+                                <span class="input-group-text border-0 bg-light">
+                                    <i class="bi bi-person-fill text-muted"></i>
+                                </span>
+                                <input type="text" name="username" id="id_username" class="form-control border-0 bg-light ps-0"
+                                       placeholder="Enter your username" value="{{ form.username.value|default_if_none:'' }}"
+                                       autocomplete="username" required>
+                            </div>
+                            {% if form.username.errors %}
+                            <div class="text-danger small mt-1">{{ form.username.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="id_password" class="form-label fw-semibold">Password</label>
+                            <div class="input-group">
+                                <span class="input-group-text border-0 bg-light">
+                                    <i class="bi bi-lock-fill text-muted"></i>
+                                </span>
+                                <input type="password" name="password" id="id_password" class="form-control border-0 bg-light ps-0"
+                                       placeholder="Enter your password" autocomplete="current-password" required>
+                            </div>
+                            {% if form.password.errors %}
+                            <div class="text-danger small mt-1">{{ form.password.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="d-grid mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg rounded-custom fw-semibold">
+                                <i class="bi bi-box-arrow-in-right me-2"></i>Sign In
+                            </button>
+                        </div>
+
+                        <div class="text-center">
+                            <a href="{% url 'password_reset' %}" class="text-decoration-none text-muted small">
+                                Forgot your password?
+                            </a>
+                        </div>
+                    </form>
                 </div>
-            </form>
+            </div>
+
+            <div class="text-center mt-4 d-lg-none">
+                <small class="text-muted">School Administration & Attendance Management System</small>
+            </div>
         </div>
-    </section>
+    </div>
 </div>
 {% endblock %}

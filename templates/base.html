@@ -10,308 +10,270 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="School MS">
     <meta name="mobile-web-app-capable" content="yes">
-    <meta name="theme-color" content="#2563eb">
+    <meta name="theme-color" content="#4f46e5">
     <link rel="icon" href="/favicon.ico">
     <link rel="shortcut icon" href="/favicon.ico">
     <link rel="manifest" href="{% static 'manifest.json' %}">
     <link rel="apple-touch-icon" href="{% static 'icons/apple-touch-icon.png' %}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        (function () {
-            const savedTheme = window.localStorage.getItem("theme") || window.localStorage.getItem("saams.theme");
-            if (savedTheme === "dark") {
-                document.documentElement.classList.add("theme-dark");
-                document.documentElement.classList.add("dark-mode");
-            }
-        })();
-    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="{% static 'css/app.css' %}">
-    <link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
     {% block extra_css %}{% endblock %}
 </head>
-<body class="app-body {% if request.user.is_authenticated %}role-{{ request.user.role|lower }}{% else %}role-guest{% endif %}">
-{% with current_url=request.resolver_match.url_name|default:'' %}
-    {% if request.user.is_authenticated %}
-    <div class="app-background" aria-hidden="true">
-        <span class="bg-orb bg-orb-one"></span>
-        <span class="bg-orb bg-orb-two"></span>
-        <span class="bg-grid"></span>
-        <p class="app-watermark">SAAMS</p>
-    </div>
-
-    <div class="app-shell" id="appShell">
-        <div class="sidebar-overlay" id="sidebarOverlay" aria-hidden="true"></div>
-
-        {% include "partials/sidebar.html" %}
-
-        <main class="content-area">
-            <button type="button" class="dashboard-mobile-nav-toggle" id="mobileSidebarToggle" aria-label="Open navigation" aria-expanded="false">
-                <i class="bi bi-list"></i>
-            </button>
-
-            <div class="content-surface">
-                <div class="page-shell animate-fade-in">
-                    {% block content %}{% endblock %}
+<body class="bg-light text-dark" style="background-color: #f1f5f9 !important;">
+{% if request.user.is_authenticated %}
+<!-- Sidebar for desktop/tablet -->
+<div class="d-none d-md-block position-fixed top-0 start-0 vh-100 bg-white shadow-lg" id="sidebar" style="width: 280px; z-index: 1030;">
+    <div class="d-flex flex-column h-100">
+        <!-- Logo -->
+        <div class="p-3 border-bottom">
+            <div class="d-flex align-items-center">
+                <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px; background: linear-gradient(135deg, #4f46e5, #7c3aed);">
+                    <i class="bi bi-building text-white fs-5"></i>
                 </div>
-                {% if not hide_footer %}
-                {% include "partials/footer.html" %}
-                {% endif %}
+                <div>
+                    <h6 class="mb-0 fw-bold text-dark">SAAMS</h6>
+                    <small class="text-muted">School Management</small>
+                </div>
+            </div>
+        </div>
+
+        <!-- Navigation -->
+        <nav class="flex-grow-1 p-3">
+            <ul class="nav flex-column gap-2">
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none {% if request.resolver_match.url_name == 'dashboard' %}bg-primary text-white{% else %}text-dark hover-bg-light{% endif %}" style="transition: all 0.3s ease;">
+                        <i class="bi bi-speedometer2 me-3 fs-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                        <i class="bi bi-people me-3 fs-5"></i>
+                        <span>Students</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                        <i class="bi bi-person-badge me-3 fs-5"></i>
+                        <span>Teachers</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                        <i class="bi bi-calendar-check me-3 fs-5"></i>
+                        <span>Attendance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                        <i class="bi bi-graph-up me-3 fs-5"></i>
+                        <span>Results</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                        <i class="bi bi-book me-3 fs-5"></i>
+                        <span>Homework</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                        <i class="bi bi-bell me-3 fs-5"></i>
+                        <span>Notifications</span>
+                        <span class="badge bg-danger ms-auto">3</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                        <i class="bi bi-gear me-3 fs-5"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <!-- Logout -->
+        <div class="p-3 border-top">
+            <a href="{% url 'logout' %}" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Mobile Sidebar Offcanvas -->
+<div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
+    <div class="offcanvas-header bg-primary text-white">
+        <div class="d-flex align-items-center">
+            <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-3" style="width: 40px; height: 40px;">
+                <i class="bi bi-building text-primary fs-5"></i>
+            </div>
+            <div>
+                <h6 class="mb-0 fw-bold">SAAMS</h6>
+                <small class="text-white-50">School Management</small>
+            </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+    <div class="offcanvas-body p-0">
+        <nav class="p-3">
+            <ul class="nav flex-column gap-2">
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none {% if request.resolver_match.url_name == 'dashboard' %}bg-primary text-white{% else %}text-dark hover-bg-light{% endif %}">
+                        <i class="bi bi-speedometer2 me-3 fs-5"></i>
+                        <span>Dashboard</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                        <i class="bi bi-people me-3 fs-5"></i>
+                        <span>Students</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                        <i class="bi bi-person-badge me-3 fs-5"></i>
+                        <span>Teachers</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                        <i class="bi bi-calendar-check me-3 fs-5"></i>
+                        <span>Attendance</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                        <i class="bi bi-graph-up me-3 fs-5"></i>
+                        <span>Results</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                        <i class="bi bi-book me-3 fs-5"></i>
+                        <span>Homework</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                        <i class="bi bi-bell me-3 fs-5"></i>
+                        <span>Notifications</span>
+                        <span class="badge bg-danger ms-auto">3</span>
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                        <i class="bi bi-gear me-3 fs-5"></i>
+                        <span>Settings</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+        <div class="p-3 border-top">
+            <a href="{% url 'logout' %}" class="btn btn-outline-danger w-100 d-flex align-items-center justify-content-center gap-2">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Main Content -->
+<div class="d-flex">
+    <!-- Spacer for desktop sidebar -->
+    <div class="d-none d-md-block" style="width: 280px; flex-shrink: 0;"></div>
+
+    <div class="flex-grow-1 min-vh-100">
+        <!-- Top Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm border-bottom" style="background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;">
+            <div class="container-fluid px-4">
+                <!-- Mobile menu button -->
+                <button class="btn btn-link text-white d-md-none me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
+                    <i class="bi bi-list fs-4"></i>
+                </button>
+
+                <!-- Brand -->
+                <a class="navbar-brand text-white fw-bold d-none d-md-block" href="#">
+                    <i class="bi bi-building me-2"></i>SAAMS Dashboard
+                </a>
+
+                <div class="d-flex align-items-center ms-auto">
+                    <!-- Notifications -->
+                    <div class="dropdown me-3">
+                        <button class="btn btn-link text-white position-relative" type="button" id="notificationDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-bell fs-5"></i>
+                            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">3</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="notificationDropdown" style="width: 300px;">
+                            <li><h6 class="dropdown-header">Notifications</h6></li>
+                            <li><a class="dropdown-item" href="#">New attendance marked</a></li>
+                            <li><a class="dropdown-item" href="#">Homework deadline approaching</a></li>
+                            <li><a class="dropdown-item" href="#">New results published</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-center" href="#">View all</a></li>
+                        </ul>
+                    </div>
+
+                    <!-- Profile -->
+                    <div class="dropdown">
+                        <button class="btn btn-link text-white d-flex align-items-center" type="button" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <div class="bg-white rounded-circle d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px;">
+                                <i class="bi bi-person-fill text-primary"></i>
+                            </div>
+                            <span class="d-none d-lg-inline">{{ request.user.get_full_name|default:request.user.username }}</span>
+                            <i class="bi bi-chevron-down ms-1"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="profileDropdown">
+                            <li><h6 class="dropdown-header">{{ request.user.get_full_name|default:request.user.username }}</h6></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-person me-2"></i>Profile</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item text-danger" href="{% url 'logout' %}"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Page Content -->
+        <main class="container-fluid p-4" style="background-color: #f1f5f9;">
+            <div class="row">
+                <div class="col-12">
+                    <div class="card border-0 shadow-sm rounded-4" style="background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px);">
+                        <div class="card-body p-4">
+                            {% block content %}{% endblock %}
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     </div>
-
-    <div class="pwa-install-banner" id="pwaInstallBanner" hidden>
-        <div class="pwa-install-copy">
-            <strong>Install School MS</strong>
-            <span>Keep the app on your home screen for faster access.</span>
-        </div>
-        <div class="pwa-install-actions">
-            <button type="button" class="btn btn-sm btn-primary pwa-install-button" id="pwaInstallButton">Install App</button>
-            <button type="button" class="pwa-dismiss-button" id="pwaDismissButton" aria-label="Dismiss install prompt">
-                <i class="bi bi-x-lg"></i>
-            </button>
+</div>
+{% else %}
+<!-- Guest Layout -->
+<div class="min-vh-100 d-flex align-items-center justify-content-center" style="background: linear-gradient(135deg, #4f46e5, #7c3aed);">
+    <div class="container">
+        <div class="row justify-content-center">
+            <div class="col-md-6">
+                <div class="card border-0 shadow-lg rounded-4" style="background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(20px);">
+                    <div class="card-body p-5">
+                        {% block guest_content %}{% endblock %}
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    {% else %}
-    <main class="guest-shell">
-        <div class="app-background" aria-hidden="true">
-            <span class="bg-orb bg-orb-one"></span>
-            <span class="bg-orb bg-orb-two"></span>
-            <span class="bg-grid"></span>
-        </div>
-        <div class="guest-content animate-fade-in">
-            {% block guest_content %}{% endblock %}
-        </div>
-    </main>
-    {% endif %}
-{% endwith %}
+</div>
+{% endif %}
 
+<!-- Bootstrap JS -->
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-    const shell = document.getElementById("appShell");
-    const sidebar = document.getElementById("appSidebar");
-    const desktopToggle = document.getElementById("desktopSidebarToggle");
-    const mobileToggle = document.getElementById("mobileSidebarToggle");
-    const overlay = document.getElementById("sidebarOverlay");
-    const themeToggle = document.getElementById("themeToggle");
-    const profileMenu = document.getElementById("profileMenu");
-    const notificationMenu = document.getElementById("notificationMenu");
-
-    const collapseKey = "saams.sidebar.collapsed";
-    const themeKey = "theme";
-    const desktopQuery = window.matchMedia("(min-width: 769px)");
-    const mobileQuery = window.matchMedia("(max-width: 768px)");
-
-    function applyTheme(theme) {
-        const isDark = theme === "dark";
-        document.documentElement.classList.toggle("theme-dark", isDark);
-        document.body.classList.toggle("theme-dark", isDark);
-        document.documentElement.classList.toggle("dark-mode", isDark);
-        document.body.classList.toggle("dark-mode", isDark);
-
-        if (themeToggle) {
-            themeToggle.textContent = isDark ? "Light Mode" : "Dark Mode";
-            themeToggle.setAttribute("aria-label", isDark ? "Switch to light mode" : "Switch to dark mode");
-            themeToggle.setAttribute("title", isDark ? "Switch to light mode" : "Switch to dark mode");
-        }
-
-        window.localStorage.setItem(themeKey, isDark ? "dark" : "light");
-        window.localStorage.setItem("saams.theme", isDark ? "dark" : "light");
-    }
-
-    function syncSidebarAccessibility() {
-        if (!shell || !sidebar) {
-            return;
-        }
-
-        const isDesktop = desktopQuery.matches;
-        const isOpen = shell.classList.contains("is-sidebar-open");
-        const shouldHideSidebar = !isDesktop && !isOpen;
-
-        sidebar.setAttribute("aria-hidden", String(shouldHideSidebar));
-        if (overlay) {
-            overlay.setAttribute("aria-hidden", String(!(mobileQuery.matches && isOpen)));
-        }
-    }
-
-    function updateDesktopToggleState() {
-        if (!shell || !desktopToggle) {
-            return;
-        }
-
-        const icon = desktopToggle.querySelector("i");
-        const isCollapsed = shell.classList.contains("is-collapsed");
-
-        desktopToggle.setAttribute("aria-expanded", String(!isCollapsed));
-        if (icon) {
-            icon.className = isCollapsed ? "bi bi-layout-sidebar-inset" : "bi bi-layout-sidebar";
-        }
-    }
-
-    function updateMobileToggleState() {
-        if (!shell || !mobileToggle) {
-            return;
-        }
-
-        const icon = mobileToggle.querySelector("i");
-        const isOpen = shell.classList.contains("is-sidebar-open");
-
-        mobileToggle.setAttribute("aria-expanded", String(isOpen));
-        if (icon) {
-            icon.className = isOpen ? "bi bi-x-lg" : "bi bi-list";
-        }
-    }
-
-    function openMobileSidebar() {
-        if (!shell) {
-            return;
-        }
-
-        shell.classList.add("is-sidebar-open");
-        document.body.classList.add("sidebar-mobile-open");
-        updateMobileToggleState();
-        syncSidebarAccessibility();
-
-        if (sidebar) {
-            sidebar.focus();
-        }
-    }
-
-    function closeMobileSidebar() {
-        if (!shell) {
-            return;
-        }
-
-        shell.classList.remove("is-sidebar-open");
-        document.body.classList.remove("sidebar-mobile-open");
-        updateMobileToggleState();
-        syncSidebarAccessibility();
-    }
-
-    if (shell) {
-        if (desktopToggle) {
-            desktopToggle.addEventListener("click", function () {
-                if (!desktopQuery.matches) {
-                    return;
-                }
-
-                shell.classList.toggle("is-collapsed");
-                window.localStorage.setItem(collapseKey, shell.classList.contains("is-collapsed") ? "true" : "false");
-                updateDesktopToggleState();
-            });
-        }
-
-        if (mobileToggle) {
-            mobileToggle.addEventListener("click", function () {
-                if (shell.classList.contains("is-sidebar-open")) {
-                    closeMobileSidebar();
-                } else {
-                    openMobileSidebar();
-                }
-            });
-        }
-
-        if (overlay) {
-            overlay.addEventListener("click", closeMobileSidebar);
-        }
-
-        document.querySelectorAll(".sidebar-link").forEach(function (link) {
-            link.addEventListener("click", function () {
-                if (mobileQuery.matches) {
-                    closeMobileSidebar();
-                }
-            });
-        });
-
-        window.addEventListener("resize", function () {
-            if (desktopQuery.matches) {
-                closeMobileSidebar();
-            }
-
-            if (desktopQuery.matches && window.localStorage.getItem(collapseKey) === "true") {
-                shell.classList.add("is-collapsed");
-            } else if (!desktopQuery.matches) {
-                shell.classList.remove("is-collapsed");
-            }
-
-            updateDesktopToggleState();
-            syncSidebarAccessibility();
-        });
-
-        window.addEventListener("keydown", function (event) {
-            if (event.key === "Escape" && shell.classList.contains("is-sidebar-open")) {
-                closeMobileSidebar();
-            }
-        });
-
-        if (desktopQuery.matches && window.localStorage.getItem(collapseKey) === "true") {
-            shell.classList.add("is-collapsed");
-        }
-
-        updateDesktopToggleState();
-        updateMobileToggleState();
-        syncSidebarAccessibility();
-    }
-
-    if (profileMenu) {
-        document.addEventListener("click", function (event) {
-            if (!profileMenu.contains(event.target)) {
-                profileMenu.removeAttribute("open");
-            }
-        });
-    }
-
-    if (notificationMenu) {
-        document.addEventListener("click", function (event) {
-            if (!notificationMenu.contains(event.target)) {
-                notificationMenu.removeAttribute("open");
-            }
-        });
-    }
-
-    if (themeToggle) {
-        const savedTheme =
-            window.localStorage.getItem(themeKey) ||
-            window.localStorage.getItem("saams.theme") ||
-            (document.documentElement.classList.contains("theme-dark") ? "dark" : "light");
-        applyTheme(savedTheme);
-
-        themeToggle.addEventListener("click", function () {
-            const currentTheme = document.body.classList.contains("dark-mode") ? "dark" : "light";
-            applyTheme(currentTheme === "dark" ? "light" : "dark");
-        });
-    }
-
-    document.addEventListener("click", function (event) {
-        const target = event.target.closest(".btn, .icon-action, .sidebar-link, .sidebar-logout-btn");
-        if (!target || target.classList.contains("no-ripple")) {
-            return;
-        }
-
-        const ripple = document.createElement("span");
-        ripple.className = "btn-ripple";
-
-        const rect = target.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        ripple.style.width = size + "px";
-        ripple.style.height = size + "px";
-        ripple.style.left = (event.clientX - rect.left - size / 2) + "px";
-        ripple.style.top = (event.clientY - rect.top - size / 2) + "px";
-
-        target.appendChild(ripple);
-
-        window.setTimeout(function () {
-            ripple.remove();
-        }, 500);
-    });
-});
-</script>
-<script src="{% static 'js/app-shell.js' %}"></script>
 <script src="{% static 'js/pwa.js' %}"></script>
 {% block extra_js %}{% endblock %}
 </body>
