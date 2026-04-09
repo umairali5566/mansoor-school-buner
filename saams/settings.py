@@ -28,6 +28,10 @@ def _load_local_env(env_path):
 _load_local_env(BASE_DIR / ".env")
 
 
+def _env_truthy(name, default=""):
+    return os.environ.get(name, default).strip().lower() in {"1", "true", "yes", "on"}
+
+
 # ==============================
 # BASIC SETTINGS
 # ==============================
@@ -39,6 +43,8 @@ SECRET_KEY = os.environ.get(
 )
 
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
+IS_RENDER = bool(RENDER_EXTERNAL_HOSTNAME) or _env_truthy("RENDER")
+FORCE_HTTPS = _env_truthy("FORCE_HTTPS", "true" if IS_RENDER else "false")
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
@@ -208,17 +214,17 @@ LOGIN_THROTTLE_WINDOW_SECONDS = 600
 # ==============================
 
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
-SECURE_SSL_REDIRECT = not IS_TEST
+SECURE_SSL_REDIRECT = FORCE_HTTPS and not IS_TEST
 
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = FORCE_HTTPS
+CSRF_COOKIE_SECURE = FORCE_HTTPS
 SESSION_COOKIE_HTTPONLY = True
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
 
-SECURE_HSTS_SECONDS = 31536000
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_PRELOAD = True
+SECURE_HSTS_SECONDS = 31536000 if FORCE_HTTPS else 0
+SECURE_HSTS_INCLUDE_SUBDOMAINS = FORCE_HTTPS
+SECURE_HSTS_PRELOAD = FORCE_HTTPS
 
 X_FRAME_OPTIONS = "DENY"
 
