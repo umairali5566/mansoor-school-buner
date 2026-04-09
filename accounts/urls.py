@@ -111,4 +111,11 @@ urlpatterns = [
     # =====================================================
     path('view-students/', views.view_students, name='view_students'),
     path("search/quick/", views.quick_search, name="quick_search"),
+
+    # =====================================================
+    # SEPARATE PAGES FOR SIDEBAR
+    # =====================================================
+    path('attendance/', views.attendance_page, name='attendance'),
+    path('results/', views.results_page, name='results'),
+    path('homework/', views.homework_page, name='homework'),
 ]

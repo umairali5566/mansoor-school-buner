@@ -1,0 +1,30 @@
+{% extends "base.html" %}
+
+{% block title %}Homework | Mansoor School Buner{% endblock %}
+
+{% block content %}
+<div class="dashboard-page animate-fade-in">
+    <div class="saas-panel">
+        <div class="saas-panel-body">
+            <div class="text-center">
+                <h2>Homework & Assignments</h2>
+                <p>Manage homework, assignments, and quizzes.</p>
+                <div class="row g-3 mt-4">
+                    <div class="col-md-3">
+                        <a href="{% url 'assignment_list' %}" class="btn btn-primary btn-lg w-100">Assignments</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'quiz_list' %}" class="btn btn-success btn-lg w-100">Quizzes</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'homework_list' %}" class="btn btn-info btn-lg w-100">Homework</a>
+                    </div>
+                    <div class="col-md-3">
+                        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary btn-lg w-100">Back to Dashboard</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

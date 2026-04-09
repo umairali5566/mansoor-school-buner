@@ -46,37 +46,37 @@
         <nav class="flex-grow-1 p-3">
             <ul class="nav flex-column gap-2">
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none {% if request.resolver_match.url_name == 'dashboard' %}bg-primary text-white{% else %}text-dark hover-bg-light{% endif %}" style="transition: all 0.3s ease;">
+                    <a href="{% url 'admin_dashboard' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-primary text-white{% else %}text-dark hover-bg-light{% endif %}" style="transition: all 0.3s ease;">
                         <i class="bi bi-speedometer2 me-3 fs-5"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                    <a href="{% url 'student_list' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
                         <i class="bi bi-people me-3 fs-5"></i>
                         <span>Students</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                    <a href="{% url 'teacher_list' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
                         <i class="bi bi-person-badge me-3 fs-5"></i>
                         <span>Teachers</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                    <a href="{% url 'attendance' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
                         <i class="bi bi-calendar-check me-3 fs-5"></i>
                         <span>Attendance</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                    <a href="{% url 'results' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
                         <i class="bi bi-graph-up me-3 fs-5"></i>
                         <span>Results</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
+                    <a href="{% url 'homework' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light" style="transition: all 0.3s ease;">
                         <i class="bi bi-book me-3 fs-5"></i>
                         <span>Homework</span>
                     </a>
@@ -125,37 +125,37 @@
         <nav class="p-3">
             <ul class="nav flex-column gap-2">
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none {% if request.resolver_match.url_name == 'dashboard' %}bg-primary text-white{% else %}text-dark hover-bg-light{% endif %}">
+                    <a href="{% url 'admin_dashboard' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none {% if request.resolver_match.url_name == 'admin_dashboard' %}bg-primary text-white{% else %}text-dark hover-bg-light{% endif %}">
                         <i class="bi bi-speedometer2 me-3 fs-5"></i>
                         <span>Dashboard</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                    <a href="{% url 'student_list' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
                         <i class="bi bi-people me-3 fs-5"></i>
                         <span>Students</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                    <a href="{% url 'teacher_list' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
                         <i class="bi bi-person-badge me-3 fs-5"></i>
                         <span>Teachers</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                    <a href="{% url 'attendance' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
                         <i class="bi bi-calendar-check me-3 fs-5"></i>
                         <span>Attendance</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                    <a href="{% url 'results' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
                         <i class="bi bi-graph-up me-3 fs-5"></i>
                         <span>Results</span>
                     </a>
                 </li>
                 <li class="nav-item">
-                    <a href="#" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
+                    <a href="{% url 'homework' %}" class="nav-link d-flex align-items-center p-3 rounded-3 text-decoration-none text-dark hover-bg-light">
                         <i class="bi bi-book me-3 fs-5"></i>
                         <span>Homework</span>
                     </a>

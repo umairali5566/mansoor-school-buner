@@ -1662,3 +1662,28 @@ def quick_search(request):
             )
 
     return JsonResponse({"results": results})
+
+
+# =========================================================
+# SEPARATE PAGES FOR SIDEBAR
+# =========================================================
+
+def attendance_page(request):
+    """Attendance overview page."""
+    return render(request, "accounts/attendance.html", {
+        "dashboard_header": get_dashboard_header("ADMIN"),
+    })
+
+
+def results_page(request):
+    """Results overview page."""
+    return render(request, "accounts/results.html", {
+        "dashboard_header": get_dashboard_header("ADMIN"),
+    })
+
+
+def homework_page(request):
+    """Homework overview page."""
+    return render(request, "accounts/homework.html", {
+        "dashboard_header": get_dashboard_header("ADMIN"),
+    })
