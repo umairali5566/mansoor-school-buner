@@ -1,9 +1,12 @@
 import os
 from pathlib import Path
-from django.core.exceptions import ImproperlyConfigured
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+
+# ==============================
+# ENV LOAD (optional)
+# ==============================
 
 def _load_local_env(env_path):
     if not env_path.exists():
@@ -15,41 +18,25 @@ def _load_local_env(env_path):
             continue
 
         key, value = line.split("=", 1)
-        key = key.strip()
-        value = value.strip().strip('"').strip("'")
-        if key:
-            os.environ.setdefault(key, value)
-
+        os.environ.setdefault(key.strip(), value.strip().strip('"').strip("'"))
 
 _load_local_env(BASE_DIR / ".env")
 
 
-def _env_bool(name, default=False):
-    value = os.getenv(name)
-    if value is None:
-        return default
-    return value.strip().lower() in {"1", "true", "yes", "on"}
+# ==============================
+# BASIC SETTINGS
+# ==============================
+
+DEBUG = os.environ.get("DEBUG", "False") == "True"
+
+SECRET_KEY = os.environ.get("SECRET_KEY", "dev-only-change-me")
+
+ALLOWED_HOSTS = ['.onrender.com', 'localhost', '127.0.0.1']
 
 
-# 🔥 IMPORTANT
-DEBUG = False
-
-SECRET_KEY = os.environ.get('DJANGO_SECRET_KEY')
-if not SECRET_KEY:
-    if DEBUG:
-        SECRET_KEY = "dev-only-change-me"
-    else:
-        raise ImproperlyConfigured("DJANGO_SECRET_KEY must be set.")
-
-
-# ✅ FIXED HOSTS
-ALLOWED_HOSTS = [
-    'mansoor-school-buner.onrender.com',
-    'www.mansoor-school-buner.onrender.com',
-    'localhost',
-    '127.0.0.1',
-]
-
+# ==============================
+# APPS
+# ==============================
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -68,20 +55,30 @@ INSTALLED_APPS = [
 ]
 
 
+# ==============================
+# MIDDLEWARE
+# ==============================
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
+
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
+
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
+
     'django.contrib.messages.middleware.MessageMiddleware',
-    'django.middleware.clickjacking.XFrameOptionsMiddleware'
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 
-ROOT_URLCONF = 'saams.urls'
+# ==============================
+# URLS / TEMPLATES
+# ==============================
 
+ROOT_URLCONF = 'saams.urls'
 
 TEMPLATES = [
     {
@@ -100,9 +97,12 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = 'saams.wsgi.application'
 
+
+# ==============================
+# DATABASE
+# ==============================
 
 DATABASES = {
     'default': {
@@ -112,10 +112,18 @@ DATABASES = {
 }
 
 
+# ==============================
+# INTERNATIONAL
+# ==============================
+
 LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'Asia/Karachi'
 USE_TZ = True
 
+
+# ==============================
+# STATIC / MEDIA
+# ==============================
 
 STATIC_URL = '/static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
@@ -125,52 +133,47 @@ STATICFILES_DIRS = [
     BASE_DIR / 'pwa_static',
 ]
 
-
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
 
+# ==============================
+# AUTH
+# ==============================
+
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-
-# ✅ LOGIN FIX
 LOGIN_URL = '/login/'
 LOGIN_REDIRECT_URL = '/admin-dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'
-
 
 AUTH_USER_MODEL = 'accounts.CustomUser'
 
 
 # ==============================
-# 🔥 SECURITY FIX (IMPORTANT)
+# SECURITY (RENDER FIX)
 # ==============================
 
-SECURE_SSL_REDIRECT = False   # Render already handles HTTPS
+SECURE_SSL_REDIRECT = False
 
-SESSION_COOKIE_SECURE = True   # 🔥 FIX
-CSRF_COOKIE_SECURE = True      # 🔥 FIX
+SESSION_COOKIE_SECURE = True
+CSRF_COOKIE_SECURE = True
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
-CSRF_TRUSTED_ORIGINS = [
-    "https://mansoor-school-buner.onrender.com",
-    "https://www.mansoor-school-buner.onrender.com",
-]
+CSRF_TRUSTED_ORIGINS = ['https://*.onrender.com']
 
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"
-
 SESSION_COOKIE_HTTPONLY = True
 
 
 # ==============================
-# STATIC FILES (WHITE NOISE)
+# WHITENOISE
 # ==============================
 
 def _whitenoise_add_headers(headers, path, url):
     if str(path).endswith("service-worker.js"):
         headers["Cache-Control"] = "no-cache"
-
     if str(path).endswith("manifest.json"):
         headers["Cache-Control"] = "no-cache"
 
