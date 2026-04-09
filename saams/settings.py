@@ -134,7 +134,7 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 # ✅ LOGIN FIX
 LOGIN_URL = '/login/'
-LOGIN_REDIRECT_URL = '/'
+LOGIN_REDIRECT_URL = '/admin-dashboard/'
 LOGOUT_REDIRECT_URL = '/login/'
 
 
@@ -147,8 +147,9 @@ AUTH_USER_MODEL = 'accounts.CustomUser'
 
 SECURE_SSL_REDIRECT = False   # Render already handles HTTPS
 
-SESSION_COOKIE_SECURE = False   # 🔥 FIX
-CSRF_COOKIE_SECURE = False      # 🔥 FIX
+SESSION_COOKIE_SECURE = True   # 🔥 FIX
+CSRF_COOKIE_SECURE = True      # 🔥 FIX
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CSRF_TRUSTED_ORIGINS = [
     "https://mansoor-school-buner.onrender.com",

@@ -203,7 +203,6 @@ def login_view(request):
 
 
 @require_POST
-@login_required
 def logout_view(request):
     """Handle user logout."""
     logout(request)
