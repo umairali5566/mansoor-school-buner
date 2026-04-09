@@ -45,6 +45,7 @@ if not SECRET_KEY:
 # ✅ FIXED HOSTS
 ALLOWED_HOSTS = [
     'mansoor-school-buner.onrender.com',
+    'www.mansoor-school-buner.onrender.com',
     'localhost',
     '127.0.0.1',
 ]
@@ -153,9 +154,8 @@ SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 CSRF_TRUSTED_ORIGINS = [
     "https://mansoor-school-buner.onrender.com",
+    "https://www.mansoor-school-buner.onrender.com",
 ]
-
-SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
 SESSION_COOKIE_SAMESITE = "Lax"
 CSRF_COOKIE_SAMESITE = "Lax"

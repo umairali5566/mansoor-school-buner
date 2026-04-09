@@ -177,6 +177,11 @@ def _register_login_failure(request):
 def login_view(request):
     """Handle user login with role-based redirection."""
     if request.user.is_authenticated:
+        role = getattr(request.user, 'role', '')
+        if not role:
+            logout(request)
+            messages.info(request, "Your account is not properly configured. Please contact support.")
+            return redirect('login')
         return redirect(_get_redirect_url(request.user))
 
     form = AuthenticationForm(request, data=request.POST or None)
