@@ -1,1 +1,1 @@
-web: gunicorn saams.wsgi:application
+web: gunicorn saams.wsgi:application --log-file -

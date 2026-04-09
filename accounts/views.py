@@ -11,7 +11,7 @@ This module handles all views related to user accounts including:
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.forms import AuthenticationForm
@@ -176,26 +176,47 @@ def _register_login_failure(request):
 
 def login_view(request):
     if request.user.is_authenticated:
-        return redirect('/admin-dashboard/')
+        return redirect(_get_redirect_url(request.user))
 
+    next_url = (request.POST.get("next") or request.GET.get("next") or "").strip()
     error = None
+    username = ""
 
-    if request.method == 'POST':
-        username = request.POST.get('username')
-        password = request.POST.get('password')
+    if request.method == "POST":
+        username = (request.POST.get("username") or "").strip()
 
-        if not username or not password:
-            error = "Please enter username and password"
+        locked, retry_after = _is_login_locked(request)
+        if locked:
+            retry_minutes = max(1, (retry_after + 59) // 60)
+            error = f"Too many login attempts. Please try again in {retry_minutes} minute(s)."
         else:
-            user = authenticate(request, username=username, password=password)
-
-            if user is not None:
+            form = AuthenticationForm(request, data=request.POST)
+            if form.is_valid():
+                user = form.get_user()
                 login(request, user)
-                return redirect('/admin-dashboard/')
-            else:
-                error = "Invalid username or password"
+                _reset_login_attempts(request)
 
-    return render(request, 'accounts/login.html', {'error': error})
+                if next_url and url_has_allowed_host_and_scheme(
+                    url=next_url,
+                    allowed_hosts={request.get_host()},
+                    require_https=request.is_secure(),
+                ):
+                    return redirect(next_url)
+
+                return redirect(_get_redirect_url(user))
+
+            _register_login_failure(request)
+            error = "Invalid username or password."
+
+    return render(
+        request,
+        "accounts/login.html",
+        {
+            "error": error,
+            "next": next_url,
+            "username": username,
+        },
+    )
 
 @require_POST
 def logout_view(request):

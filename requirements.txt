@@ -1,5 +1,5 @@
-﻿Django==4.2
+Django==4.2
 gunicorn
 whitenoise
-openai
-django-ratelimit
+dj-database-url
+psycopg2-binary
