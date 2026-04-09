@@ -36,7 +36,6 @@ def _env_truthy(name, default=""):
 # BASIC SETTINGS
 # ==============================
 
-DEBUG = False
 SECRET_KEY = os.environ.get(
     "SECRET_KEY",
     "saams-render-secret-key-change-this-before-production-2026-secure",
@@ -45,6 +44,7 @@ SECRET_KEY = os.environ.get(
 RENDER_EXTERNAL_HOSTNAME = os.environ.get("RENDER_EXTERNAL_HOSTNAME", "").strip()
 IS_RENDER = bool(RENDER_EXTERNAL_HOSTNAME) or _env_truthy("RENDER")
 FORCE_HTTPS = _env_truthy("FORCE_HTTPS", "true" if IS_RENDER else "false")
+DEBUG = _env_truthy("DEBUG", "false" if IS_RENDER else "true")
 
 ALLOWED_HOSTS = [
     "127.0.0.1",
