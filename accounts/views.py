@@ -11,7 +11,7 @@ This module handles all views related to user accounts including:
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
-from django.contrib.auth import login, logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from django.contrib.auth.hashers import make_password
 from django.contrib.auth.forms import AuthenticationForm
@@ -175,48 +175,27 @@ def _register_login_failure(request):
 
 
 def login_view(request):
-    """Handle user login with role-based redirection."""
     if request.user.is_authenticated:
-        role = getattr(request.user, 'role', '')
-        if role == 'ADMIN':
-            return redirect('admin_dashboard')
-        elif role == 'TEACHER':
-            return redirect('teacher_dashboard')
-        elif role == 'STUDENT':
-            return redirect('student_dashboard')
+        return redirect('/admin-dashboard/')
+
+    error = None
+
+    if request.method == 'POST':
+        username = request.POST.get('username')
+        password = request.POST.get('password')
+
+        if not username or not password:
+            error = "Please enter username and password"
         else:
-            logout(request)
-            messages.error(request, "Your account has no role assigned. Please contact admin.")
-            return redirect('login')
+            user = authenticate(request, username=username, password=password)
 
-    form = AuthenticationForm(data=request.POST or None)
-    form.fields['username'].widget.attrs.update({'class': 'form-control'})
-    form.fields['password'].widget.attrs.update({'class': 'form-control'})
-
-    if request.method == "POST":
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
-            next_url = request.POST.get('next')
-            if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts=request.get_host()):
-                return redirect(next_url)
-            # Role-based redirect
-            role = getattr(user, 'role', '')
-            if role == 'ADMIN':
-                return redirect('admin_dashboard')
-            elif role == 'TEACHER':
-                return redirect('teacher_dashboard')
-            elif role == 'STUDENT':
-                return redirect('student_dashboard')
+            if user is not None:
+                login(request, user)
+                return redirect('/admin-dashboard/')
             else:
-                logout(request)
-                messages.error(request, "Account configuration error.")
-                return redirect('login')
-        else:
-            messages.error(request, "Invalid username or password.")
+                error = "Invalid username or password"
 
-    return render(request, "accounts/login.html", {"form": form, "next": request.GET.get('next')})
-
+    return render(request, 'accounts/login.html', {'error': error})
 
 @require_POST
 def logout_view(request):

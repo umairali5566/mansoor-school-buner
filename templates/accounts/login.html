@@ -23,24 +23,12 @@
         </div>
 
         <div class="card-body">
-            {% if messages %}
-                {% for message in messages %}
-                <div class="alert alert-{{ message.tags|default:'info' }} alert-dismissible fade show" role="alert">
-                    {{ message }}
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-                {% endfor %}
+            {% if error %}
+            <div class="alert alert-danger" role="alert">{{ error }}</div>
             {% endif %}
 
-            {% if form.non_field_errors %}
-            <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
-            {% endif %}
-
-            <form method="post" novalidate>
+            <form method="POST">
                 {% csrf_token %}
-                {% if next %}
-                <input type="hidden" name="next" value="{{ next }}">
-                {% endif %}
 
                 <div class="form-group">
                     <label for="id_username" class="form-label">Username</label>
@@ -49,12 +37,8 @@
                             <i class="bi bi-person-fill"></i>
                         </span>
                         <input type="text" name="username" id="id_username" class="form-control"
-                               placeholder="Enter your username" value="{{ form.username.value|default:'' }}"
-                               autocomplete="username" required>
+                               placeholder="Enter your username" autocomplete="username" required>
                     </div>
-                    {% if form.username.errors %}
-                    <div class="form-error">{{ form.username.errors }}</div>
-                    {% endif %}
                 </div>
 
                 <div class="form-group">
@@ -66,9 +50,6 @@
                         <input type="password" name="password" id="id_password" class="form-control"
                                placeholder="Enter your password" autocomplete="current-password" required>
                     </div>
-                    {% if form.password.errors %}
-                    <div class="form-error">{{ form.password.errors }}</div>
-                    {% endif %}
                 </div>
 
                 <div class="form-actions">
