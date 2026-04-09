@@ -176,21 +176,20 @@ def _register_login_failure(request):
 
 def login_view(request):
     """Handle user login with role-based redirection."""
-    try:
-        if request.user.is_authenticated:
-            role = getattr(request.user, 'role', '')
-            if not role:
-                logout(request)
-                messages.info(request, "Your account is not properly configured. Please contact support.")
-                return redirect('login')
-            return redirect(_get_redirect_url(request.user))
+    if request.user.is_authenticated:
+        role = getattr(request.user, 'role', '')
+        if not role:
+            logout(request)
+            messages.info(request, "Your account is not properly configured. Please contact support.")
+            return redirect('login')
+        return redirect(_get_redirect_url(request.user))
 
-        form = AuthenticationForm(request, data=request.POST or None)
-        for field in form.fields.values():
-            field.widget.attrs.update({"class": "form-control"})
+    form = AuthenticationForm(request, data=request.POST or None)
+    for field in form.fields.values():
+        field.widget.attrs.update({"class": "form-control"})
 
-        if request.method == "POST":
-            locked, wait_seconds = _is_login_locked(request)
+    if request.method == "POST":
+        locked, wait_seconds = _is_login_locked(request)
         if locked:
             wait_minutes = max(wait_seconds // 60, 1)
             messages.error(request, f"Too many failed attempts. Try again in about {wait_minutes} minute(s).")
@@ -209,10 +208,6 @@ def login_view(request):
         messages.error(request, "Invalid username or password")
 
     return render(request, "accounts/login.html", {"form": form, "next": request.GET.get('next')})
-    except Exception as e:
-        LOGGER.error("Error in login_view: %s", str(e), exc_info=True)
-        messages.error(request, "An error occurred. Please try again later.")
-        return render(request, "accounts/login.html", {"form": AuthenticationForm(), "next": request.GET.get('next')})
 
 
 @require_POST
