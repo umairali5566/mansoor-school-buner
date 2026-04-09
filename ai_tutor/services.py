@@ -1,5 +1,4 @@
 from django.conf import settings
-from openai import OpenAI
 
 from accounts.models import Student
 
@@ -53,6 +52,11 @@ def generate_ai_tutor_reply(user, question):
     if not api_key:
         raise RuntimeError("AI Tutor is not configured. Set OPENAI_API_KEY in the environment.")
 
+    try:
+        from openai import OpenAI
+    except ImportError as exc:
+        raise RuntimeError("AI Tutor dependency is missing. Install the openai package.") from exc
+
     client = OpenAI(api_key=api_key)
     response = client.responses.create(
         model=settings.AI_TUTOR_MODEL,
@@ -65,4 +69,3 @@ def generate_ai_tutor_reply(user, question):
     if not answer:
         raise RuntimeError("AI Tutor returned an empty response.")
     return answer
-

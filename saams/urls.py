@@ -33,6 +33,8 @@ urlpatterns = [
 
     path('notifications/', include('notifications.urls')),
 
+    path('ai-tutor/', include('ai_tutor.urls')),
+
 ]
 
 

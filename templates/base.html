@@ -25,7 +25,8 @@
     {% block extra_css %}{% endblock %}
 </head>
 <body class="bg-light text-dark" style="background-color: #f1f5f9 !important;">
-{% if request.user.is_authenticated and request.user.role == 'ADMIN' %}
+{% if request.user.is_authenticated %}
+{% if request.user.role == 'ADMIN' %}
 <!-- Sidebar for desktop/tablet -->
 <div class="d-none d-md-block position-fixed top-0 start-0 vh-100 bg-white shadow-lg" id="sidebar" style="width: 280px; z-index: 1030;">
     <div class="d-flex flex-column h-100">
@@ -108,7 +109,7 @@
 </div>
 {% endif %}
 
-{% if request.user.is_authenticated and request.user.role == 'ADMIN' %}
+{% if request.user.role == 'ADMIN' %}
 <!-- Mobile Sidebar Offcanvas -->
 <div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="mobileSidebar" aria-labelledby="mobileSidebarLabel">
     <div class="offcanvas-header bg-primary text-white">
@@ -189,7 +190,7 @@
 
 <!-- Main Content -->
 <div class="d-flex">
-    {% if request.user.is_authenticated and request.user.role == 'ADMIN' %}
+    {% if request.user.role == 'ADMIN' %}
     <!-- Spacer for desktop sidebar -->
     <div class="d-none d-md-block" style="width: 280px; flex-shrink: 0;"></div>
     {% endif %}
@@ -198,7 +199,7 @@
         <!-- Top Navbar -->
         <nav class="navbar navbar-expand-lg navbar-light bg-white shadow-sm border-bottom" style="background: linear-gradient(135deg, #4f46e5, #7c3aed) !important;">
             <div class="container-fluid px-4">
-                {% if request.user.is_authenticated and request.user.role == 'ADMIN' %}
+                {% if request.user.role == 'ADMIN' %}
                 <!-- Mobile menu button -->
                 <button class="btn btn-link text-white d-md-none me-3" type="button" data-bs-toggle="offcanvas" data-bs-target="#mobileSidebar" aria-controls="mobileSidebar">
                     <i class="bi bi-list fs-4"></i>

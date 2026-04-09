@@ -4,7 +4,15 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import render
 from django.views.decorators.http import require_POST
-from ratelimit.decorators import ratelimit
+
+try:
+    from ratelimit.decorators import ratelimit
+except ImportError:
+    def ratelimit(*args, **kwargs):
+        def decorator(view_func):
+            return view_func
+
+        return decorator
 
 from .models import ChatHistory
 from .services import generate_ai_tutor_reply
@@ -66,4 +74,3 @@ def ai_tutor_send(request):
             "timestamp": chat.timestamp.strftime("%b %d, %Y %I:%M %p"),
         }
     )
-

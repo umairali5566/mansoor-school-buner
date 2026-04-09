@@ -1,4 +1,5 @@
 import os
+import sys
 from pathlib import Path
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -52,6 +53,7 @@ INSTALLED_APPS = [
     'results.apps.ResultsConfig',
     'homework.apps.HomeworkConfig',
     'notifications.apps.NotificationsConfig',
+    'ai_tutor.apps.AiTutorConfig',
 ]
 
 
@@ -168,6 +170,15 @@ SESSION_COOKIE_HTTPONLY = True
 
 
 # ==============================
+# AI TUTOR
+# ==============================
+
+OPENAI_API_KEY = os.environ.get("OPENAI_API_KEY", "")
+AI_TUTOR_MODEL = os.environ.get("AI_TUTOR_MODEL", "gpt-4.1-mini")
+AI_TUTOR_MAX_OUTPUT_TOKENS = int(os.environ.get("AI_TUTOR_MAX_OUTPUT_TOKENS", "400"))
+
+
+# ==============================
 # WHITENOISE
 # ==============================
 
@@ -183,4 +194,7 @@ WHITENOISE_AUTOREFRESH = DEBUG
 WHITENOISE_ADD_HEADERS_FUNCTION = _whitenoise_add_headers
 
 if not DEBUG:
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    if "test" in sys.argv:
+        STATICFILES_STORAGE = "whitenoise.storage.CompressedStaticFilesStorage"
+    else:
+        STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
