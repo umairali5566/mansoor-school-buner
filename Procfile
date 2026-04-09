@@ -1,1 +1,1 @@
-web: gunicorn saams.wsgi
+web: gunicorn saams.wsgi:application
